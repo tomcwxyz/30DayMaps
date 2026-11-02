@@ -11,6 +11,7 @@ ONS_REGIONS = (
     "Regions_December_2025_Boundaries_EN_BGC/FeatureServer/0/query"
 )
 NORTH_EAST_CODE = "E12000001"
+NAPTAN_CSV = "https://naptan.api.dft.gov.uk/v1/access-nodes?dataFormat=csv"
 
 
 def download(url: str, destination: Path, *, force: bool = False) -> Path:
