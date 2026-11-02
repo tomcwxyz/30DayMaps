@@ -18,6 +18,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import matplotlib.patheffects as path_effects
 import pandas as pd
 from shapely.geometry import shape
 
@@ -132,6 +133,43 @@ def railway_title(kind: str) -> str:
     raise ValueError(f"Unknown map kind: {kind}")
 
 
+# Town centroids in WGS84 (longitude, latitude): landmarks, not railway stations.
+# Keep locations as coordinates, NEVER hand-place labels by pixel position.
+NORTH_EAST_TOWNS = (
+    ("Berwick-upon-Tweed", -2.005, 55.771, -7, 8, "right"),
+    ("Hexham", -2.101, 54.972, -7, 8, "right"),
+    ("Newcastle", -1.618, 54.978, -7, 8, "right"),
+    ("Sunderland", -1.384, 54.907, 8, -9, "left"),
+    ("Durham", -1.573, 54.776, -7, 8, "right"),
+    ("Hartlepool", -1.213, 54.692, 8, 8, "left"),
+    ("Darlington", -1.553, 54.527, -7, 9, "right"),
+    ("Middlesbrough", -1.2344, 54.576, 8, 9, "left"),
+)
+
+
+def north_east_town_points() -> gpd.GeoDataFrame:
+    """Create anchored settlement labels in metres (EPSG:27700)."""
+    from shapely.geometry import Point
+    records = [{"name": n, "dx": dx, "dy": dy, "ha": ha, "geometry": Point(lon, lat)}
+               for n, lon, lat, dx, dy, ha in NORTH_EAST_TOWNS]
+    return gpd.GeoDataFrame(records, geometry="geometry", crs="EPSG:4326").to_crs("EPSG:27700")
+
+
+def draw_ne_town_labels(ax, outline) -> None:
+    """Place accurate anchor dots and short labels inside the mapped region."""
+    for town in north_east_town_points().itertuples():
+        if not outline.covers(town.geometry):
+            raise ValueError(f"Town anchor outside North East boundary: {town.name}")
+        x, y = town.geometry.x, town.geometry.y
+        ax.scatter([x], [y], color="#233842", edgecolors=PAPER, linewidths=0.7,
+                   s=14, zorder=10)
+        label = ax.annotate(town.name, (x, y), xytext=(town.dx, town.dy),
+                            textcoords="offset points", ha=town.ha,
+                            va="bottom" if town.dy >= 0 else "top",
+                            fontsize=7.7, color=SLATE, zorder=11)
+        label.set_path_effects([path_effects.withStroke(linewidth=2.9, foreground=PAPER)])
+
+
 def draw_railways(lines: gpd.GeoDataFrame, outline, output: Path, *, kind: str) -> None:
     """Reproducible, static editorial cartography for Day 02."""
     fig = plt.figure(figsize=(10, 12), facecolor=PAPER)
@@ -139,8 +177,8 @@ def draw_railways(lines: gpd.GeoDataFrame, outline, output: Path, *, kind: str) 
     gpd.GeoSeries([outline], crs=27700).boundary.plot(ax=ax, color=SLATE, lw=0.65, zorder=1)
     existing = lines.loc[lines.status.isin(CURRENT)]
     if not existing.empty:
-        existing.plot(ax=ax, color="#A5B3B2", linewidth=0.34 if kind == "england" else 0.57,
-                      alpha=0.52, zorder=2)
+        existing.plot(ax=ax, color="#CBD3D0", linewidth=0.30 if kind == "england" else 0.48,
+                      alpha=0.55, zorder=2)
     for status in FORMER:
         subset = lines.loc[lines.status.eq(status)]
         if not subset.empty:
@@ -152,16 +190,21 @@ def draw_railways(lines: gpd.GeoDataFrame, outline, output: Path, *, kind: str) 
     ax.set_xlim(minx - dx * 0.035, maxx + dx * 0.035)
     ax.set_ylim(miny - dy * 0.035, maxy + dy * 0.035)
     ax.set_aspect("equal", adjustable="box")
+    if kind == "north-east":
+        draw_ne_town_labels(ax, outline)
     ax.axis("off")
     fig.text(0.08, 0.953, "30 DAY MAP CHALLENGE   /   DAY 02: LINES", fontsize=10,
              color="#376B5E", fontweight="bold")
     fig.text(0.08, 0.914, railway_title(kind), fontsize=24, fontweight="bold", color=SLATE)
     fig.text(0.08, 0.886, "ENGLAND" if kind == "england" else "NORTH EAST ENGLAND", fontsize=11, color=SLATE)
+    if kind == "north-east":
+        fig.text(0.08, 0.866, "Former railways in colour · other mapped railways in pale grey",
+                 fontsize=8.2, color="#52686D")
     handles = [
         Line2D([0], [0], color="#B75E43", lw=2, label="Disused · rails generally remain"),
         Line2D([0], [0], color="#C68C3E", lw=2, label="Abandoned · alignment visible"),
         Line2D([0], [0], color="#527E82", lw=2, label="Removed · razed / dismantled"),
-        Line2D([0], [0], color="#A5B3B2", lw=2, label="Other mapped railway track"),
+        Line2D([0], [0], color="#CBD3D0", lw=2, label="Other mapped railway track"),
     ]
     fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.075, 0.105),
                frameon=False, fontsize=9, labelspacing=0.65)
