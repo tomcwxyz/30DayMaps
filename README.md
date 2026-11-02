@@ -52,6 +52,31 @@ This gives an **England-only geographic candidate ranking** and matching PNG, wi
 
 Planned definitions: (1) furthest from another distinct stop location, (2) furthest from a settlement, and (3) fewest actual scheduled departures. We will present separate rankings rather than an arbitrary composite score.
 
+
+## Day 02 — Lines: The Railways We Lost
+
+**Geography:** England as the master dataset, plus a detailed North East map (including the Tees Valley).
+**Source:** [Geofabrik England OpenStreetMap extract](https://download.geofabrik.de/europe/united-kingdom/england.html) (live extract, typically about 1.6 GB), using the Open Database Licence. The map is a record of railway *features currently mapped in OSM*, **not an inventory of every historic railway**, former passenger service, or safe public access. The existing railway context includes freight, sidings and industrial rail; it is *not* a current passenger-service map.
+
+We compare OSM railway statuses: `disused` (rails generally remain), `abandoned` (alignment visible, rails removed), and `razed` / `dismantled` / `demolished` (mapped removed alignments). The last group is particularly incomplete and can be controversial to map. OSM data and map must be attributed **© OpenStreetMap contributors (ODbL)**; regional boundaries are ONS under OGL v3.0.
+
+### Build
+
+The national pipeline uses [Osmium Tool](https://osmcode.org/osmium-tool/) to extract only railway ways **with their referenced nodes**, exports GeoJSON Text Sequences, then uses GeoPandas/Matplotlib for British National Grid length analysis and cartography.
+
+```bash
+# Install osmium-tool separately (e.g. sudo apt install osmium-tool)
+python -m pip install -e '.[test]'
+python -m pytest -q tests/test_railways.py
+python -m maps.railways
+```
+
+Use `python -m maps.railways --input /path/to/railway-ways.geojsonseq` to render from an existing extraction, or `--pbf /path/to/england.osm.pbf` for a previously downloaded file. GitHub Actions runs the live-data pipeline on Day 2 changes and attaches outputs without committing large extracts.
+
+**Outputs:** `challenges/02-lines/outputs/england-railways.png`, `north-east-railways.png`, matching `.gpkg` geospatial layers and `-railway-summary.csv` tables. Lengths in CSVs are **summed mapped feature geometry**, not unduplicated route kilometres; parallel tracks and overlapping mapping may inflate the totals.
+
+The longer-term UK-wide version can use the UK's OSM PBF; unlike England, Geofabrik does not publish a UK-wide free SHP/GeoPackage bundle.
+
 ## Approach
 
 Reusable foundations are minimal: fetching sources, boundary handling, attribution and styling. Individual challenges can switch tools: GeoPandas/Matplotlib first, then MapLibre, QGIS, H3, DuckDB Spatial, 3D, cartograms, animated cartography and unconventional approaches when the question merits it.
