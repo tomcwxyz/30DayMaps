@@ -87,3 +87,20 @@ def test_partial_coverage_cannot_claim_great_britain(tmp_path):
     produced=publish(england,output,boundaries=boundaries)
     assert not any("great-britain" in str(f) for f in produced)
     assert not (output/"great-britain-ancient-woodland.png").exists()
+
+
+def test_stale_great_britain_map_removed_on_partial_coverage(tmp_path):
+    files={}
+    for nation in ("England", "Scotland", "Wales"):
+        p=tmp_path / f"{nation}.gpkg"
+        sample(nation).to_file(p,driver="GPKG")
+        files[nation]=p
+    boundaries=gpd.GeoDataFrame({"RGN25CD":["E12000001"]},
+       geometry=[box(390000,520000,420000,550000)], crs=27700)
+    full=combine_inventories(files)
+    partial=normalise(sample("England"),"England")
+    output=tmp_path/"out"
+    publish(full,output,boundaries=boundaries)
+    assert (output/"great-britain-ancient-woodland.png").exists()
+    publish(partial,output,boundaries=boundaries)
+    assert not (output/"great-britain-ancient-woodland.png").exists()
