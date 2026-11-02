@@ -83,6 +83,7 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
     fig.text(0.10, 0.945, "30 DAY MAP CHALLENGE  /  DAY 01: POINTS", color=GREEN,
              fontfamily="DejaVu Sans", fontsize=10, weight="bold")
     fig.text(0.10, 0.910, title, color=SLATE, fontsize=21, weight="bold")
+    fig.text(0.10, 0.094, "TRIG POINTS: ONLY CONCRETE TRIG PILLARS SHOWN", fontsize=8.5, color=GREEN, weight="bold")
     fig.text(0.10, 0.076, legend_note, fontsize=9, color=SLATE)
     fig.text(0.10, 0.049, "Contains OS data © Crown copyright and database right · ONS boundaries · OGL v3.0", fontsize=7.5, color=MUTED)
     fig.text(0.10, 0.034, "Historic OS archive · condition is not independently verified · location is approximate", fontsize=7.5, color=MUTED)
