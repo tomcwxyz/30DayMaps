@@ -167,15 +167,15 @@ def make_maps(archive: Path | None, output: Path, visits_path: Path | None, *, f
     highest[export_cols].to_csv(output / "england-top-10-highest.csv", index=False)
     isolated[export_cols + ["nearest_pillar_km"]].to_csv(output / "england-top-10-isolated.csv", index=False)
     views = [
-        ("england-overview", england, english_geom, "The points that mapped England", "elevation", None),
-        ("england-visited", england, english_geom, "My trig points", "visited", None),
-        ("england-highest", england, english_geom, "The ten highest trig pillars", "highlights", highest),
-        ("england-isolated", england, english_geom, "The ten most isolated trig pillars", "highlights", isolated),
-        ("england-lost", england, english_geom, "The lost pillars", "lost", None),
-        ("north-east-detail", ne, ne_geom, "The points that mapped the North East", "elevation", None),
+        ("england-overview", england, english_geom, "The points that mapped England", "elevation", None, None),
+        ("england-visited", england, english_geom, "My trig points", "visited", None, None),
+        ("england-highest", england, english_geom, "The ten highest trig pillars", "highlights", highest, "height_m"),
+        ("england-isolated", england, english_geom, "The ten most isolated trig pillars", "highlights", isolated, "nearest_pillar_km"),
+        ("england-lost", england, english_geom, "The lost pillars", "lost", None, None),
+        ("north-east-detail", ne, ne_geom, "The points that mapped the North East", "elevation", None, None),
     ]
-    for filename, points, outline, title, mode, highlighted in views:
-        draw_trig_map(points, outline, title, output / f"{filename}.png", mode=mode, highlighted=highlighted)
+    for filename, points, outline, title, mode, highlighted, metric in views:
+        draw_trig_map(points, outline, title, output / f"{filename}.png", mode=mode, highlighted=highlighted, highlight_metric=metric)
     print(f"Saved {len(england):,} English and {len(ne):,} North East pillars to {output}")
     print(f"Visited (England): {int(england.visited.sum())} | England archival lost: {int(england.destroyed_in_archive.sum())}")
 
