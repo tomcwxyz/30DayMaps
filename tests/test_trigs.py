@@ -89,3 +89,18 @@ def test_unlevelled_zero_height_is_not_assumed_zero_elevation():
     rows.loc[0, "HEIGHT"] = "0"
     result = parse_pillars(rows)
     assert pd.isna(result[result.station_id.eq("A")].iloc[0].height_m)
+
+def test_highest_legend_uses_elevation_even_when_isolation_column_present():
+    from maps.render import ranking_measure_label
+
+    row = pd.Series({"height_m": 892.759, "nearest_pillar_km": 4.9})
+    assert ranking_measure_label(row, "height_m") == "892.8 m"
+    assert ranking_measure_label(row, "nearest_pillar_km") == "4.9 km"
+
+
+def test_unknown_ranking_metric_rejected():
+    import pytest
+    from maps.render import ranking_measure_label
+
+    with pytest.raises(ValueError, match="Unknown ranking measure"):
+        ranking_measure_label(pd.Series({"height_m": 100}), "distance")
