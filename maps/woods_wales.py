@@ -15,6 +15,7 @@ TYPE_NAME = "inspire-nrw:NRW_ANCIENT_WOODLAND_INVENTORY_2021"
 
 def fetch_wales(destination: Path, *, page_size: int = 1000,
                 session=None) -> Path:
+    """Fetch every feature, validating WFS numberMatched, IDs and pagination."""
     if page_size < 1 or page_size > 10000:
         raise ValueError("page_size must be from 1 to 10000")
     destination = Path(destination)
@@ -22,12 +23,14 @@ def fetch_wales(destination: Path, *, page_size: int = 1000,
     temp = destination.with_suffix(destination.suffix + ".part")
     http = session or requests.Session()
     seen = set()
+    total = None
     count = 0
+    start = 0
     try:
         with temp.open("w", encoding="utf-8") as out:
             out.write('{"type":"FeatureCollection","features":[')
             first = True
-            for start in range(0, 1_000_000, page_size):
+            while start < 1_000_000:
                 resp = http.get(SERVICE, params={
                     "service": "WFS",
                     "version": "2.0.0",
@@ -44,36 +47,53 @@ def fetch_wales(destination: Path, *, page_size: int = 1000,
                 except ValueError as exc:
                     raise RuntimeError("NRW WFS did not return JSON; check service") from exc
                 if payload.get("type") != "FeatureCollection" or not isinstance(payload.get("features"), list):
-                    raise RuntimeError(f"NRW WFS returned an error/non-GeoJSON: {str(payload)[:400]}")
+                    raise RuntimeError(f"NRW WFS returned error/non-GeoJSON: {str(payload)[:400]}")
+                advertised = payload.get("numberMatched")
+                if advertised is None or str(advertised).lower() == "unknown":
+                    raise RuntimeError("NRW WFS omitted a verifiable numberMatched total")
+                try:
+                    page_total = int(advertised)
+                except (TypeError, ValueError) as exc:
+                    raise RuntimeError(f"Invalid NRW numberMatched: {advertised}") from exc
+                if total is None:
+                    total = page_total
+                if total != page_total:
+                    raise RuntimeError("NRW WFS changed the total across pages")
                 records = payload["features"]
-                if not records:
-                    break
+                if not records and count != total:
+                    raise RuntimeError("NRW WFS stopped before all features were fetched")
                 for feature in records:
                     if not isinstance(feature.get("geometry"), dict):
                         raise RuntimeError("Wales feature missing geometry")
                     identifier = feature.get("id")
-                    if identifier is not None:
-                        if identifier in seen:
-                            raise RuntimeError("Wales WFS repeated a feature ID across pages")
-                        seen.add(identifier)
+                    if identifier is None:
+                        raise RuntimeError("NRW WFS feature missing source ID")
+                    if identifier in seen:
+                        raise RuntimeError("Wales WFS repeated a feature ID across pages")
+                    seen.add(identifier)
                     if not first:
                         out.write(",")
                     out.write(json.dumps(feature, separators=(",", ":")))
                     first = False
                     count += 1
-                print(f"Wales: {count:,} records fetched", flush=True)
-                if len(records) < page_size:
+                if count > total:
+                    raise RuntimeError("NRW WFS returned more features than advertised")
+                print(f"Wales: {count:,}/{total:,} records fetched", flush=True)
+                if count == total:
                     break
+                if not records:
+                    raise RuntimeError("Incomplete Welsh inventory")
+                # Advance by *actual* returned count in case WFS caps page size.
+                start += len(records)
             else:
                 raise RuntimeError("Exceeded safety limit for Welsh woodland WFS")
-            out.write(']}')
-        if count == 0:
-            raise RuntimeError("No Welsh woodland polygons returned")
+            out.write("]}")
+        if not count or count != total:
+            raise RuntimeError(f"Incomplete Welsh inventory: got {count}, expected {total}")
         temp.replace(destination)
         return destination
     finally:
         temp.unlink(missing_ok=True)
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
