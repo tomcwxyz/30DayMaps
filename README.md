@@ -42,7 +42,13 @@ Remove the example placeholder before running. Keep this personal CSV uncommitte
 
 ## Loneliest bus stops — England-wide exploration
 
-Use [DfT NaPTAN national CSV](https://beta-naptan.dft.gov.uk/download/national) to explore geographical isolation and later match against active timetables. This is research, not a published ranking yet. The initial command `python -m maps.buses --csv path/to/naptan.csv` produces a **quality-audit candidate** file only. The eventual national rankings must distinguish stop platforms from stop locations, English candidates from Scottish/Welsh nearest neighbours, and stop records from genuinely operating services.
+Use [DfT NaPTAN national CSV](https://beta-naptan.dft.gov.uk/download/national) to explore geographical isolation and later match against active timetables. The official public [CSV endpoint](https://naptan.api.dft.gov.uk/v1/access-nodes?dataFormat=csv) can be downloaded automatically:
+
+```bash
+python -m maps.buses --output explorations/loneliest-bus-stops/outputs/top100.csv
+```
+
+This gives an **England-only geographic candidate ranking** and matching PNG, with cross-border nearest-neighbour comparisons against all GB stops. It filters for active boarding locations (`BCT`, `BCS`, `BCQ`), excludes entrance/access records and the floating hail-and-ride category, then groups platforms within 75 metres that have an identical normalised name (or nearby bays within one station locality). Each group's distance is the shortest straight-line distance to another group's platform; this is **not** walking or public transport travel distance. The output exposes original stop IDs and group sizes for audit. Active NaPTAN *records* do not verify the presence of an operating service. Uncertain local pairs or duplicate stops must be reviewed before sharing a definitive top-100 list.
 
 Planned definitions: (1) furthest from another distinct stop location, (2) furthest from a settlement, and (3) fewest actual scheduled departures. We will present separate rankings rather than an arbitrary composite score.
 
