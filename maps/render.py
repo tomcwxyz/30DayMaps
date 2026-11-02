@@ -81,7 +81,8 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
     plt.close(fig)
 
 
-def draw_bus_map(ranked, boundary, filename: Path):
+def draw_bus_map(ranked, boundary, filename: Path, *, title="The 100 loneliest bus stops?",
+                 description="England · distance to the next distinct boarding location"):
     """Map the geographic top 100, with the ten most isolated named in a side key."""
     fig, ax = plt.subplots(figsize=(10, 11), facecolor=PAPER)
     ax.set_facecolor(PAPER)
@@ -100,11 +101,11 @@ def draw_bus_map(ranked, boundary, filename: Path):
     ax.set_aspect("equal", adjustable="box")
     ax.axis("off")
     fig.text(.08,.95,"30 DAY MAP CHALLENGE  /  EXPERIMENT",fontsize=10,color=GREEN,weight="bold")
-    fig.text(.08,.912,"The 100 loneliest bus stops?",fontsize=22,color=SLATE,weight="bold")
-    fig.text(.08,.874,"England · distance to the next distinct boarding location",fontsize=10,color=SLATE)
+    fig.text(.08,.912,title,fontsize=22,color=SLATE,weight="bold")
+    fig.text(.08,.874,description,fontsize=10,color=SLATE)
     fig.text(.08,.073,"Gold: top 100 · red: top 10 · distance is straight-line",fontsize=9,color=SLATE)
     fig.text(.08,.048,"NaPTAN (DfT), OS/ONS boundaries · OGL v3.0",fontsize=8,color=MUTED)
-    fig.text(.08,.033,"Provisional geographic ranking; an active stop record does not prove a current bus service",fontsize=7.5,color=MUTED)
+    fig.text(.08,.033,"Provisional geography only: no current services verified · 2022 built-up boundaries where used",fontsize=7.5,color=MUTED)
     filename.parent.mkdir(parents=True,exist_ok=True)
     fig.savefig(filename,dpi=210,facecolor=PAPER,bbox_inches="tight",pad_inches=.12)
     plt.close(fig)
