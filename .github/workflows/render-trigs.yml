@@ -1,0 +1,31 @@
+name: Render Day 01 maps
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/**'
+      - 'pyproject.toml'
+      - '.github/workflows/render-trigs.yml'
+  
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install mapping tools
+        run: python -m pip install -e '.[test]'
+      - name: Unit tests
+        run: python -m pytest -q
+      - name: Render England and North East maps from live sources
+        run: python -m maps.trigs
+      - name: Attach images and tables
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day01-trig-points
+          path: challenges/01-points/outputs/
+          retention-days: 30
