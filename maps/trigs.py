@@ -45,20 +45,60 @@ def parse_pillars(df: pd.DataFrame) -> gpd.GeoDataFrame:
     rows = rows.dropna(subset=["easting", "northing"])
     rows["name"] = rows.get("Trig Name", pd.Series("", index=rows.index)).astype(str).str.strip()
     rows["name"] = rows["name"].mask(rows["name"].eq(""), rows.get("STATION NAME", "Unnamed pillar"))
-    raw_id = rows.get("New Name", pd.Series("", index=rows.index)).astype(str).str.strip()
-    # Stable fallback when OS's newer station identifier is blank.
-    fallback = "OS-" + rows["easting"].round().astype(int).astype(str) + "-" + rows["northing"].round().astype(int).astype(str)
-    rows["station_id"] = raw_id.mask(raw_id.eq(""), fallback)
+    rows["os_reference"] = rows.get("New Name", pd.Series("", index=rows.index)).astype(str).str.strip()
+    # Archive references are not universally unique. Disambiguate different positions
+    # without treating two records of a single physical pillar as two pillars.
+    coords = rows["easting"].map(lambda x: f"{x:.2f}") + "-" + rows["northing"].map(lambda x: f"{x:.2f}")
+    rows["site_coordinate_key"] = coords
+    rows["os_reference"] = rows["os_reference"].mask(rows["os_reference"].eq(""), "OS-" + coords)
+    rows["_destroyed_value"] = rows["DESTROYED MARK INDICATOR"].astype(str).str.strip().str.lower()
+    known_true = {"1", "y", "yes", "true"}
+    known_false = {"0", "n", "no", "false"}
+    rows["_is_destroyed"] = rows["_destroyed_value"].isin(known_true)
+    rows["_is_known"] = rows["_destroyed_value"].isin(known_true | known_false)
+    rows["_levelling_valid"] = pd.to_numeric(rows.get("CLASS OF LEVELLING", pd.Series("1", index=rows.index)), errors="coerce").fillna(0).gt(0)
+    # Unlevelled marks frequently use HEIGHT=0 as a placeholder.
+    rows.loc[~rows["_levelling_valid"] & rows["height_m"].eq(0), "height_m"] = np.nan
+    # Prefer a record with measured height when source duplicates exist.
+    rows = rows.sort_values(["_levelling_valid", "height_m"], ascending=[False, False], na_position="last", kind="stable")
+    group_keys = ["os_reference", "site_coordinate_key"]
+    grouping = rows.groupby(group_keys, dropna=False, sort=False)
+    condition = grouping["_is_destroyed"].agg(["any", "all"])
+    recognised = grouping["_is_known"].all()
+    # If duplicate archive entries contradict each other, treat their status as
+    # uncertain instead of falsely claiming a pillar is standing or destroyed.
+    conflict = condition["any"] & ~condition["all"]
+    condition["unknown"] = (~recognised) | conflict
+    chosen = rows.drop_duplicates(group_keys).copy().set_index(group_keys)
+    chosen["destroyed_in_archive"] = condition["all"] & ~condition["unknown"]
+    chosen["archive_status_unknown"] = condition["unknown"]
+    chosen["destroyed_raw"] = grouping["DESTROYED MARK INDICATOR"].agg(lambda s: ", ".join(sorted(set(s.astype(str)))))
+    rows = chosen.reset_index()
+    repeated_refs = rows["os_reference"].duplicated(keep=False)
+    rows["station_id"] = rows["os_reference"].where(~repeated_refs, rows["os_reference"] + "@" + rows["site_coordinate_key"])
     if rows["station_id"].duplicated().any():
-        raise ValueError("Duplicate OS station identifiers. Review the archive rather than silently merging visits.")
-    destroyed_raw = rows["DESTROYED MARK INDICATOR"].astype(str).str.strip().str.lower()
-    rows["destroyed_in_archive"] = destroyed_raw.isin(["1", "y", "yes", "true"])
-    rows["archive_status_unknown"] = ~destroyed_raw.isin(["0", "1", "y", "n", "yes", "no", "true", "false"])
-    rows["destroyed_raw"] = rows["DESTROYED MARK INDICATOR"]
+        raise ValueError("Unresolvable duplicate trig station IDs after location disambiguation")
     return gpd.GeoDataFrame(
-        rows[["station_id", "name", "easting", "northing", "height_m", "destroyed_in_archive", "archive_status_unknown", "destroyed_raw"]],
+        rows[["station_id", "os_reference", "name", "easting", "northing", "height_m", "destroyed_in_archive", "archive_status_unknown", "destroyed_raw"]],
         geometry=gpd.points_from_xy(rows["easting"], rows["northing"]), crs="EPSG:27700"
     ).reset_index(drop=True)
+
+
+def duplicate_audit(df: pd.DataFrame) -> pd.DataFrame:
+    """Report repeated OS references without misrepresenting each row as a pillar."""
+    pillars = df.loc[df["TYPE OF MARK"].astype(str).str.strip().str.lower().eq("pillar")].copy()
+    counts = pillars.groupby("New Name", dropna=False).size().rename("archive_rows")
+    repeated = counts[counts.gt(1)]
+    if repeated.empty:
+        return pd.DataFrame(columns=["os_reference", "archive_rows", "locations", "destroyed_values"])
+    subset = pillars.loc[pillars["New Name"].isin(repeated.index)]
+    grouped = subset.groupby("New Name", dropna=False)
+    return pd.DataFrame({
+        "os_reference": repeated.index,
+        "archive_rows": repeated.to_numpy(),
+        "locations": grouped.apply(lambda d: len(set(zip(d["EASTING"], d["NORTHING"]))), include_groups=False).reindex(repeated.index).to_numpy(),
+        "destroyed_values": grouped["DESTROYED MARK INDICATOR"].agg(lambda v: ",".join(sorted(set(v.astype(str))))).reindex(repeated.index).to_numpy(),
+    })
 
 
 def in_area(pillars: gpd.GeoDataFrame, area) -> gpd.GeoDataFrame:
@@ -86,8 +126,8 @@ def add_visits(pillars: gpd.GeoDataFrame, visits: pd.DataFrame) -> gpd.GeoDataFr
 
 def rank_extremes(england: gpd.GeoDataFrame, all_gb: gpd.GeoDataFrame, n: int = 10):
     """England-only candidates; nearest surviving-in-archive pillar across all GB."""
-    candidates = england.loc[~england["destroyed_in_archive"]].copy()
-    standing_gb = all_gb.loc[~all_gb["destroyed_in_archive"]]
+    candidates = england.loc[~england["destroyed_in_archive"] & ~england["archive_status_unknown"]].copy()
+    standing_gb = all_gb.loc[~all_gb["destroyed_in_archive"] & ~all_gb["archive_status_unknown"]]
     if len(standing_gb) < 2:
         raise ValueError("Need at least two archive-standing pillars")
     tree = cKDTree(standing_gb[["easting", "northing"]].to_numpy())
@@ -106,7 +146,9 @@ def make_maps(archive: Path | None, output: Path, visits_path: Path | None, *, f
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     os_zip = Path(archive) if archive is not None else download(OS_TRIG_ARCHIVE, Path("data/raw/CompleteTrigArchive.zip"), force=force)
-    all_gb = parse_pillars(archive_rows(os_zip))
+    archive_data = archive_rows(os_zip)
+    duplicate_audit(archive_data).to_csv(output / "archive-duplicate-audit.csv", index=False)
+    all_gb = parse_pillars(archive_data)
     boundaries = regions(Path("data/raw/regions-2025.geojson"), force=force)
     english_geom = boundaries.geometry.union_all()
     ne_geom = boundaries.loc[boundaries.RGN25CD.eq(NORTH_EAST_CODE)].geometry.union_all()
@@ -119,7 +161,7 @@ def make_maps(archive: Path | None, output: Path, visits_path: Path | None, *, f
     england = add_visits(england, visits)
     ne = add_visits(ne, visits)
     highest, isolated = rank_extremes(england, all_gb)
-    export_cols = ["station_id", "name", "height_m", "destroyed_in_archive", "archive_status_unknown", "visited", "easting", "northing"]
+    export_cols = ["station_id", "os_reference", "name", "height_m", "destroyed_in_archive", "archive_status_unknown", "visited", "easting", "northing"]
     england[export_cols].to_csv(output / "england-pillars.csv", index=False)
     ne[export_cols].to_csv(output / "north-east-pillars.csv", index=False)
     highest[export_cols].to_csv(output / "england-top-10-highest.csv", index=False)
