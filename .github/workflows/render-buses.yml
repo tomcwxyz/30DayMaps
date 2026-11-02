@@ -1,0 +1,30 @@
+name: Research England's lonely bus stops
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/buses.py'
+      - 'maps/render.py'
+      - 'maps/common.py'
+      - '.github/workflows/render-buses.yml'
+jobs:
+  calculate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[test]'
+      - name: Validate code
+        run: python -m pytest -q
+      - name: Fetch NaPTAN and calculate England-wide geographical candidates
+        run: python -m maps.buses --output explorations/loneliest-bus-stops/outputs/top100.csv
+      - name: Attach initial findings
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: england-loneliest-bus-stops-geographic-candidates
+          path: explorations/loneliest-bus-stops/outputs/
+          retention-days: 30
