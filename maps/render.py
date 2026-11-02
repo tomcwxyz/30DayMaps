@@ -15,7 +15,16 @@ RED = "#B85B4B"
 MUTED = "#8A9B9B"
 
 
-def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path, *, mode: str, highlighted=None):
+def ranking_measure_label(item, metric: str) -> str:
+    """Explicitly choose height or isolation distance; both fields exist on both rankings."""
+    if metric == "height_m":
+        return f"{item['height_m']:,.1f} m"
+    if metric == "nearest_pillar_km":
+        return f"{item['nearest_pillar_km']:,.1f} km"
+    raise ValueError(f"Unknown ranking measure: {metric}")
+
+
+def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path, *, mode: str, highlighted=None, highlight_metric: str | None = None):
     """Draw one map from the England data or its North East subset."""
     fig, ax = plt.subplots(figsize=(9, 11), facecolor=PAPER)
     ax.set_facecolor(PAPER)
@@ -47,15 +56,16 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
         ax.scatter(lost.easting, lost.northing, s=20, color=RED, alpha=0.84, linewidths=0, zorder=4)
         legend_note = f"{len(lost):,} pillars recorded destroyed in the OS archive"
     elif mode == "highlights":
+        if highlight_metric not in {"height_m", "nearest_pillar_km"}:
+            raise ValueError("Highlight maps require explicit height or isolation metric")
         ax.scatter(active.easting, active.northing, s=5, color=MUTED, alpha=0.38, linewidths=0, zorder=2)
         if highlighted is not None:
             ax.scatter(highlighted.easting, highlighted.northing, color=GOLD, marker="o", s=47,
                        edgecolors=SLATE, linewidths=0.55, zorder=5)
-            fig.text(0.09, 0.82, "ENGLAND TOP TEN", color=GREEN, fontsize=10, weight="bold")
-            units = "km" if "nearest_pillar_km" in highlighted.columns else "m"
+            heading = "ENGLAND TOP TEN · ARCHIVE HEIGHT" if highlight_metric == "height_m" else "ENGLAND TOP TEN · NEAREST PILLAR"
+            fig.text(0.09, 0.82, heading, color=GREEN, fontsize=10, weight="bold")
             for i, (_, item) in enumerate(highlighted.iterrows(), 1):
-                measure = item.nearest_pillar_km if units == "km" else item.height_m
-                line = f"{i:02d}   {str(item['name'])[:21]}  ·  {measure:,.1f}{units}"
+                line = f"{i:02d}   {str(item['name'])[:21]}  ·  {ranking_measure_label(item, highlight_metric)}"
                 fig.text(0.09, 0.799 - (i - 1)*0.024, line, color=SLATE,
                          fontsize=7.7, family="DejaVu Sans")
         legend_note = "Gold: nationally ranked pillars · all other archive-standing pillars in grey"
