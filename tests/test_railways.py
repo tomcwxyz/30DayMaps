@@ -108,10 +108,10 @@ def test_town_labels_are_reprojected_from_geographic_coordinates():
     assert middlesbrough.y > darlington.y
 
 
-def test_label_position_fails_if_town_outside_region():
+def test_out_of_region_town_labels_are_not_plotted():
     from maps.railways import draw_ne_town_labels
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    with pytest.raises(ValueError, match="outside North East boundary"):
-        draw_ne_town_labels(ax, box(0, 0, 100, 100))
+    draw_ne_town_labels(ax, box(0, 0, 100, 100))
+    assert len(ax.texts) == 0
     plt.close(fig)
