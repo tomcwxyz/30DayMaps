@@ -68,3 +68,32 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
     filename.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(filename, dpi=200, facecolor=PAPER, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
+
+
+def draw_bus_map(ranked, boundary, filename: Path):
+    """Map the geographic top 100, with the ten most isolated named in a side key."""
+    fig, ax = plt.subplots(figsize=(10, 11), facecolor=PAPER)
+    ax.set_facecolor(PAPER)
+    gpd.GeoSeries([boundary], crs="EPSG:27700").boundary.plot(ax=ax, color=SLATE, lw=0.75)
+    ax.scatter(ranked.Easting, ranked.Northing, s=18, color=GOLD,
+               edgecolors=SLATE, linewidths=0.45, alpha=0.85, zorder=3)
+    for n, (_, stop) in enumerate(ranked.head(10).iterrows(), 1):
+        ax.scatter([stop.Easting], [stop.Northing], s=72, facecolors=RED,
+                   edgecolors=SLATE, linewidths=0.6, zorder=4)
+        ax.annotate(str(n), (stop.Easting, stop.Northing), xytext=(6, 5),
+                    textcoords="offset points", fontsize=7, weight="bold", color=SLATE)
+    xmin, ymin, xmax, ymax = boundary.bounds
+    dx, dy = xmax - xmin, ymax - ymin
+    ax.set_xlim(xmin-dx*.09, xmax+dx*.09)
+    ax.set_ylim(ymin-dy*.06, ymax+dy*.06)
+    ax.set_aspect("equal", adjustable="box")
+    ax.axis("off")
+    fig.text(.08,.95,"30 DAY MAP CHALLENGE  /  EXPERIMENT",fontsize=10,color=GREEN,weight="bold")
+    fig.text(.08,.912,"The 100 loneliest bus stops?",fontsize=22,color=SLATE,weight="bold")
+    fig.text(.08,.874,"England · distance to the next distinct boarding location",fontsize=10,color=SLATE)
+    fig.text(.08,.073,"Gold: top 100 · red: top 10 · distance is straight-line",fontsize=9,color=SLATE)
+    fig.text(.08,.048,"NaPTAN (DfT), OS/ONS boundaries · OGL v3.0",fontsize=8,color=MUTED)
+    fig.text(.08,.033,"Provisional geographic ranking; an active stop record does not prove a current bus service",fontsize=7.5,color=MUTED)
+    filename.parent.mkdir(parents=True,exist_ok=True)
+    fig.savefig(filename,dpi=210,facecolor=PAPER,bbox_inches="tight",pad_inches=.12)
+    plt.close(fig)
