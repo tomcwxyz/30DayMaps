@@ -71,3 +71,24 @@ def test_title_is_not_passenger_service_claim():
     assert railway_title("england") == "The Railways We Lost"
     with pytest.raises(ValueError):
         railway_title("britain")
+
+def test_north_east_only_mode_does_not_publish_partial_england_map(tmp_path):
+    railway = read_railway_lines(fixture_seq(tmp_path))
+    polygon = box(*railway.total_bounds).buffer(5000)
+    border = gpd.GeoDataFrame({"RGN25CD": ["E12000001", "E12000002"]},
+                              geometry=[polygon, box(0, 0, 100, 100)], crs=27700)
+    boundary_path = tmp_path / "regions.geojson"
+    border.to_file(boundary_path, driver="GeoJSON")
+    out = tmp_path / "outputs"
+    make_maps(fixture_seq(tmp_path), out, boundaries_path=boundary_path, area="north-east")
+    assert (out / "north-east-railways.png").exists()
+    assert not (out / "england-railways.png").exists()
+
+
+def test_railway_source_signature_changes_on_updated_extract(tmp_path):
+    from maps.railways import source_signature
+    p = tmp_path / "rail.osm.pbf"
+    p.write_bytes(b"old")
+    old = source_signature(p)
+    p.write_bytes(b"changed source file")
+    assert source_signature(p) != old
