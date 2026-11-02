@@ -169,8 +169,8 @@ def make_maps(archive: Path | None, output: Path, visits_path: Path | None, *, f
     views = [
         ("england-overview", england, english_geom, "The points that mapped England", "elevation", None, None),
         ("england-visited", england, english_geom, "My trig points", "visited", None, None),
-        ("england-highest", england, english_geom, "The ten highest trig pillars", "highlights", highest, "height_m"),
-        ("england-isolated", england, english_geom, "The ten most isolated trig pillars", "highlights", isolated, "nearest_pillar_km"),
+        ("england-highest", england, english_geom, "The ten highest trig points", "highlights", highest, "height_m"),
+        ("england-isolated", england, english_geom, "The ten most isolated trig points", "highlights", isolated, "nearest_pillar_km"),
         ("england-lost", england, english_geom, "The lost pillars", "lost", None, None),
         ("north-east-detail", ne, ne_geom, "The points that mapped the North East", "elevation", None, None),
     ]
