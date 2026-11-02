@@ -92,3 +92,26 @@ def test_railway_source_signature_changes_on_updated_extract(tmp_path):
     old = source_signature(p)
     p.write_bytes(b"changed source file")
     assert source_signature(p) != old
+
+
+def test_town_labels_are_reprojected_from_geographic_coordinates():
+    from maps.railways import north_east_town_points
+    towns = north_east_town_points().set_index("name")
+    darlington = towns.loc["Darlington"].geometry
+    middlesbrough = towns.loc["Middlesbrough"].geometry
+    assert towns.crs.to_epsg() == 27700
+    assert 426000 < darlington.x < 433000
+    assert 510000 < darlington.y < 520000
+    assert 445000 < middlesbrough.x < 455000
+    assert 515000 < middlesbrough.y < 525000
+    assert middlesbrough.x > darlington.x
+    assert middlesbrough.y > darlington.y
+
+
+def test_label_position_fails_if_town_outside_region():
+    from maps.railways import draw_ne_town_labels
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    with pytest.raises(ValueError, match="outside North East boundary"):
+        draw_ne_town_labels(ax, box(0, 0, 100, 100))
+    plt.close(fig)
