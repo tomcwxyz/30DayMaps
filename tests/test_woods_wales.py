@@ -12,7 +12,7 @@ class FakeResponse:
         pass
 
     def json(self):
-        return {"type": "FeatureCollection", "features": self.features}
+        return {"type": "FeatureCollection", "numberMatched": 4, "features": self.features}
 
 
 class FakeWFS:
@@ -37,7 +37,7 @@ def test_wales_wfs_paginates_and_never_silently_truncates(tmp_path):
     out = fetch_wales(tmp_path / "wales.geojson", page_size=2, session=client)
     data = json.loads(out.read_text())
     assert len(data["features"]) == 4
-    assert client.starts == [0, 2, 4]
+    assert client.starts == [0, 2]
 
 
 class RepeatingWFS:
@@ -55,3 +55,20 @@ def test_repeated_features_rejected_and_partial_file_removed(tmp_path):
         fetch_wales(tmp_path / "wales.geojson", page_size=2, session=RepeatingWFS())
     assert not (tmp_path / "wales.geojson").exists()
     assert not (tmp_path / "wales.geojson.part").exists()
+
+
+class TruncatingWFS:
+    def get(self, url, *, params, timeout):
+        if params["startIndex"]:
+            return FakeResponse([])
+        return FakeResponse([
+            {"type": "Feature", "id": "wood.first",
+             "geometry": {"type": "Polygon",
+                          "coordinates": [[[-4,52],[-3.9,52],[-3.9,52.1],[-4,52]]]}}
+        ])
+
+
+def test_short_wfs_page_does_not_silently_claim_full_inventory(tmp_path):
+    with pytest.raises(RuntimeError, match="stopped before all features"):
+        fetch_wales(tmp_path / "wales.geojson", page_size=2, session=TruncatingWFS())
+    assert not (tmp_path / "wales.geojson").exists()
