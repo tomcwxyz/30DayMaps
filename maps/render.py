@@ -20,16 +20,17 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
     fig, ax = plt.subplots(figsize=(9, 11), facecolor=PAPER)
     ax.set_facecolor(PAPER)
     gpd.GeoSeries([boundary], crs="EPSG:27700").boundary.plot(ax=ax, color=SLATE, lw=0.65, zorder=1)
-    active = points.loc[~points.destroyed_in_archive]
+    active = points.loc[~points.destroyed_in_archive & ~points.archive_status_unknown]
     lost = points.loc[points.destroyed_in_archive]
+    uncertain = points.loc[points.archive_status_unknown]
     if mode == "elevation":
         ax.scatter(active.easting, active.northing, c=active.height_m, cmap="YlGn", vmin=0, vmax=900,
                    s=9, linewidths=0, alpha=0.83, zorder=3, rasterized=True)
         ax.scatter(lost.easting, lost.northing, s=10, edgecolors=RED, facecolors="none", lw=0.5, zorder=4)
-        legend_note = "Height above datum · red rings: recorded destroyed"
+        legend_note = "Archive height (metres) · red rings: recorded destroyed"
     elif mode == "visited":
         ax.scatter(active.easting, active.northing, s=7, color=MUTED, alpha=0.6, linewidths=0, zorder=3)
-        visited = active.loc[active.visited]
+        visited = points.loc[points.visited]
         ax.scatter(visited.easting, visited.northing, s=35, color=GOLD, edgecolors=SLATE,
                    linewidths=0.4, zorder=5, marker="*", label="Recorded as visited")
         ax.scatter(lost.easting, lost.northing, s=8, edgecolors=RED, facecolors="none", lw=0.5)
@@ -50,6 +51,8 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
     else:
         raise ValueError(f"Unknown rendering mode: {mode}")
 
+    if len(uncertain):
+        ax.scatter(uncertain.easting, uncertain.northing, s=16, marker="x", color=GOLD, lw=0.7, zorder=6)
     minx, miny, maxx, maxy = boundary.bounds
     dx, dy = maxx - minx, maxy - miny
     ax.set_xlim(minx - dx * 0.08, maxx + dx * 0.08)
