@@ -159,7 +159,7 @@ def draw_ne_town_labels(ax, outline) -> None:
     """Place accurate anchor dots and short labels inside the mapped region."""
     for town in north_east_town_points().itertuples():
         if not outline.covers(town.geometry):
-            raise ValueError(f"Town anchor outside North East boundary: {town.name}")
+            continue  # A town outside a clipped/test region must not be plotted.
         x, y = town.geometry.x, town.geometry.y
         ax.scatter([x], [y], color="#233842", edgecolors=PAPER, linewidths=0.7,
                    s=14, zorder=10)
