@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import time
 from pathlib import Path
 from typing import Iterable
 
@@ -36,22 +37,47 @@ STYLES = {
 PAPER, SLATE, MUTED = "#F7F5EF", "#20323A", "#A7ADAF"
 
 
+def source_signature(source_pbf: Path) -> dict:
+    """Identify the PBF for cache invalidation without hashing a multi-GB file."""
+    stat = Path(source_pbf).stat()
+    return {
+        "path": str(Path(source_pbf).resolve()),
+        "bytes": stat.st_size,
+        "modified_ns": stat.st_mtime_ns,
+    }
+
+
 def osmium_extract(source_pbf: Path, destination: Path, *, force: bool = False) -> Path:
-    """Retain matching railway ways AND their referenced nodes before GeoJSON export."""
-    if destination.exists() and not force:
-        return destination
+    """Keep railway ways and referenced nodes; reject stale cache from another PBF."""
+    destination = Path(destination)
+    source_pbf = Path(source_pbf)
+    signature = source_signature(source_pbf)
+    metadata = destination.with_suffix(destination.suffix + ".source.json")
+    if destination.exists() and metadata.exists() and not force:
+        try:
+            if json.loads(metadata.read_text(encoding="utf-8")) == signature:
+                print("Using cached railway extract for this exact PBF", flush=True)
+                return destination
+        except (OSError, ValueError):
+            pass
     destination.parent.mkdir(parents=True, exist_ok=True)
     filtered = destination.with_suffix(".railways.osm.pbf")
     selection = "w/railway=" + ",".join(STATUS)
+    begin = time.monotonic()
     try:
+        print(f"Filtering railway ways from {source_pbf.name} ({signature['bytes'] / 1e6:.1f} MB)", flush=True)
         subprocess.run(["osmium", "tags-filter", "--overwrite", "-o", str(filtered),
                         str(source_pbf), selection], check=True)
-        subprocess.run(["osmium", "export", "--overwrite", "--geometry-types=linestring",
-                        "-f", "geojsonseq", "-o", str(destination), str(filtered)], check=True)
+        print(f"Railway-only PBF ready after {time.monotonic()-begin:.1f}s; exporting geometries", flush=True)
+        # Without -u the GeoJSON ID is absent; source OSM way IDs must survive.
+        subprocess.run(["osmium", "export", "--overwrite", "--add-unique-id=type_id",
+                        "--geometry-types=linestring", "-f", "geojsonseq",
+                        "-o", str(destination), str(filtered)], check=True)
+        metadata.write_text(json.dumps(signature), encoding="utf-8")
+        print(f"GeoJSON sequence: {destination.stat().st_size / 1e6:.1f} MB in {time.monotonic()-begin:.1f}s", flush=True)
     finally:
         filtered.unlink(missing_ok=True)
     return destination
-
 
 def read_railway_lines(source: Path) -> gpd.GeoDataFrame:
     """Parse OSM-derived GeoJSON Text Sequences (RFC 8142) into projected lines."""
@@ -150,25 +176,34 @@ def draw_railways(lines: gpd.GeoDataFrame, outline, output: Path, *, kind: str) 
     plt.close(fig)
 
 
-def make_maps(input_geojsonseq: Path, output: Path, *, boundaries_path: Path | None = None) -> None:
+def make_maps(input_geojsonseq: Path, output: Path, *, boundaries_path: Path | None = None,
+              area: str = "both") -> None:
+    if area not in {"both", "north-east"}:
+        raise ValueError("area must be 'both' or 'north-east'")
+    print("Reading extracted railway geometries", flush=True)
     network = read_railway_lines(input_geojsonseq)
+    print(f"Loaded {len(network):,} railway segments", flush=True)
     borders = gpd.read_file(boundaries_path).to_crs(27700) if boundaries_path else regions(Path("data/raw/regions-2025.geojson"))
     if "RGN25CD" not in borders.columns or NORTH_EAST_CODE not in set(borders.RGN25CD):
         raise ValueError("English regional boundary data is missing or unexpected")
-    england_poly = borders.geometry.union_all()
     ne_poly = borders.loc[borders.RGN25CD.eq(NORTH_EAST_CODE)].geometry.union_all()
-    england = clip_lines(network, england_poly)
-    north_east = clip_lines(england, ne_poly)
-    if not len(england) or not len(north_east):
-        raise ValueError("No railway data after geographic clipping; check sources")
+    ne = clip_lines(network, ne_poly)
+    if not len(ne):
+        raise ValueError("No North East railways after clipping; check source coverage")
+    regions_to_render = [("north-east", ne, ne_poly)]
+    if area == "both":
+        england_poly = borders.geometry.union_all()
+        england = clip_lines(network, england_poly)
+        if not len(england):
+            raise ValueError("No England railway data after clipping")
+        regions_to_render.insert(0, ("england", england, england_poly))
     output.mkdir(parents=True, exist_ok=True)
-    for tag, data, polygon in [("england", england, england_poly), ("north-east", north_east, ne_poly)]:
+    for tag, data, polygon in regions_to_render:
+        print(f"Rendering {tag} ({len(data):,} segments)", flush=True)
         draw_railways(data, polygon, output / f"{tag}-railways.png", kind=tag)
         length_summary(data).to_csv(output / f"{tag}-railway-summary.csv", index=False)
         data.to_file(output / f"{tag}-railways.gpkg", layer="railways", driver="GPKG", index=False)
-    print(f"England: {len(england):,} mapped railway segments; North East: {len(north_east):,}")
-    print(f"Outputs written to {output}")
-
+        print(f"Completed {tag} map and GeoPackage", flush=True)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Day 02: disused and lost railways")
@@ -176,13 +211,14 @@ def main() -> None:
     parser.add_argument("--pbf", type=Path, help="An existing England OSM PBF rather than downloading")
     parser.add_argument("--output", type=Path, default=Path("challenges/02-lines/outputs"))
     parser.add_argument("--force", action="store_true", help="Re-download and re-extract OSM data")
+    parser.add_argument("--area", choices=("both", "north-east"), default="both", help="Render both maps or the North East alone")
     args = parser.parse_args()
     if args.input:
         seq = args.input
     else:
         pbf = args.pbf or download(ENGLAND_PBF, Path("data/raw/england-latest.osm.pbf"), force=args.force)
         seq = osmium_extract(pbf, Path("data/processed/england-railways.geojsonseq"), force=args.force)
-    make_maps(seq, args.output)
+    make_maps(seq, args.output, area=args.area)
 
 
 if __name__ == "__main__":
