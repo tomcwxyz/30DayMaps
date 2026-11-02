@@ -48,3 +48,44 @@ def test_archive_zip_reader(tmp_path):
     with ZipFile(path, "w") as z:
         z.writestr("historical.csv", example_rows().to_csv(index=False))
     assert len(archive_rows(path)) == 5
+
+
+def test_same_reference_different_sites_have_distinct_stable_keys():
+    rows = example_rows()
+    alt = rows.iloc[[0]].copy()
+    alt["EASTING"] = "402000"
+    rows = pd.concat([rows, alt], ignore_index=True)
+    result = parse_pillars(rows)
+    duplicate = result[result.os_reference.eq("A")]
+    assert len(duplicate) == 2
+    assert duplicate.station_id.nunique() == 2
+    assert duplicate.station_id.str.startswith("A@").all()
+
+
+def test_exact_duplicate_pillar_rows_not_double_counted():
+    rows = pd.concat([example_rows(), example_rows().iloc[[0]]], ignore_index=True)
+    result = parse_pillars(rows)
+    assert len(result) == 4
+    assert (result.os_reference == "A").sum() == 1
+
+
+def test_contradictory_archive_status_is_uncertain_and_not_ranked():
+    rows = example_rows()
+    alt = rows.iloc[[0]].copy()
+    alt["DESTROYED MARK INDICATOR"] = "1"
+    rows = pd.concat([rows, alt], ignore_index=True)
+    result = parse_pillars(rows)
+    ambiguous = result[result.os_reference.eq("A")].iloc[0]
+    assert ambiguous.archive_status_unknown
+    highest, isolated = rank_extremes(result, result)
+    assert "A" not in set(highest.station_id)
+    assert "A" not in set(isolated.station_id)
+
+
+def test_unlevelled_zero_height_is_not_assumed_zero_elevation():
+    rows = example_rows()
+    rows["CLASS OF LEVELLING"] = "1"
+    rows.loc[0, "CLASS OF LEVELLING"] = "0"
+    rows.loc[0, "HEIGHT"] = "0"
+    result = parse_pillars(rows)
+    assert pd.isna(result[result.station_id.eq("A")].iloc[0].height_m)
