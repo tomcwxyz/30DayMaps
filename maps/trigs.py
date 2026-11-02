@@ -5,7 +5,6 @@ import argparse
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
-import re
 
 import geopandas as gpd
 import numpy as np
@@ -81,7 +80,7 @@ def read_visits(csv_path: Path | None) -> pd.DataFrame:
 
 def add_visits(pillars: gpd.GeoDataFrame, visits: pd.DataFrame) -> gpd.GeoDataFrame:
     result = pillars.merge(visits[["station_id", "visited"]], how="left", on="station_id", validate="one_to_one")
-    result["visited"] = result["visited"].fillna(False).astype(bool)
+    result["visited"] = result["visited"].map(lambda value: bool(value) if pd.notna(value) else False).astype(bool)
     return result
 
 
