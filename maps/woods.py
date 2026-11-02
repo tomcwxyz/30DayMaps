@@ -215,6 +215,13 @@ def publish(sites: gpd.GeoDataFrame, output: Path, *,
             export_gpkg: bool = True) -> list[Path]:
     """Produce only honest, explicitly named geographies."""
     output.mkdir(parents=True, exist_ok=True)
+    # Do not leave apparently current maps from a previous, more complete run.
+    for stale in (
+        "great-britain-ancient-woodland.png", "england-ancient-woodland.png",
+        "north-east-ancient-woodland.png", "north-east-ancient-woodland.gpkg",
+        "north-east-fragmentation.csv", "woodland-summary.csv", "source-manifest.json"
+    ):
+        (output / stale).unlink(missing_ok=True)
     produced = []
     complete = set(sites.nation) == {"England", "Scotland", "Wales"}
     if complete:
