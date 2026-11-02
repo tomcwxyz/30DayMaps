@@ -57,3 +57,23 @@ Planned definitions: (1) furthest from another distinct stop location, (2) furth
 Reusable foundations are minimal: fetching sources, boundary handling, attribution and styling. Individual challenges can switch tools: GeoPandas/Matplotlib first, then MapLibre, QGIS, H3, DuckDB Spatial, 3D, cartograms, animated cartography and unconventional approaches when the question merits it.
 
 Each map should answer a question, credit the data, document its technique, and state what it cannot tell us.
+
+### Second definition of loneliness: distance from mapped settlement
+
+A separate experiment calculates each English stop-location group's **shortest
+straight-line distance to an ONS 2022 built-up area polygon** (not its centre).
+It queries the official [ONS built-up areas 2022 feature service](https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/BUA_2022_GB/FeatureServer/0)
+in batches, caches the GB-wide polygons, and includes Welsh and Scottish areas
+when identifying the nearest area. It also retains GB stop locations as input.
+
+```bash
+python -m maps.settlements
+# Or use a local file downloaded from the ONS:
+python -m maps.settlements --built-up /path/to/built-up-areas.geojson
+```
+
+This is a **different question** from geographical isolation between stops.
+ONS built-up polygons are generalised and omit some small groups of houses,
+so *outside an ONS built-up area* does not mean *nowhere near people*.
+Neither analysis verifies bus service frequency, road access or stop condition.
+Keep both 100-stop lists as **provisional candidates** pending source checks.
