@@ -1,0 +1,86 @@
+name: Day 03 ancient woodland maps
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/woods.py'
+      - 'maps/woods_wales.py'
+      - 'tests/test_woods.py'
+      - 'tests/test_woods_wales.py'
+      - '.github/workflows/render-woods.yml'
+      - 'pyproject.toml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[test]'
+      - run: python -m pytest -q tests/test_woods.py tests/test_woods_wales.py
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install mapping dependencies
+        run: python -m pip install -e '.[test]'
+      - name: Download Natural England baseline ancient woodland inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/raw
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 360 \
+            --speed-time 45 --speed-limit 2048 --progress-bar \
+            'https://environment.data.gov.uk/api/file/download?fileDataSetId=008cdfcf-893b-48f6-937a-3891a2a698c9&fileName=Ancient_Woodland_England.gpkg.zip' \
+            --output data/raw/england-ancient-woodland.gpkg.zip
+          unzip -tqq data/raw/england-ancient-woodland.gpkg.zip
+          ls -lh data/raw/england-ancient-woodland.gpkg.zip
+      - name: Download NatureScot ancient woodland inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 360 \
+            --speed-time 45 --speed-limit 2048 --progress-bar \
+            https://gis-downloads.nature.scot/AWI_SCOTLAND_GPKG_27700.zip \
+            --output data/raw/scotland-ancient-woodland.gpkg.zip
+          unzip -tqq data/raw/scotland-ancient-woodland.gpkg.zip
+          ls -lh data/raw/scotland-ancient-woodland.gpkg.zip
+      - name: Download Wales Ancient Woodland Inventory (2021, NRW)
+        id: wales
+        continue-on-error: true
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: python -u -m maps.woods_wales --output data/raw/wales-ancient-woodland.geojson
+      - name: Render available national inventories, North East and fragmentation
+        env:
+          PYTHONUNBUFFERED: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--england data/raw/england-ancient-woodland.gpkg.zip
+                --scotland data/raw/scotland-ancient-woodland.gpkg.zip)
+          if [[ -s data/raw/wales-ancient-woodland.geojson ]]; then
+            args+=(--wales data/raw/wales-ancient-woodland.geojson)
+          else
+            echo "::warning::Welsh data unavailable: do not publish Great Britain map"
+          fi
+          python -u -m maps.woods "${args[@]}"
+      - name: Upload complete maps, manifest and tabular datasets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day03-ancient-woodland
+          path: challenges/03-polygons/outputs/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Map coverage summary
+        if: success()
+        run: |
+          cat challenges/03-polygons/outputs/source-manifest.json >> "$GITHUB_STEP_SUMMARY"
+          cat challenges/03-polygons/outputs/woodland-summary.csv >> "$GITHUB_STEP_SUMMARY"
