@@ -42,21 +42,40 @@ def load_built_up_areas(cache: Path, *, force: bool = False, chunk_size: int = 3
         ids = sorted(index.get("objectIds") or [])
         if "error" in index or not ids:
             raise RuntimeError(f"ONS BUA query returned no object IDs: {str(index)[:250]}")
+        def get_batch(batch: list[int]) -> list[dict]:
+            """Use POST to avoid giant URLs, bisecting batches rejected upstream."""
+            params = {
+                "objectIds": ",".join(map(str, batch)), "outFields": "BUA22CD,BUA22NM",
+                "returnGeometry": "true", "outSR": "4326", "f": "geojson",
+            }
+            errors = []
+            for method in ("post", "get"):
+                try:
+                    if method == "post":
+                        result = session.post(ONS_BUILT_UP, data=params, timeout=(15, 150))
+                    else:
+                        result = session.get(ONS_BUILT_UP, params=params, timeout=(15, 150))
+                    result.raise_for_status()
+                    payload = result.json()
+                    if "error" in payload:
+                        raise RuntimeError(str(payload["error"]))
+                    features = payload.get("features") or []
+                    if len(features) != len(batch):
+                        raise RuntimeError(f"Incomplete ONS batch: {len(features)} of {len(batch)}")
+                    return features
+                except (requests.RequestException, ValueError, RuntimeError) as error:
+                    errors.append(f"{method}: {error}")
+            if len(batch) == 1:
+                raise RuntimeError(f"ONS BUA request failed for OBJECTID {batch[0]}: {'; '.join(errors)}")
+            middle = len(batch) // 2
+            return get_batch(batch[:middle]) + get_batch(batch[middle:])
+
         features = []
         for start in range(0, len(ids), chunk_size):
             batch = ids[start:start + chunk_size]
-            result = session.get(ONS_BUILT_UP, params={
-                "objectIds": ",".join(map(str, batch)), "outFields": "BUA22CD,BUA22NM",
-                "returnGeometry": "true", "outSR": "4326", "f": "geojson",
-            }, timeout=(15, 150))
-            result.raise_for_status()
-            payload = result.json()
-            if "error" in payload:
-                raise RuntimeError(f"ONS BUA batch failed: {payload['error']}")
-            batch_features = payload.get("features") or []
-            if len(batch_features) != len(batch):
-                raise RuntimeError(f"Incomplete ONS BUA batch: expected {len(batch)}, got {len(batch_features)}")
-            features.extend(batch_features)
+            features.extend(get_batch(batch))
+            if (start // chunk_size + 1) % 10 == 0:
+                print(f"Retrieved {len(features):,}/{len(ids):,} built-up area polygons", flush=True)
         areas = gpd.GeoDataFrame.from_features(features, crs="EPSG:4326")
         if not {"BUA22CD", "BUA22NM"}.issubset(areas.columns):
             raise ValueError("ONS BUA code/name fields are missing")
