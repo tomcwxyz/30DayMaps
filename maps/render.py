@@ -27,7 +27,14 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
         ax.scatter(active.easting, active.northing, c=active.height_m, cmap="YlGn", vmin=0, vmax=900,
                    s=9, linewidths=0, alpha=0.83, zorder=3, rasterized=True)
         ax.scatter(lost.easting, lost.northing, s=10, edgecolors=RED, facecolors="none", lw=0.5, zorder=4)
-        legend_note = "Archive height (metres) · red rings: recorded destroyed"
+        from matplotlib.colors import Normalize
+        from matplotlib.cm import ScalarMappable
+        cax = fig.add_axes([0.10, 0.116, 0.29, 0.012])
+        colorbar = fig.colorbar(ScalarMappable(norm=Normalize(0, 900), cmap="YlGn"), cax=cax, orientation="horizontal")
+        colorbar.set_ticks([0, 300, 600, 900])
+        colorbar.ax.tick_params(labelsize=7, length=2, colors=SLATE)
+        colorbar.outline.set_visible(False)
+        legend_note = "Archive height (m) · red rings: recorded destroyed · orange ×: uncertain"
     elif mode == "visited":
         ax.scatter(active.easting, active.northing, s=7, color=MUTED, alpha=0.6, linewidths=0, zorder=3)
         visited = points.loc[points.visited]
@@ -44,10 +51,14 @@ def draw_trig_map(points: gpd.GeoDataFrame, boundary, title: str, filename: Path
         if highlighted is not None:
             ax.scatter(highlighted.easting, highlighted.northing, color=GOLD, marker="o", s=47,
                        edgecolors=SLATE, linewidths=0.55, zorder=5)
-            for i, (_, p) in enumerate(highlighted.iterrows(), 1):
-                ax.annotate(str(i), (p.easting, p.northing), xytext=(5, 4), textcoords="offset points",
-                            color=SLATE, fontsize=7, fontweight="bold", zorder=6)
-        legend_note = "Gold: top ten · rank names and values in companion CSV"
+            fig.text(0.09, 0.82, "ENGLAND TOP TEN", color=GREEN, fontsize=10, weight="bold")
+            units = "km" if "nearest_pillar_km" in highlighted.columns else "m"
+            for i, (_, item) in enumerate(highlighted.iterrows(), 1):
+                measure = item.nearest_pillar_km if units == "km" else item.height_m
+                line = f"{i:02d}   {str(item['name'])[:21]}  ·  {measure:,.1f}{units}"
+                fig.text(0.09, 0.799 - (i - 1)*0.024, line, color=SLATE,
+                         fontsize=7.7, family="DejaVu Sans")
+        legend_note = "Gold: nationally ranked pillars · all other archive-standing pillars in grey"
     else:
         raise ValueError(f"Unknown rendering mode: {mode}")
 
