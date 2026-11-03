@@ -118,7 +118,7 @@ def draw(access, area, distance_km, bounds, stats, filename):
            f"{stats['largest_island_share']:.0%} of it. {stats['share_of_region_over_5km_from_access_land']:.0%} "
            "of the region is over 5 km from any.")
     footer(fig, [
-        "Distances are straight-line to the nearest access land, not a walk. Footpaths, bridleways and coast path spreading room aren't in this layer.",
+        "Distances are straight-line to the nearest access land. Footpaths, bridleways and coast path not included.",
         "© Natural England copyright. Contains Ordnance Survey data © Crown copyright and database right 2026. OGL v3.0.",
         "ONS Regions December 2025 (North East, including Tees Valley) · CRoW Act 2000 Access Layer via Natural England's ArcGIS service.",
     ])
