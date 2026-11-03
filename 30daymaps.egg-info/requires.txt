@@ -1,0 +1,16 @@
+geopandas>=1.0
+matplotlib>=3.9
+pandas>=2.2
+requests>=2.31
+scipy>=1.13
+
+[motion]
+Pillow>=11
+imageio>=2.36
+imageio-ffmpeg>=0.6
+
+[test]
+pytest>=8
+Pillow>=11
+imageio>=2.36
+imageio-ffmpeg>=0.6

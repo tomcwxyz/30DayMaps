@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Footprints Print Maker</title>
+<meta name="description" content="Make a print of any place drawn as buildings and nothing else. OpenStreetMap data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a drafting-table split. Controls on the left like a plan chest, the sheet on the right. */
+:root {
+  --bg: #EEF0EE;
+  --panel: #F8F9F7;
+  --fg: #1B2528;
+  --muted: #5F6D70;
+  --line: #CDD4D2;
+  --accent: #2E6B5A;
+  --accent-fg: #FFFFFF;
+  --sheet-shadow: rgba(20, 35, 38, .18);
+  --warn: #9A5B1E;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121A1C; --panel: #182225; --fg: #E6ECEA; --muted: #93A3A5; --line: #2C3A3D;
+    --accent: #6FB29C; --accent-fg: #0E1715; --sheet-shadow: rgba(0,0,0,.5); --warn: #E0A260;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121A1C; --panel: #182225; --fg: #E6ECEA; --muted: #93A3A5; --line: #2C3A3D;
+  --accent: #6FB29C; --accent-fg: #0E1715; --sheet-shadow: rgba(0,0,0,.5); --warn: #E0A260;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--display);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+.app { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; align-items: start; }
+@media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font-weight: 800; font-size: 26px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 18px; min-width: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+legend { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; padding: 0; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+input[type=text], input[type=search], select, textarea {
+  font: 15px/1.3 var(--display); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; min-width: 0;
+}
+textarea { resize: vertical; min-height: 54px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.search { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+button {
+  font: 600 14px/1 var(--display); border-radius: 6px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: progress; }
+.results { display: grid; gap: 4px; }
+.results button { text-align: left; font-weight: 500; line-height: 1.3; padding: 8px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 6px 10px; font-weight: 500; font-size: 13px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; padding: 0; position: relative; border: 2px solid var(--line); }
+.swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.swatch span { position: absolute; inset: 12px; border-radius: 50%; }
+.range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.range output { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: right; color: var(--fg); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
+.status.warn { color: var(--warn); }
+.exports { display: grid; gap: 8px; }
+.exports .row button { width: 100%; }
+.stage { min-width: 0; display: grid; gap: 10px; justify-items: center; position: sticky; top: 16px; }
+.sheet { max-width: 100%; box-shadow: 0 10px 40px var(--sheet-shadow); background: #fff; }
+.sheet canvas { display: block; width: 100%; height: auto; }
+.meta { font: 12px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.credit { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
+.credit a { color: inherit; }
+@media (prefers-reduced-motion: no-preference) { button { transition: background .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Footprints Print Maker</h1>
+    <p class="lede">Any place, drawn as buildings and nothing else.</p>
+  </header>
+
+  <form class="panel" id="controls" autocomplete="off">
+    <fieldset>
+      <legend>Place</legend>
+      <div class="search">
+        <input type="search" id="q" placeholder="Search a town, street or postcode" aria-label="Search for a place">
+        <button type="submit" id="find">Find</button>
+      </div>
+      <div class="results" id="results" aria-live="polite"></div>
+      <div class="chips" id="presets" aria-label="Example places"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Words</legend>
+      <label for="title">Title<input type="text" id="title" value="Newcastle and Gateshead"></label>
+      <label for="subtitle">Subtitle<textarea id="subtitle" rows="2">Every building and nothing else. Name the gaps!</textarea></label>
+      <label for="kicker">Small line above the title (optional)<input type="text" id="kicker" value=""></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Sheet</legend>
+      <div class="row">
+        <label for="paper">Paper
+          <select id="paper">
+            <option value="A4">A4</option><option value="A3" selected>A3</option><option value="A2">A2</option>
+            <option value="A1">A1</option><option value="50x70">50 × 70 cm</option><option value="square">Square 30 cm</option>
+          </select>
+        </label>
+        <label for="orient">Orientation
+          <select id="orient"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+        </label>
+      </div>
+      <label for="width">Ground width shown
+        <span class="range"><input type="range" id="width" min="0.5" max="20" step="0.5" value="9"><output id="widthOut" for="width">9 km</output></span>
+      </label>
+      <div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Colours</div>
+        <div class="swatches" id="themes" role="group" aria-label="Colour theme"></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="exports">
+      <legend>Download</legend>
+      <button type="button" class="primary" id="load">Draw buildings</button>
+      <div class="status" id="status" role="status"></div>
+      <label for="dpi">Image resolution
+        <select id="dpi">
+          <option value="web">Web (2000 px long edge)</option>
+          <option value="150">Print, 150 dpi</option>
+          <option value="300" selected>Print, 300 dpi</option>
+        </select>
+      </label>
+      <div class="row">
+        <button type="button" id="png" disabled>PNG image</button>
+        <button type="button" id="svg" disabled>SVG for print</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <section class="stage" aria-label="Preview">
+    <div class="sheet" id="sheet"><canvas id="preview" width="600" height="848"></canvas></div>
+    <div class="meta" id="meta">Example sheet. Pick a place, then Draw buildings.</div>
+  </section>
+
+  <p class="credit">Buildings and search from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> (ODbL), via the Overpass API and Nominatim. The credit line on each print is required by the licence. Big areas can take a minute to load.</p>
+</div>
+
+<script>
+"use strict";
+const MM_PER_IN = 25.4, PT_TO_MM = 25.4 / 72;
+const PAPERS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841], "50x70": [500, 700], square: [300, 300] };
+const THEMES = {
+  paper: { ink: "#1E353B", bg: "#F7F6F0", muted: "#8A9B9B", label: "Paper" },
+  night: { ink: "#EDE6D6", bg: "#17252B", muted: "#7F9399", label: "Night" },
+  blue:  { ink: "#F1F5F7", bg: "#1F4A66", muted: "#9DB5C4", label: "Blueprint" },
+  ink:   { ink: "#111111", bg: "#FFFFFF", muted: "#888888", label: "Ink" },
+};
+const PRESETS = [
+  ["Newcastle", 54.9738, -1.6132, "Newcastle and Gateshead", 9],
+  ["York", 53.9590, -1.0815, "York", 6], ["Durham", 54.7761, -1.5733, "Durham", 4],
+  ["Edinburgh", 55.9533, -3.1883, "Edinburgh", 7], ["Manchester", 53.4794, -2.2453, "Manchester", 8],
+  ["Barcelona", 41.3910, 2.1650, "Barcelona", 4], ["Venice", 45.4380, 12.3358, "Venice", 4],
+  ["Manhattan", 40.7580, -73.9855, "Manhattan", 6],
+];
+const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+const CREDIT = "Buildings © OpenStreetMap contributors, ODbL · openstreetmap.org/copyright";
+
+const state = { lat: 54.9738, lon: -1.6132, place: "Newcastle and Gateshead", theme: "paper", rings: null, loaded: null };
+const $ = id => document.getElementById(id);
+
+// ---- Layout (mirrors maps/prints.py so web and print agree) -------------------
+function paperMM() {
+  const [w, h] = PAPERS[$("paper").value];
+  return $("orient").value === "landscape" ? [h, w] : [w, h];
+}
+function layout(pw, ph, hasKicker) {
+  const margin = 0.055 * Math.min(pw, ph);
+  const titlePt = Math.min(pw, ph) * 0.13;
+  const head = (titlePt + titlePt * 0.42 * 2.2 + (hasKicker ? titlePt * 0.32 * 1.6 : 0)) * PT_TO_MM + margin * 0.6;
+  const foot = margin * 0.9;
+  const map = { x: margin, y: margin + head, w: pw - 2 * margin, h: ph - (2 * margin + head + foot * 0.6) };
+  return { margin, titlePt, map };
+}
+function groundWindow(map) {
+  const wm = parseFloat($("width").value) * 1000;
+  return { w: wm, h: wm * map.h / map.w };
+}
+
+// ---- Projection: local equirectangular, metres from the centre (fine at city scale)
+function projector(lat0, lon0) {
+  const kx = 111320 * Math.cos(lat0 * Math.PI / 180), ky = 110540;
+  return (lon, lat) => [(lon - lon0) * kx, (lat - lat0) * ky];
+}
+function bboxFor(lat0, lon0, w, h) {
+  const kx = 111320 * Math.cos(lat0 * Math.PI / 180), ky = 110540;
+  return { s: lat0 - h / 2 / ky, n: lat0 + h / 2 / ky, w: lon0 - w / 2 / kx, e: lon0 + w / 2 / kx };
+}
+
+// ---- OpenStreetMap ----------------------------------------------------------
+function assembleRings(lines) {
+  // Join member ways end to end into closed rings (multipolygon outers/inners).
+  const rings = [], pool = lines.map(l => l.slice());
+  while (pool.length) {
+    let ring = pool.shift(), guard = 0;
+    while (!same(ring[0], ring[ring.length - 1]) && guard++ < 1000) {
+      const end = ring[ring.length - 1];
+      const i = pool.findIndex(l => same(l[0], end) || same(l[l.length - 1], end));
+      if (i < 0) break;
+      const next = pool.splice(i, 1)[0];
+      ring = ring.concat(same(next[0], end) ? next.slice(1) : next.reverse().slice(1));
+    }
+    if (ring.length >= 4 && same(ring[0], ring[ring.length - 1])) rings.push(ring);
+  }
+  return rings;
+}
+function same(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+
+function parseOverpass(json, project) {
+  const out = [];
+  for (const el of json.elements || []) {
+    if (el.type === "way" && el.geometry) {
+      const pts = el.geometry.map(p => [p.lon, p.lat]);
+      if (pts.length >= 4 && same(pts[0], pts[pts.length - 1])) out.push(pts.map(p => project(...p)));
+    } else if (el.type === "relation" && el.members) {
+      const lines = el.members.filter(m => m.type === "way" && m.geometry && (m.role === "outer" || m.role === "inner"))
+        .map(m => m.geometry.map(p => [p.lon, p.lat]));
+      for (const r of assembleRings(lines)) out.push(r.map(p => project(...p)));  // even-odd fill handles holes
+    }
+  }
+  return out;
+}
+
+async function fetchBuildings(bb) {
+  const b = [bb.s, bb.w, bb.n, bb.e].map(v => v.toFixed(6)).join(",");
+  const q = `[out:json][timeout:180];(way["building"](${b});relation["building"]["type"="multipolygon"](${b}););out geom;`;
+  let lastErr;
+  for (const url of OVERPASS) {
+    try {
+      const r = await fetch(url, { method: "POST", body: new URLSearchParams({ data: q }) });
+      if (!r.ok) throw new Error(r.status === 429 ? "busy (too many requests)" : `error ${r.status}`);
+      return await r.json();
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+// ---- Drawing ----------------------------------------------------------------
+function buildingPath(rings) {
+  const p = new Path2D();
+  for (const r of rings) {
+    p.moveTo(r[0][0], -r[0][1]);
+    for (let i = 1; i < r.length; i++) p.lineTo(r[i][0], -r[i][1]);
+    p.closePath();
+  }
+  return p;
+}
+
+function wrapLines(ctx, text, maxW) {
+  const words = text.split(/\s+/).filter(Boolean), lines = [];
+  let line = "";
+  for (const w of words) {
+    const t = line ? line + " " + w : w;
+    if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function words() {
+  return { title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), kicker: $("kicker").value.trim() };
+}
+
+// Draw the whole sheet onto a canvas at `pxPerMM`.
+function drawSheet(canvas, pxPerMM, path) {
+  const [pw, ph] = paperMM(), t = THEMES[state.theme], w = words();
+  const lay = layout(pw, ph, !!w.kicker);
+  canvas.width = Math.round(pw * pxPerMM); canvas.height = Math.round(ph * pxPerMM);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(pxPerMM, 0, 0, pxPerMM, 0, 0);  // work in millimetres
+  ctx.fillStyle = t.bg; ctx.fillRect(0, 0, pw, ph);
+
+  // Map
+  const m = lay.map, g = groundWindow(m), s = m.w / g.w;   // mm per metre
+  ctx.save();
+  ctx.beginPath(); ctx.rect(m.x, m.y, m.w, m.h); ctx.clip();
+  ctx.translate(m.x + m.w / 2, m.y + m.h / 2); ctx.scale(s, s);
+  ctx.fillStyle = t.ink;
+  if (path) ctx.fill(path, "evenodd");
+  else drawPlaceholder(ctx, g, t);
+  ctx.restore();
+
+  // Words
+  const x = lay.margin; let y = lay.margin; const pt = lay.titlePt;
+  ctx.textBaseline = "top";
+  if (w.kicker) {
+    ctx.fillStyle = t.muted; ctx.font = `700 ${pt * 0.32 * PT_TO_MM}px Archivo, Arial, sans-serif`;
+    ctx.fillText(w.kicker.toUpperCase(), x, y); y += pt * 0.32 * 1.6 * PT_TO_MM;
+  }
+  ctx.fillStyle = t.ink; ctx.font = `800 ${pt * PT_TO_MM}px Archivo, Arial, sans-serif`;
+  ctx.fillText(w.title, x, y); y += pt * 1.25 * PT_TO_MM;
+  if (w.subtitle) {
+    ctx.font = `400 ${pt * 0.42 * PT_TO_MM}px Archivo, Arial, sans-serif`;
+    for (const line of wrapLines(ctx, w.subtitle, pw - 2 * x).slice(0, 2)) { ctx.fillText(line, x, y); y += pt * 0.42 * 1.3 * PT_TO_MM; }
+  }
+  ctx.fillStyle = t.muted; ctx.textBaseline = "bottom";
+  ctx.font = `400 ${Math.max(5.5, pt * 0.17) * PT_TO_MM}px Archivo, Arial, sans-serif`;
+  ctx.fillText(CREDIT, x, ph - lay.margin * 0.55);
+  return { lay, g };
+}
+
+// A quiet example block pattern so the sheet reads as a sheet before any data loads.
+function drawPlaceholder(ctx, g, t) {
+  ctx.globalAlpha = 0.18;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let y = -g.h / 2; y < g.h / 2; y += 90) for (let x = -g.w / 2; x < g.w / 2; x += 70) {
+    if (rnd() < 0.25) continue;
+    ctx.fillRect(x + rnd() * 10, -y - 40 - rnd() * 10, 40 + rnd() * 20, 24 + rnd() * 30);
+  }
+  ctx.globalAlpha = 1;
+}
+
+let path = null;
+function render() {
+  const sheet = $("sheet"), maxW = Math.min(sheet.parentElement.clientWidth, 900);
+  const [pw, ph] = paperMM();
+  const maxH = Math.max(420, window.innerHeight - 120);
+  const pxPerMM = Math.min(maxW / pw, maxH / ph) * (window.devicePixelRatio || 1);
+  const c = $("preview");
+  const { g } = drawSheet(c, pxPerMM, needsReload() ? null : path);
+  c.style.width = (c.width / (window.devicePixelRatio || 1)) + "px";
+  sheet.style.width = c.style.width;
+  $("widthOut").textContent = `${(+$("width").value).toFixed(1)} km`;
+  $("meta").textContent = path && !needsReload()
+    ? `${state.place} · ${(g.w / 1000).toFixed(1)} × ${(g.h / 1000).toFixed(1)} km · ${state.rings.length.toLocaleString("en-GB")} buildings`
+    : `${state.place} · ${(g.w / 1000).toFixed(1)} × ${(g.h / 1000).toFixed(1)} km · press Draw buildings`;
+  const ready = path && !needsReload();
+  $("png").disabled = $("svg").disabled = !ready;
+}
+
+function currentWindow() {
+  const [pw, ph] = paperMM(), lay = layout(pw, ph, !!words().kicker);
+  return groundWindow(lay.map);
+}
+// Buildings already fetched still serve any smaller window at the same centre.
+function needsReload() {
+  const L = state.loaded, g = currentWindow();
+  return !state.rings || !L || L.lat !== state.lat || L.lon !== state.lon || g.w > L.w + 1 || g.h > L.h + 1;
+}
+
+async function load() {
+  const [pw, ph] = paperMM(), lay = layout(pw, ph, !!words().kicker), g = groundWindow(lay.map);
+  const bb = bboxFor(state.lat, state.lon, g.w * 1.02, g.h * 1.02);
+  setStatus("Fetching buildings from OpenStreetMap…");
+  $("load").disabled = true;
+  const t0 = performance.now();
+  try {
+    const json = await fetchBuildings(bb);
+    state.rings = parseOverpass(json, projector(state.lat, state.lon));
+    state.loaded = { lat: state.lat, lon: state.lon, w: g.w * 1.02, h: g.h * 1.02 };
+    path = buildingPath(state.rings);
+    if (!state.rings.length) setStatus("No buildings mapped here. Try a wider area or another place.", true);
+    else setStatus(`Loaded ${state.rings.length.toLocaleString("en-GB")} buildings in ${((performance.now() - t0) / 1000).toFixed(0)} s.`);
+  } catch (e) {
+    setStatus(`Couldn't load buildings: ${e.message}. The Overpass server may be busy; try again in a minute or use a smaller width.`, true);
+  } finally {
+    $("load").disabled = false; render();
+  }
+}
+
+function setStatus(text, warn) { const s = $("status"); s.textContent = text; s.classList.toggle("warn", !!warn); }
+
+// ---- Exports ----------------------------------------------------------------
+function fileStem() {
+  const slug = (state.place || "place").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${slug}-${$("paper").value.toLowerCase()}${$("orient").value === "landscape" ? "-landscape" : ""}`;
+}
+function save(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function exportPNG() {
+  const [pw, ph] = paperMM(), choice = $("dpi").value;
+  const pxPerMM = choice === "web" ? 2000 / Math.max(pw, ph) : +choice / MM_PER_IN;
+  const pixels = pw * ph * pxPerMM * pxPerMM;
+  if (pixels > 160e6) { setStatus("That's too big for a browser image. Choose 150 dpi or use the SVG.", true); return; }
+  setStatus("Rendering image…");
+  await new Promise(r => setTimeout(r, 30));
+  const c = document.createElement("canvas");
+  try {
+    drawSheet(c, pxPerMM, path);
+    const blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("canvas too large")), "image/png"));
+    save(blob, `${fileStem()}-${choice === "web" ? "web" : choice + "dpi"}.png`);
+    setStatus(`Saved ${c.width} × ${c.height} px PNG.`);
+  } catch (e) {
+    setStatus("This browser couldn't make an image that big (common on phones). Try 150 dpi, or the SVG.", true);
+  }
+}
+function exportSVG() {
+  const [pw, ph] = paperMM(), t = THEMES[state.theme], w = words(), lay = layout(pw, ph, !!w.kicker);
+  const m = lay.map, g = groundWindow(m), s = m.w / g.w, cx = m.x + m.w / 2, cy = m.y + m.h / 2;
+  const f = v => (Math.round(v * 100) / 100).toString();
+  const d = [];
+  for (const r of state.rings) {
+    d.push("M" + r.map(p => f(cx + p[0] * s) + " " + f(cy - p[1] * s)).join("L") + "Z");
+  }
+  const esc = x => x.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const pt = lay.titlePt, fam = "Archivo, Helvetica, Arial, sans-serif";
+  let y = lay.margin, text = "";
+  if (w.kicker) { text += `<text x="${f(lay.margin)}" y="${f(y)}" dominant-baseline="hanging" font-family="${fam}" font-weight="700" font-size="${f(pt * 0.32 * PT_TO_MM)}" fill="${t.muted}">${esc(w.kicker.toUpperCase())}</text>`; y += pt * 0.32 * 1.6 * PT_TO_MM; }
+  text += `<text x="${f(lay.margin)}" y="${f(y)}" dominant-baseline="hanging" font-family="${fam}" font-weight="800" font-size="${f(pt * PT_TO_MM)}" fill="${t.ink}">${esc(w.title)}</text>`; y += pt * 1.25 * PT_TO_MM;
+  if (w.subtitle) {
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = `400 ${pt * 0.42 * PT_TO_MM}px Archivo, Arial, sans-serif`;
+    for (const line of wrapLines(ctx, w.subtitle, pw - 2 * lay.margin).slice(0, 2)) {
+      text += `<text x="${f(lay.margin)}" y="${f(y)}" dominant-baseline="hanging" font-family="${fam}" font-size="${f(pt * 0.42 * PT_TO_MM)}" fill="${t.ink}">${esc(line)}</text>`; y += pt * 0.42 * 1.3 * PT_TO_MM;
+    }
+  }
+  text += `<text x="${f(lay.margin)}" y="${f(ph - lay.margin * 0.55)}" font-family="${fam}" font-size="${f(Math.max(5.5, pt * 0.17) * PT_TO_MM)}" fill="${t.muted}">${esc(CREDIT)}</text>`;
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${pw}mm" height="${ph}mm" viewBox="0 0 ${pw} ${ph}">
+<rect width="${pw}" height="${ph}" fill="${t.bg}"/>
+<clipPath id="map"><rect x="${f(m.x)}" y="${f(m.y)}" width="${f(m.w)}" height="${f(m.h)}"/></clipPath>
+<path clip-path="url(#map)" fill="${t.ink}" fill-rule="evenodd" d="${d.join("")}"/>
+${text}
+</svg>`;
+  save(new Blob([svg], { type: "image/svg+xml" }), `${fileStem()}.svg`);
+  setStatus("Saved SVG. It scales to any size; the printer needs the Archivo font or will substitute a similar one.");
+}
+
+// ---- Search -----------------------------------------------------------------
+async function search(ev) {
+  ev.preventDefault();
+  const q = $("q").value.trim(); if (!q) return;
+  const box = $("results"); box.textContent = "Searching…";
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "en-GB" } });
+    const hits = await r.json();
+    box.textContent = "";
+    if (!hits.length) { box.textContent = "No matches. Try adding the town or country."; return; }
+    for (const h of hits) {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = h.display_name;
+      b.addEventListener("click", () => { choose(+h.lat, +h.lon, h.name || h.display_name.split(",")[0]); box.textContent = ""; });
+      box.appendChild(b);
+    }
+  } catch { box.textContent = "Search isn't reachable right now. Try an example place below."; }
+}
+function choose(lat, lon, name, widthKm) {
+  state.lat = lat; state.lon = lon; state.place = name;
+  $("title").value = name;
+  if (widthKm) $("width").value = widthKm;
+  path = null; state.rings = null;
+  setStatus("Press Draw buildings to load this place.");
+  render();
+}
+
+// ---- Wire up ----------------------------------------------------------------
+for (const [label, lat, lon, title, wkm] of PRESETS) {
+  const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+  b.addEventListener("click", () => choose(lat, lon, title, wkm));
+  $("presets").appendChild(b);
+}
+for (const [key, t] of Object.entries(THEMES)) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "swatch"; b.title = t.label; b.setAttribute("aria-label", t.label);
+  b.style.background = t.bg; b.setAttribute("aria-pressed", key === state.theme);
+  const dot = document.createElement("span"); dot.style.background = t.ink; b.appendChild(dot);
+  b.addEventListener("click", () => {
+    state.theme = key;
+    document.querySelectorAll(".swatch").forEach(s => s.setAttribute("aria-pressed", s === b));
+    render();
+  });
+  $("themes").appendChild(b);
+}
+$("controls").addEventListener("submit", search);
+$("load").addEventListener("click", load);
+$("png").addEventListener("click", exportPNG);
+$("svg").addEventListener("click", exportSVG);
+["title", "subtitle", "kicker", "paper", "orient", "width"].forEach(id => $(id).addEventListener("input", render));
+window.addEventListener("resize", render);
+(document.fonts ? document.fonts.load('800 20px "Archivo"').then(() => document.fonts.ready) : Promise.resolve()).then(render);
+render();
+</script>
+</body>
+</html>

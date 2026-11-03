@@ -1,0 +1,124 @@
+name: Footprints print maker
+on:
+  workflow_dispatch:
+    inputs:
+      place:
+        description: "Preset place (see maps/print_places.json), or leave blank and give lat/lon"
+        default: "newcastle"
+      lat:
+        description: "Latitude of the centre (overrides the preset)"
+        default: ""
+      lon:
+        description: "Longitude of the centre (overrides the preset)"
+        default: ""
+      name:
+        description: "Place name for file names (needed with lat/lon)"
+        default: ""
+      title:
+        description: "Title (blank = place name)"
+        default: ""
+      subtitle:
+        description: "Subtitle (blank = preset's or 'Every building and nothing else.')"
+        default: ""
+      paper:
+        description: "Paper size"
+        type: choice
+        options: [A3, A4, A2, A1, 50x70, square]
+        default: A3
+      landscape:
+        description: "Landscape"
+        type: boolean
+        default: false
+      width_km:
+        description: "Ground width shown, km (blank = 9 or the preset's)"
+        default: ""
+      theme:
+        description: "Colour theme"
+        type: choice
+        options: [paper, night, blue, ink]
+        default: paper
+      source:
+        description: "Data: auto = OS in Great Britain, OpenStreetMap elsewhere"
+        type: choice
+        options: [auto, os, osm]
+        default: auto
+  push:
+    branches: ["feat/day03-four-more-polygons"]
+    paths: ["maps/prints.py", "maps/print_places.json", ".github/workflows/prints.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[test]'
+      - run: python -m pytest -q tests/test_prints.py
+
+  make:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pushes render three examples; a manual run renders just the form's choice.
+        example: ${{ github.event_name == 'workflow_dispatch' && fromJSON('["form"]') || fromJSON('["newcastle","barcelona","york"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e '.[test]'
+      - name: Make the print
+        env:
+          EXAMPLE: ${{ matrix.example }}
+          PLACE: ${{ inputs.place }}
+          LAT: ${{ inputs.lat }}
+          LON: ${{ inputs.lon }}
+          NAME: ${{ inputs.name }}
+          TITLE: ${{ inputs.title }}
+          SUBTITLE: ${{ inputs.subtitle }}
+          PAPER: ${{ inputs.paper }}
+          LANDSCAPE: ${{ inputs.landscape }}
+          WIDTH_KM: ${{ inputs.width_km }}
+          THEME: ${{ inputs.theme }}
+          SOURCE: ${{ inputs.source }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          case "$EXAMPLE" in
+            newcastle) args=(--place newcastle --title "Newcastle and Gateshead") ;;
+            barcelona) args=(--place barcelona --paper square --theme night --width-km 4 --subtitle "The Eixample grid") ;;
+            york)      args=(--place york --paper A3 --landscape --theme blue --width-km 6) ;;
+            form)
+              [[ -n "$PLACE" ]] && args+=(--place "$PLACE")
+              [[ -n "$LAT" ]] && args+=(--lat "$LAT")
+              [[ -n "$LON" ]] && args+=(--lon "$LON")
+              [[ -n "$NAME" ]] && args+=(--name "$NAME")
+              [[ -n "$TITLE" ]] && args+=(--title "$TITLE")
+              [[ -n "$SUBTITLE" ]] && args+=(--subtitle "$SUBTITLE")
+              [[ -n "$WIDTH_KM" ]] && args+=(--width-km "$WIDTH_KM")
+              [[ "$LANDSCAPE" == "true" ]] && args+=(--landscape)
+              args+=(--paper "$PAPER" --theme "$THEME" --source "$SOURCE") ;;
+          esac
+          python -u -m maps.prints "${args[@]}"
+      - name: Small previews in the log
+        if: always()
+        run: |
+          python - <<'PY'
+          import base64, io, pathlib
+          from PIL import Image
+          for p in sorted(pathlib.Path("prints").rglob("*-web.png")):
+              im = Image.open(p).convert("RGB"); im.thumbnail((1200, 1200))
+              buf = io.BytesIO(); im.save(buf, "JPEG", quality=72)
+              b = base64.b64encode(buf.getvalue()).decode()
+              print(f"PREVIEW-BEGIN {p}"); print("\n".join(b[i:i+400] for i in range(0, len(b), 400))); print("PREVIEW-END")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: print-${{ matrix.example == 'form' && 'custom' || matrix.example }}-${{ github.run_number }}
+          path: prints/
+          retention-days: 30
