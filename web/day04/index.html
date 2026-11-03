@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101923">
+  <meta name="description" content="Day 04 of 30DayMaps: where starlings gather. Explore a source-labelled map of published murmuration sites, then watch an explicitly simulated flock.">
+  <title>Where the sky gathers · 30DayMaps / Day 04</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the map</a>
+  <main id="main">
+    <header class="masthead page-pad">
+      <div class="topline"><span>30 DAY MAPS / 2026</span><span>DAY 04 — CLUSTERS</span></div>
+      <div class="headline"><p class="eyebrow">An atlas of collective movement</p><h1>Where the sky <em>gathers.</em></h1>
+      <p class="intro">Each winter, thousands of starlings gather into restless, shifting clouds before disappearing into the reeds. The spectacle is called a <em>murmuration.</em></p></div>
+      <div class="sky-decoration" aria-hidden="true"><span>⋅</span><span>·</span><span>﹒</span><span>·</span><span>⋅</span></div>
+    </header>
+
+    <section class="atlas page-pad" aria-labelledby="atlas-title">
+      <div class="section-heading">
+        <div><span class="section-number">01 / THE GEOGRAPHY</span><h2 id="atlas-title">Where do they gather?</h2></div>
+        <p>Explore publicly documented murmuration sites. Move the map, zoom in, or change the distance at which neighbouring locations group together.</p>
+      </div>
+      <div class="map-layout">
+        <div class="map-stage">
+          <div id="map" aria-label="Interactive map of example UK murmuration locations" role="region"></div>
+          <div class="map-legend"><span class="legend-dot"></span>Published example site <span class="legend-cluster">3</span>Grouped nearby sites</div>
+          <p class="map-fallback" id="mapFallback" hidden>Unable to load the basemap. The site list remains available.</p>
+        </div>
+        <aside class="map-panel">
+          <div class="panel-top"><span class="mono">ILLUSTRATIVE SITE INDEX</span><strong id="siteCount">21</strong></div>
+          <p>These are <strong>published examples of places associated with murmurations</strong>, not all UK roosts and not reports that birds are present tonight. Pins indicate approximate public site centres.</p>
+          <label class="range-label" for="radius">Cluster distance <output id="radiusValue">65 km</output></label>
+          <input id="radius" type="range" min="10" max="130" step="5" value="65">
+          <p class="note">Clustering groups the listed places by distance. It does <em>not</em> measure birds, populations or observations.</p>
+          <label for="siteFilter" class="mono">FIND A SITE</label>
+          <input id="siteFilter" type="search" placeholder="Place or county…" autocomplete="off">
+          <ul id="siteList" class="site-list" aria-label="Published sites"></ul>
+          <div class="source-note">Sources: <a href="https://www.woodlandtrust.org.uk/blog/starling-murmurations/" target="_blank" rel="noopener noreferrer">Woodland Trust</a>, <a href="https://www.nhm.ac.uk/discover/spot-a-starling-murmuration-this-winter.html" target="_blank" rel="noopener noreferrer">Natural History Museum</a>, <a href="https://www.rspb.org.uk/days-out/reserves/ham-wall/the-starling-roost" target="_blank" rel="noopener noreferrer">RSPB</a>, and <a href="https://www.itv.com/news/2025-12-04/why-do-starlings-make-murmurations-in-the-winter" target="_blank" rel="noopener noreferrer">Wildlife Trust site list reported by ITV</a>.</div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="movement page-pad" aria-labelledby="movement-title">
+      <div class="section-heading">
+        <div><span class="section-number">02 / THE MOVEMENT</span><h2 id="movement-title">When individuals become a flock.</h2></div>
+        <p>A generative study of cohesion, separation and alignment: three simple rules that can give rise to astonishing collective motion.</p>
+      </div>
+      <div class="movement-stage">
+        <canvas id="flock" role="img" aria-label="An animated, simulated flock of tiny birds, gathering and changing shape"></canvas>
+        <div class="movement-overlay"><span class="mono">SIMULATED FLOCK · NOT TRACKED BIRDS</span><div><strong id="phaseName">Scattered</strong><p id="phaseDescription">Small groups travel towards the roost.</p></div></div>
+        <div class="movement-controls"><button id="playPause" type="button" aria-pressed="false">Pause motion</button>
+          <label for="duskProgress">Towards dusk <output id="duskValue">0%</output></label>
+          <input type="range" id="duskProgress" min="0" max="100" value="0" step="1">
+          <button id="restart" type="button">Replay</button>
+        </div>
+      </div>
+      <p class="caption">An artistic <strong>Boids-style simulation</strong> of self-organising motion, not a reconstruction, tracking dataset or claim about the exact behaviour of a real murmuration. Chronophotography trails represent positions over simulated time.</p>
+    </section>
+
+    <section class="meaning page-pad">
+      <span class="section-number">03 / WHY IT MATTERS</span>
+      <div class="meaning-layout"><h2>Extraordinary together.<br><em>Vulnerable apart.</em></h2>
+        <div><p>Starlings remain widespread but are <strong>Red-listed in the UK</strong> after a long-term population decline. A spectacular gathering can conceal a troubling trend.</p>
+          <p>Places to feed, nest and shelter matter throughout the year, long after the winter display has ended.</p>
+          <a class="text-link" href="https://www.rspb.org.uk/birds-and-wildlife/starling" target="_blank" rel="noopener noreferrer">Read the RSPB starling profile ↗</a></div></div>
+    </section>
+
+    <section class="action page-pad" aria-labelledby="action-title">
+      <span class="section-number">04 / SMALL ACTIONS</span><h2 id="action-title">Make room for starlings.</h2>
+      <p class="action-intro">You don't need a reedbed or a thousand birds. A garden, a roofline and a few neighbours can help.</p>
+      <div class="action-grid" id="conservationLinks"></div>
+      <p class="watch-note">Going to watch? Arrive before dusk, keep your distance, stay on paths and never disturb birds at the roost. Check recent site information first: roosts can move, and some locations are deliberately not publicised.</p>
+    </section>
+    <footer class="footer page-pad"><span>30DAYMAPS / DAY 04 / CLUSTERS</span><span>Map © OpenStreetMap contributors · Open-source map tiles by CARTO · Published example site list, not a census</span><a href="https://github.com/tomcwxyz/30DayMaps" target="_blank" rel="noopener noreferrer">Project & methods ↗</a></footer>
+  </main>
+</body>
+</html>
