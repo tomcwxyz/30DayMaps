@@ -57,12 +57,12 @@ Planned definitions: (1) furthest from another distinct stop location, (2) furth
 Reusable foundations are minimal: fetching sources, boundary handling, attribution and styling. Individual challenges can switch tools: GeoPandas/Matplotlib first, then MapLibre, QGIS, H3, DuckDB Spatial, 3D, cartograms, animated cartography and unconventional approaches when the question merits it.
 
 Each map should answer a question, credit the data, document its technique, and state what it cannot tell us.
-## Day 04 — Clusters: Where the sky gathers
 
-A [mobile-friendly interactive murmuration map](web/day04/) with **21 published example roost locations**, adjustable geographic clustering, a clearly labelled simulated flock and practical RSPB conservation links. The map does not imply these are all active roosts or measure bird density. Read [data sources, limitations and how to run it](challenges/04-clusters/README.md).
+## Day 04 — Clusters: GBIF starling data
+
+The Day 4 interactive map and illustrative murmuration have been withdrawn. Only the **GBIF data acquisition work** remains: a reproducible common-starling occurrence downloader, tests, and a GitHub Actions workflow that can save a validated, attributed CSV and manifest. Occurrence records are **not** murmuration or roost records. See [the dataset notes](challenges/04-clusters/README.md).
 
 ```bash
-python -m http.server 8000
-# Open http://localhost:8000/web/day04/
-node --test tests/day04.test.mjs
+python -m unittest discover -s tests -p 'test_gbif_starlings.py' -v
+python -m maps.gbif_starlings
 ```

@@ -1,54 +1,38 @@
-# Day 04 — Clusters: Where the sky gathers
+# Day 04 — Clusters: GBIF common-starling data
 
-**Question:** where are publicly documented starling murmuration sites, and what can clustering reveal about the *locations in our small published example set*?
+**Scope: data collection only.** The earlier interactive site, curated roost locations, animated flock, and Vercel demonstration have been removed from the Day 4 codebase. No map or visualisation is currently published from this work.
 
-A mobile-first interactive map and an animated, explicitly simulated flock. The published map is **not** a density map of birds, a live roost finder, a complete UK census or a forecast of the next murmuration.
+## Dataset
 
-## Open it
+A reproducible GBIF occurrence API extraction targeting the species *Sturnus vulgaris* (European/common starling) in the United Kingdom, for **November 2025**. The query requests coordinates, no reported geospatial issue and `PRESENT` occurrence status.
 
-From the repository root:
+- Script: [`maps/gbif_starlings.py`](../../maps/gbif_starlings.py)
+- Tests: [`tests/test_gbif_starlings.py`](../../tests/test_gbif_starlings.py)
+- GitHub Action: [`.github/workflows/day04-gbif.yml`](../../.github/workflows/day04-gbif.yml)
+- Intended output: `challenges/04-clusters/data/gbif_sturnus_vulgaris_gb_2025_11.csv`
+- Intended attribution: `challenges/04-clusters/data/gbif_manifest.json`
 
-```bash
-python -m http.server 8000
-# Visit http://localhost:8000/web/day04/
-```
+The files in `data/` exist **only after a completed, successful download and commit**. Do not treat their absence as zero observations.
 
-Requires internet for the [Leaflet](https://leafletjs.com/) library, [CARTO](https://carto.com/) basemap tiles and fonts. The site data and behaviour otherwise run without an API key, bundler, account, framework or backend.
+## Run locally
 
-## How it works
-
-- `web/day04/roosts.js` — 21 published example locations, with **indicative coordinates at named publicly accessible sites**; source and conservation links.
-- `web/day04/clusters.js` — independently testable great-circle distance and connected-components proximity clustering.
-- `web/day04/map.js` — source-linked Leaflet markers, geographical grouping, and accessible pop-ups.
-- `web/day04/flock.js` — original, **simulated** starling-like agents using neighbour separation, alignment, cohesion and gradual roost attraction. The animated paths are not field measurements.
-- `web/day04/main.js` — filters, radius, canvas controls, replay, time slider and source cards.
-- `web/day04/style.css` — responsive layout; supports small screens and respects reduced-motion settings.
-
-The cluster distance slider controls a **graph connectivity threshold** (kilometres). A group may contain sites farther apart than the threshold where they are linked through intermediate sites. Counts are the number of listed *places* in a group, never the number of birds or sightings.
-
-### Sources and limitations
-
-Named public sites were taken from:
-
-1. [Woodland Trust — Starling murmurations](https://www.woodlandtrust.org.uk/blog/starling-murmurations/).
-2. [Natural History Museum — How to spot a murmuration](https://www.nhm.ac.uk/discover/spot-a-starling-murmuration-this-winter.html).
-3. [RSPB — The starling roost at Ham Wall](https://www.rspb.org.uk/days-out/reserves/ham-wall/the-starling-roost).
-4. [ITV News — Wildlife Trust places to watch](https://www.itv.com/news/2025-12-04/why-do-starlings-make-murmurations-in-the-winter).
-
-**Provenance note:** these are hand-curated examples from editorial reserve and birdwatching guides, not individual sighting records. Their site-centre coordinates are approximate, not verified active roosts. Precise and sensitive sites are intentionally not included, and some reserves ask not to be advertised. We do not extract the crowdsourced [Starlings in the UK roost map](https://www.starlingsintheuk.co.uk/roost-map.html) without permission. We cannot draw evidence-backed UK-wide heatmaps or starling-population conclusions from this sparse, non-random selection. Nor is the presence of a named site evidence that birds will be there tonight. The date of an original source report is not an activity timestamp.
-
-To turn this into a statistically meaningful temporal hotspot map, collect licensed records of **actual roost observations with dates, provenance and sampling effort**, then validate bias, access policy and attribution before drawing density or trends. Generic GBIF/eBird starling *occurrences* are not interchangeable with roost records.
-
-### Conservation
-
-Four practical, source-linked actions: [RSPB starling nest box guide](https://www.rspb.org.uk/helping-nature/what-you-can-do/activities/create-a-cosy-starling-home), [RSPB species profile and feeding advice](https://www.rspb.org.uk/birds-and-wildlife/starling), [RSPB neighbourhood nest boxes](https://www.rspb.org.uk/helping-nature/what-you-can-do/activities/give-birds-a-place-to-call-home) and [Starlings in the UK ethical roost guide](https://www.starlingsintheuk.co.uk/roost-map.html).
-
-## Test
+From the repository root with Python 3.11+:
 
 ```bash
-node --test tests/day04.test.mjs
-node --check web/day04/main.js
-node --check web/day04/flock.js
+python -m unittest discover -s tests -p 'test_gbif_starlings.py' -v
+python -m maps.gbif_starlings
 ```
 
-The simulation is an illustration rather than a biological or physical model. The map is a geographic visualisation rather than a recreated photograph.
+The downloader uses the standard library. It pages through every matching result, de-duplicates on GBIF ID and preserves event date, location, dataset and licence identifiers, and quality flags. It stores a JSON manifest with retrieval timestamp, GBIF query parameters, source dataset attribution, counts and SHA-256 integrity hash.
+
+**Bounded extract:** The GBIF public search API has a 100,000-record ceiling. To avoid quietly writing a biased page-limited sample, this script fails if more than 20,000 matching records are found. Expand the scope only by using a documented, licence-aware GBIF download request and storing the download DOI.
+
+**Licences:** The script includes CC0 and CC BY 4.0 observations. CC BY-NC and unknown-licence records are excluded from redistributed data. Individual contributing datasets and their attribution appear in the manifest.
+
+## Interpret with care
+
+GBIF starling observations are **not confirmed murmurations**, actual roost locations, numbers of individual birds or abundance measurements. Records are heavily influenced by where people observe and report birds; clusters may indicate observation effort rather than wildlife behaviour. No statistical hot-spot or population claim should be made without addressing those biases.
+
+Source: [GBIF](https://www.gbif.org/); individual records can be resolved at `https://www.gbif.org/occurrence/{gbifID}`.
+
+For any future publication or substantive research, request an official GBIF DOI-backed occurrence download and cite the contributing datasets.
