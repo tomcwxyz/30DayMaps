@@ -1,0 +1,261 @@
+{
+  "title": "A rolling stone gathers no moss",
+  "source": "NBN Atlas",
+  "source_api": "https://records-ws.nbnatlas.org/occurrences/search",
+  "generated_at": "2026-11-03T22:36:48.217823+00:00",
+  "resolution": "10 km occurrence grid, NOT moss cover",
+  "scope": "Eight selected moss species; open-licence records only",
+  "caveat": "Presence-only records; coverage and recording effort vary. Blank does not mean absent.",
+  "grids": 2777,
+  "species": [
+    {
+      "name": "Sphagnum palustre",
+      "common": "Blunt-leaved bog-moss",
+      "type": "Bog",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 17794,
+      "all_licence_records": 21875,
+      "taxon_key": "NBNSYS0000036070",
+      "status": "mapped"
+    },
+    {
+      "name": "Sphagnum capillifolium",
+      "common": "Red bog-moss",
+      "type": "Bog",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 1713,
+      "all_licence_records": 1833,
+      "taxon_key": "NHMSYS0021601352",
+      "status": "mapped"
+    },
+    {
+      "name": "Polytrichum commune",
+      "common": "Common haircap",
+      "type": "Woodland",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 18028,
+      "all_licence_records": 23713,
+      "taxon_key": "NHMSYS0021600182",
+      "status": "mapped"
+    },
+    {
+      "name": "Hypnum cupressiforme",
+      "common": "Cypress-leaved plait-moss",
+      "type": "Woodland",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 85143,
+      "all_licence_records": 97172,
+      "taxon_key": "NHMSYS0000310080",
+      "status": "mapped"
+    },
+    {
+      "name": "Rhytidiadelphus squarrosus",
+      "common": "Springy turf-moss",
+      "type": "Grassland",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 62208,
+      "all_licence_records": 76624,
+      "taxon_key": "NBNSYS0000022280",
+      "status": "mapped"
+    },
+    {
+      "name": "Grimmia pulvinata",
+      "common": "Grey-cushioned Grimmia",
+      "type": "Stone and walls",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 29443,
+      "all_licence_records": 36140,
+      "taxon_key": "NBNSYS0000036475",
+      "status": "mapped"
+    },
+    {
+      "name": "Tortula muralis",
+      "common": "Wall screw-moss",
+      "type": "Stone and walls",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 37297,
+      "all_licence_records": 45795,
+      "taxon_key": "NBNSYS0000036310",
+      "status": "mapped"
+    },
+    {
+      "name": "Syntrichia ruralis",
+      "common": "Great hairy screw-moss",
+      "type": "Stone and walls",
+      "licences": [
+        "CC-BY",
+        "CC0",
+        "OGL"
+      ],
+      "mapped_records": 9612,
+      "all_licence_records": 10953,
+      "taxon_key": "NHMSYS0000310723",
+      "status": "mapped"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "British Bryological Society",
+      "record_count": 227601
+    },
+    {
+      "name": "British & Irish Bryological Society",
+      "record_count": 16636
+    },
+    {
+      "name": "Natural Resources Wales",
+      "record_count": 8257
+    },
+    {
+      "name": "Natural England",
+      "record_count": 3897
+    },
+    {
+      "name": "BIS for Powys & Brecon Beacons National Park",
+      "record_count": 2598
+    },
+    {
+      "name": "Shropshire Ecological Data Network",
+      "record_count": 1936
+    },
+    {
+      "name": "NatureScot",
+      "record_count": 1741
+    },
+    {
+      "name": "National Trust for Scotland",
+      "record_count": 1728
+    },
+    {
+      "name": "Joint Nature Conservation Committee",
+      "record_count": 1501
+    },
+    {
+      "name": "Scottish Wildlife Trust",
+      "record_count": 1403
+    },
+    {
+      "name": "Centre for Environmental Data and Recording",
+      "record_count": 1360
+    },
+    {
+      "name": "National Trust",
+      "record_count": 1348
+    },
+    {
+      "name": "South East Wales Biodiversity Records Centre",
+      "record_count": 1039
+    },
+    {
+      "name": "West Wales Biodiversity Information Centre",
+      "record_count": 767
+    },
+    {
+      "name": "NatureSpot",
+      "record_count": 653
+    },
+    {
+      "name": "Argyll Biological Records Centre",
+      "record_count": 483
+    },
+    {
+      "name": "Cofnod - North Wales Environmental Information Service",
+      "record_count": 347
+    },
+    {
+      "name": "Natural History Museum, London",
+      "record_count": 268
+    },
+    {
+      "name": "The Wildlife Information Centre",
+      "record_count": 187
+    },
+    {
+      "name": "Gloucestershire Centre for Environmental Records",
+      "record_count": 184
+    },
+    {
+      "name": "Highland Biological Recording Group",
+      "record_count": 156
+    },
+    {
+      "name": "Sussex Biodiversity Record Centre",
+      "record_count": 69
+    },
+    {
+      "name": "Plantlife International",
+      "record_count": 54
+    },
+    {
+      "name": "Malcolm Storey",
+      "record_count": 39
+    },
+    {
+      "name": "Aggregate Industries",
+      "record_count": 28
+    },
+    {
+      "name": "Royal Horticultural Society",
+      "record_count": 21
+    },
+    {
+      "name": "Central Scotland Green Network Trust",
+      "record_count": 20
+    },
+    {
+      "name": "Knoydart Foundation",
+      "record_count": 4
+    },
+    {
+      "name": "East Ayrshire Countryside Ranger Service",
+      "record_count": 4
+    },
+    {
+      "name": "Outer Hebrides Biological Recording",
+      "record_count": 3
+    },
+    {
+      "name": "National Plant Monitoring Scheme",
+      "record_count": 1
+    },
+    {
+      "name": "Bournemouth University",
+      "record_count": 1
+    },
+    {
+      "name": "The Conservation Volunteers Scotland",
+      "record_count": 1
+    }
+  ],
+  "unmapped_grid_labels": {
+    "NOTSUPPLIED": 13097
+  }
+}
