@@ -73,3 +73,17 @@ def test_full_three_chapter_portrait_video_and_manifest(monkeypatch,tmp_path):
     assert not manifest["is_chronological"]
     assert not manifest["northern_ireland_included"]
     assert manifest["chapters"][2]["contains_local_polygon_zoom"]
+
+
+def test_polygon_hole_does_not_erase_previous_woodland():
+    from shapely.geometry import Polygon
+    view=box(0,0,100,100)
+    xy=camera(view.bounds)
+    island=box(45,45,55,55)
+    donut=Polygon([(0,0),(100,0),(100,100),(0,100)],
+                  holes=[[(30,30),(30,70),(70,70),(70,30)]])
+    image=actual_polygon_layer([island,donut],xy,GREEN,view=view)
+    x,y=xy(50,50)
+    assert image.getpixel((x,y))[3]>0
+    x,y=xy(80,80)
+    assert image.getpixel((x,y))[3]>0
