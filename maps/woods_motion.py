@@ -53,11 +53,19 @@ def read_projects(path: Path, region) -> gpd.GeoDataFrame:
     data = gpd.read_file(path)
     if data.crs is None or data.empty:
         raise ValueError("Missing CRS or empty WCC project polygon layer")
-    data = data.loc[data.geometry.geom_type.isin(("Polygon", "MultiPolygon"))].to_crs(27700)
+    data = data.loc[data.geometry.notna()].to_crs(27700).copy()
+    # Some source polygons self-intersect. Repair before an intersection/clip.
+    invalid = ~data.geometry.is_valid
+    if invalid.any():
+        print(f"Repairing {int(invalid.sum())} invalid source WCC geometries", flush=True)
+        data.loc[invalid, "geometry"] = data.loc[invalid].geometry.make_valid()
+    data = data.explode(index_parts=False)
+    data = data.loc[data.geometry.geom_type.isin(("Polygon", "MultiPolygon"))].copy()
     data = data.loc[data.geometry.intersects(region)].copy()
     if data.empty:
         raise ValueError("No WCC project polygons intersect the North East region")
     data = gpd.clip(data, region)
+    data = data.loc[data.geometry.geom_type.isin(("Polygon", "MultiPolygon"))].copy()
     if data.empty:
         raise ValueError("No WCC polygons remain after clipping")
     return data
