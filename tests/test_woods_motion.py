@@ -83,3 +83,18 @@ class Ambiguous:
 def test_ambiguous_service_fails_closed():
     with pytest.raises(RuntimeError,match="Ambiguous"):
         find_project_layer(Ambiguous())
+
+
+def test_invalid_wcc_polygon_is_repaired_before_clipping(tmp_path):
+    from shapely.geometry import Polygon
+    # Bow-tie self-intersection, similar to the observed real WCC source error.
+    region=box(400000,510000,470000,650000)
+    bowtie=Polygon([(420000,530000),(421000,531000),
+                    (420000,531000),(421000,530000),(420000,530000)])
+    assert not bowtie.is_valid
+    file=tmp_path/"invalid.gpkg"
+    gpd.GeoDataFrame({"status":["Validated"]},geometry=[bowtie],crs=27700
+                     ).to_file(file,driver="GPKG")
+    repaired=read_projects(file,region)
+    assert len(repaired)>0
+    assert repaired.geometry.is_valid.all()
