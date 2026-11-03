@@ -1,83 +1,70 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>A rolling stone gathers no moss — a UK moss map</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<style>
-*{box-sizing:border-box}body{margin:0;background:#13271e;color:#ebf2e7;font:14px/1.5 system-ui,sans-serif}
-header{padding:26px clamp(18px,4vw,60px) 20px}h1{font:normal clamp(32px,4vw,64px)/1.05 Georgia,serif;margin:8px 0}
-.kicker{color:#b1cdaa;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
-.subtitle{max-width:720px;color:#c0d0bf}
-main{display:grid;grid-template-columns:290px 1fr}aside{padding:18px 22px;background:#1e3a2b}
-#map{height:70vh;min-height:430px;background:#dee3d9}
-.group{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#b2cfac;margin:20px 0 7px}
-label{display:flex;gap:8px;align-items:start;margin:8px 0;cursor:pointer}
-label span{flex:1}small{display:block;color:#b9c9b7}
-input{accent-color:#b6d4a5}
-button{background:none;border:1px solid #a3bca4;color:#e9f0e6;border-radius:25px;padding:8px 10px;cursor:pointer;margin:3px}
-button[aria-pressed=true]{background:#c4ddae;color:#1d3626}
-#details{border-top:1px solid #61816c;padding:15px 0;margin-top:17px;min-height:70px}
-footer{font-size:11px;color:#c1cfc1;padding:20px clamp(18px,4vw,60px)}
-a{color:#d7efbd}
-@media(max-width:700px){main{display:flex;flex-direction:column}aside{order:2}#map{height:56vh;min-height:350px}}
-</style></head><body>
-<header><div class="kicker">30 Day Map Challenge · Botanical Britain</div>
-<h1>A rolling stone gathers no moss.</h1>
-<p class="subtitle">But Britain does. Where have people recorded different kinds of moss — from bogland to stone walls? Explore eight species using real NBN Atlas observations.</p></header>
-<main><aside><div id="status" role="status">Loading verified source data…</div>
-<div class="group">Colour squares by</div>
-<button id="richness" aria-pressed="true">Different mosses</button>
-<button id="records" aria-pressed="false">Number of records</button>
-<div class="group">Show species</div><div id="filters"></div>
-<button id="all">All</button><button id="none">None</button>
-<div id="details">Select a grid square to explore the mosses recorded there.</div>
-<div class="group">What this map cannot tell us</div>
-<p>These are <strong>10 km recording squares</strong>, not areas covered by moss. More records can mean more observers, not more moss. Empty squares do not prove absence.</p>
-</aside><div id="map" aria-label="UK moss atlas interactive map"></div></main>
-<footer>Source: <a href="https://nbnatlas.org/">NBN Atlas</a> and contributing data partners.
-<a href="./moss-manifest.json">Evidence, licences and source manifest</a>. Basemap © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. This is a selection of eight moss species, not a complete bryophyte inventory.</footer>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-(function(){
-'use strict';
-const map=L.map('map',{scrollWheelZoom:false}).setView([54.5,-3],5);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
-const filters=document.getElementById('filters'),status=document.getElementById('status'),details=document.getElementById('details');
-let fc=null,metadata=null,layer=null,mode='richness',active=new Set();
-function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function amount(p){const pairs=Object.entries(p.species).filter(([name])=>active.has(name));
-return mode==='richness'?pairs.length:pairs.reduce((sum,entry)=>sum+entry[1],0);}
-function colour(n){if(mode==='richness')return n<2?'#bcd5aa':n<4?'#81ad82':n<6?'#4a8864':'#18543c';
-return n<10?'#bed8af':n<100?'#80ab80':n<500?'#4c8864':'#18543c';}
-function render(){
-if(layer)map.removeLayer(layer);
-layer=L.geoJSON(fc,{filter:f=>amount(f.properties)>0,
-style:f=>({fillColor:colour(amount(f.properties)),fillOpacity:.82,color:'#244d39',weight:.3}),
-onEachFeature:(f,l)=>{
-l.bindTooltip(escapeText(f.properties.grid)+' · '+amount(f.properties)+' '+(mode==='richness'?'selected species':'records'),{sticky:true});
-l.on('click',()=>{const names=Object.entries(f.properties.species).filter(([n])=>active.has(n));
-details.innerHTML='<strong>'+escapeText(f.properties.grid)+'</strong> · 10 km square<br>'+names.map(([n,c])=>escapeText(n)+' — '+c.toLocaleString('en-GB')+' records').join('<br>');});
-}}).addTo(map);
-}
-function modeTo(name){mode=name;['richness','records'].forEach(id=>document.getElementById(id).setAttribute('aria-pressed',String(id===mode)));render();}
-document.getElementById('richness').onclick=()=>modeTo('richness');
-document.getElementById('records').onclick=()=>modeTo('records');
-document.getElementById('all').onclick=()=>{active=new Set(metadata.species.map(s=>s.name));filters.querySelectorAll('input').forEach(e=>e.checked=true);render();};
-document.getElementById('none').onclick=()=>{active.clear();filters.querySelectorAll('input').forEach(e=>e.checked=false);render();};
-Promise.all(['moss.geojson','moss-manifest.json'].map(path=>fetch(path).then(r=>{if(!r.ok)throw Error('No source snapshot');return r.json();})))
-.then(([features,manifest])=>{
-fc=features;metadata=manifest;active=new Set(manifest.species.map(s=>s.name));
-const grouped={};manifest.species.forEach(s=>(grouped[s.type]??=[]).push(s));
-Object.entries(grouped).forEach(([group,entries])=>{
-const h=document.createElement('div');h.className='group';h.textContent=group;filters.appendChild(h);
-entries.forEach(s=>{const label=document.createElement('label'),checkbox=document.createElement('input'),span=document.createElement('span'),small=document.createElement('small');
-checkbox.type='checkbox';checkbox.checked=true;checkbox.onchange=()=>{if(checkbox.checked)active.add(s.name);else active.delete(s.name);render();};
-span.textContent=s.common;small.textContent=s.name;span.appendChild(small);label.append(checkbox,span);filters.appendChild(label);});
-});
-status.textContent=manifest.grids.toLocaleString('en-GB')+' recorded grid squares · '+manifest.species.length+' species';
-render();
-}).catch(err=>{status.textContent='No NBN Atlas snapshot available yet.';details.textContent='Run the NBN data workflow to fetch real records. No placeholder records are displayed.';console.error(err);});
-})();
-</script></body></html>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12291f">
+  <meta name="description" content="Explore clusters of recorded UK moss species using real NBN Atlas open data. Day 04 of the 30 Day Map Challenge.">
+  <title>A Rolling Stone Gathers No Moss · Day 04 / Clusters</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="masthead-top"><span class="eyebrow">30 Day Map Challenge / 2026</span><span class="day-label">04 <span>/ CLUSTERS</span></span></div>
+      <h1>A rolling stone <em>gathers no moss.</em></h1>
+      <p>But where does moss gather? Follow the patterns left by eight species in Britain's natural history records.</p>
+    </header>
+    <main class="map-layout">
+      <aside class="controls" aria-label="Map controls and interpretation">
+        <p class="panel-kicker">The living map</p>
+        <p class="panel-intro">These are clusters of <strong>recorded sightings</strong>, not measured patches of moss.</p>
+        <div id="status" role="status" aria-live="polite">Loading the NBN Atlas snapshot…</div>
+        <section aria-labelledby="groups-title">
+          <h2 id="groups-title">Gatherings</h2>
+          <div class="choices" id="groups" role="group" aria-label="Moss species group">
+            <button type="button" class="chip selected" data-group="all" aria-pressed="true">All eight species</button>
+            <button type="button" class="chip" data-group="bog" aria-pressed="false">Bog mosses</button>
+            <button type="button" class="chip" data-group="woodland" aria-pressed="false">Woodland</button>
+            <button type="button" class="chip" data-group="grassland" aria-pressed="false">Grassland</button>
+            <button type="button" class="chip" data-group="stone" aria-pressed="false">Stone &amp; walls</button>
+          </div>
+        </section>
+        <section aria-labelledby="strength-title">
+          <div class="section-head"><h2 id="strength-title">Concentration</h2><span class="help" title="These are thresholds for forming recording clusters, not estimates of moss abundance.">?</span></div>
+          <div class="segmented" role="group" aria-label="Cluster concentration">
+            <button type="button" data-level="broad" aria-pressed="false">Broader</button>
+            <button type="button" data-level="focus" aria-pressed="true">Focused</button>
+            <button type="button" data-level="strong" aria-pressed="false">Strongest</button>
+          </div>
+          <p id="threshold" class="hint">Select a group to see the clustering criteria.</p>
+        </section>
+        <section aria-labelledby="evidence-title">
+          <h2 id="evidence-title">Look beneath</h2>
+          <label class="switch"><input type="checkbox" id="show-grid"><span>Show original 10 km evidence squares</span></label>
+        </section>
+        <section class="discovery" aria-labelledby="clusters-title">
+          <div class="section-head"><h2 id="clusters-title">Largest gatherings</h2><span class="hint">by grid squares</span></div>
+          <div id="ranked" class="ranked"><p class="hint">Loading…</p></div>
+        </section>
+        <section class="inspector" aria-labelledby="inspect-title">
+          <h2 id="inspect-title">Under the lens</h2>
+          <div id="details">Select a moss cluster on the map to discover which species have been recorded there.</div>
+        </section>
+      </aside>
+      <div class="map-frame">
+        <div id="map" role="region" aria-label="Interactive UK map of moss observation clusters"></div>
+        <div class="map-note"><span class="key-dot"></span> Shapes are <strong>recording clusters</strong>, not moss cover <span class="divider-dot">·</span> 10 km source resolution</div>
+        <button type="button" id="reset-view" class="reset-view">View whole UK</button>
+      </div>
+    </main>
+    <footer class="foot">
+      <div><strong>How it works.</strong> Neighbouring 10 km recording squares are grouped when they pass species and observation thresholds. At least three touching squares form a cluster. The softly rounded outlines are illustrative, not habitat boundaries. Gaps may mean nobody recorded moss.</div>
+      <div class="foot-links">Data: <a href="https://nbnatlas.org/" target="_blank" rel="noopener noreferrer">NBN Atlas</a> and contributing recorders. <a href="./moss-manifest.json">Source records and licences</a> · <a href="./moss-clusters-manifest.json">Clustering method and thresholds</a> · <a href="https://github.com/tomcwxyz/30DayMaps/tree/main/challenges/04-clusters">Source and methodology</a>. Basemap © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>.</div>
+    </footer>
+  </div>
+</body>
+</html>

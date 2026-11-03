@@ -1,16 +1,26 @@
-name: UK moss observations from NBN Atlas
+name: Day 04 — NBN moss recording clusters
 on:
   workflow_dispatch:
   pull_request:
     paths:
       - 'maps/moss.py'
+      - 'maps/moss_clusters.py'
       - 'tests/test_moss.py'
+      - 'tests/test_moss_clusters.py'
+      - 'web/moss/index.html'
+      - 'web/moss/app.js'
+      - 'web/moss/style.css'
       - '.github/workflows/render-moss.yml'
   push:
     branches: [main]
     paths:
       - 'maps/moss.py'
+      - 'maps/moss_clusters.py'
       - 'tests/test_moss.py'
+      - 'tests/test_moss_clusters.py'
+      - 'web/moss/index.html'
+      - 'web/moss/app.js'
+      - 'web/moss/style.css'
       - '.github/workflows/render-moss.yml'
 permissions:
   contents: write
@@ -23,24 +33,52 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install -e '.[test]'
-      - run: python -m pytest -q tests/test_moss.py
-      - name: Fetch real open-licence NBN 10 km grid facets
+      - name: Install map dependencies
+        run: python -m pip install -e '.[test]'
+      - name: Test coordinate conversion, attribution and spatial clusters
+        run: python -m pytest -q tests/test_moss.py tests/test_moss_clusters.py
+      - name: Syntax-check web interactions
+        run: node --check web/moss/app.js
+      - name: Fetch actual open-licence NBN 10 km grid facets
         run: python -m maps.moss
-      - uses: actions/upload-artifact@v4
+      - name: Calculate and export spatial cluster profiles
+        run: python -m maps.moss_clusters
+      - name: Validate real source and derived map files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = json.loads(Path('web/moss/moss.geojson').read_text())
+          clusters = json.loads(Path('web/moss/moss-clusters.geojson').read_text())
+          report = json.loads(Path('web/moss/moss-clusters-manifest.json').read_text())
+          assert len(source['features']) >= 100, 'NBN data unexpectedly small'
+          assert len(clusters['features']) >= 10, 'Not enough real moss clusters'
+          assert report['input_grids'] == len(source['features'])
+          for feature in clusters['features']:
+              p = feature['properties']
+              assert p['cell_count'] >= 3
+              assert len(p['grid_refs']) == p['cell_count']
+          print(len(source['features']), 'source grids; ', len(clusters['features']), 'cluster polygons')
+          PY
+      - name: Upload map data, cluster layers and provenance
+        uses: actions/upload-artifact@v4
         with:
-          name: moss-nbn-atlas-grid-data
+          name: day04-real-nbn-moss-clusters
           path: |
             web/moss/moss.geojson
             web/moss/moss-manifest.json
+            web/moss/moss-clusters.geojson
+            web/moss/moss-clusters-manifest.json
           if-no-files-found: error
-      - name: Commit source data snapshot
+          retention-days: 30
+      - name: Commit complete, reproducible source snapshot on main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/moss/moss.geojson web/moss/moss-manifest.json
+          git add web/moss/moss.geojson web/moss/moss-manifest.json \
+                  web/moss/moss-clusters.geojson web/moss/moss-clusters-manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m "Data: update open-licence NBN moss observations"
+            git commit -m "Data: refresh NBN source and Day 04 moss clusters"
             git push
           fi
