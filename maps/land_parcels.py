@@ -1,4 +1,4 @@
-"""Day 03 extra — How much of Northumberland sits in a handful of big parcels?
+"""Day 03 extra — How much of a county sits in a handful of big parcels?
 
 HM Land Registry's INSPIRE Index Polygons show the extent of registered freehold
 titles. They do not name owners, one owner can hold many polygons, and one title
@@ -26,8 +26,11 @@ from maps.polygon_frame import (INK, PAPER, GREEN, GOLD, MUTED, page, map_axes,
 INSPIRE_URL = "https://use-land-property-data.service.gov.uk/datasets/inspire/download/{name}.zip"
 COUNTIES = ("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/"
             "Counties_and_Unitary_Authorities_December_2025_Boundaries_UK_BGC/FeatureServer/0")
-NORTHUMBERLAND = "E06000057"
-NORTHUMBERLAND_BBOX = (380000, 560000, 420000, 620000)  # a box inside the county
+# slug: (display name, INSPIRE file name, ONS code, a box inside the area for the boundary query)
+AREAS = {
+    "northumberland": ("Northumberland", "Northumberland", "E06000057", (380000, 560000, 420000, 620000)),
+    "county-durham": ("County Durham", "County_Durham", "E06000047", (400000, 520000, 425000, 545000)),
+}
 OUT = Path("challenges/03-polygons/outputs/land-parcels")
 
 BANDS = [  # share of parcels, largest first
@@ -96,8 +99,8 @@ def _polygonal(geom):
     return geom
 
 
-def county_boundary(cache: Path, code: str = NORTHUMBERLAND, *, force: bool = False):
-    counties = cached_query(cache, COUNTIES, bbox=NORTHUMBERLAND_BBOX, paginate=False, force=force)
+def county_boundary(cache: Path, code: str, bbox, *, force: bool = False):
+    counties = cached_query(cache, COUNTIES, bbox=bbox, paginate=False, force=force)
     match = counties.loc[counties.apply(lambda r: code in set(map(str, r.values)), axis=1)]
     if len(match) != 1:
         raise ValueError(f"Expected one boundary for {code}; got {len(match)}")
@@ -135,10 +138,17 @@ def band_parcels(parcels: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def draw(parcels: gpd.GeoDataFrame, boundary, stats: dict, coverage: float,
-         stamp: str | None, filename: Path):
+         stamp: str | None, filename: Path, name: str = "Northumberland"):
     year = (stamp or "")[:4] or "2026"
     fig = page()
-    ax = map_axes(fig, (0.03, 0.12, 0.62, 0.72))
+    minx, miny, maxx, maxy = boundary.bounds
+    wide = (maxx - minx) > (maxy - miny)  # landscape counties get the full width
+    if wide:
+        ax = map_axes(fig, (0.04, 0.33, 0.92, 0.50))
+        panel_x, keyy, stats_y, inset_rect = 0.08, 0.27, 0.27, (0.70, 0.135, 0.25, 0.14)
+    else:
+        ax = map_axes(fig, (0.03, 0.12, 0.62, 0.72))
+        panel_x, keyy, stats_y, inset_rect = 0.68, 0.78, 0.68, (0.72, 0.36, 0.23, 0.18)
     gpd.GeoSeries([boundary], crs=27700).plot(ax=ax, color="#ECEAE1", lw=0, zorder=0)
     for label, _, colour in reversed(BANDS):
         part = parcels.loc[parcels.band == label]
@@ -148,7 +158,7 @@ def draw(parcels: gpd.GeoDataFrame, boundary, stats: dict, coverage: float,
 
     # Lorenz-style curve: how quickly area accumulates when parcels are ranked by size.
     a = np.sort(parcels.area_ha.values)[::-1]
-    inset = fig.add_axes((0.72, 0.36, 0.23, 0.18), facecolor=PAPER)
+    inset = fig.add_axes(inset_rect, facecolor=PAPER)
     x = np.arange(1, len(a) + 1) / len(a) * 100
     inset.plot(x, np.cumsum(a) / a.sum() * 100, color=GREEN, lw=1.6)
     inset.plot([0, 100], [0, 100], color=MUTED, lw=0.6, ls=(0, (3, 3)))
@@ -160,16 +170,18 @@ def draw(parcels: gpd.GeoDataFrame, boundary, stats: dict, coverage: float,
     inset.set_xlabel("Largest parcels first (% of all parcels)", fontsize=7.5, color=INK)
     inset.set_ylabel("% of registered area", fontsize=7.5, color=INK)
 
-    keyy = 0.78
     for label, _, colour in BANDS:
-        fig.patches.append(matplotlib_rect(fig, 0.68, keyy, colour))
-        fig.text(0.705, keyy + 0.002, label, fontsize=8.5, color=INK)
+        fig.patches.append(matplotlib_rect(fig, panel_x, keyy, colour))
+        fig.text(panel_x + 0.025, keyy + 0.002, label, fontsize=8.5, color=INK)
         keyy -= 0.026
-    fig.text(0.68, 0.68, f"Largest 1% hold {stats['top_1pct_share']:.0%} of the area", fontsize=8.5, color=INK, weight="bold")
-    fig.text(0.68, 0.655, f"Largest 10% hold {stats['top_10pct_share']:.0%}", fontsize=8.5, color=INK)
-    fig.text(0.68, 0.63, f"Median parcel {stats['median_ha']:.2f} ha · largest {stats['largest_ha']:,.0f} ha", fontsize=8.5, color=INK)
+    sx = panel_x + (0.28 if wide else 0)
+    sy = stats_y if wide else 0.68
+    fig.text(sx, sy, f"Largest 1% hold {stats['top_1pct_share']:.0%} of the area", fontsize=8.5, color=INK, weight="bold")
+    fig.text(sx, sy - 0.025, f"Largest 10% hold {stats['top_10pct_share']:.0%}", fontsize=8.5, color=INK)
+    fig.text(sx, sy - 0.05, f"Median parcel {stats['median_ha']:.2f} ha · largest {stats['largest_ha']:,.0f} ha", fontsize=8.5, color=INK)
 
-    header(fig, f"{stats['parcels_for_half']:,} parcels cover half of Northumberland's",
+    n_half = stats['parcels_for_half']
+    header(fig, f"{n_half:,} parcel{'s cover' if n_half != 1 else ' covers'} half of {name}'s",
            None)
     fig.text(0.08, 0.888, "registered land", color=INK, fontsize=20, weight="bold")
     fig.text(0.08, 0.862, f"{stats['parcels']:,} HM Land Registry index polygons · they cover {coverage:.0%} of the county; "
@@ -188,9 +200,11 @@ def matplotlib_rect(fig, x, y, colour):
     return Rectangle((x, y), 0.018, 0.012, transform=fig.transFigure, color=colour, figure=fig)
 
 
-def run(archive: Path, boundary_cache: Path, out: Path = OUT, *, force: bool = False) -> dict:
+def run(archive: Path, boundary_cache: Path, out: Path = OUT, *, area: str = "northumberland",
+        force: bool = False) -> dict:
+    name, _, code, bbox = AREAS[area]
     stamp = gml_timestamp(archive)
-    boundary = county_boundary(boundary_cache, force=force)
+    boundary = county_boundary(boundary_cache, code, bbox, force=force)
     parcels = read_parcels(archive)
     parcels = parcels.loc[parcels.intersects(boundary)].reset_index(drop=True)
     stats = concentration(parcels.area_ha)
@@ -198,7 +212,7 @@ def run(archive: Path, boundary_cache: Path, out: Path = OUT, *, force: bool = F
     coverage = covered.area / boundary.area
     banded = band_parcels(parcels)
     out = Path(out)
-    draw(banded, boundary, stats, coverage, stamp, out / "northumberland-parcels.png")
+    draw(banded, boundary, stats, coverage, stamp, out / f"{area}-parcels.png", name)
     top = banded.head(100).copy()
     id_col = next((c for c in top.columns if "inspire" in c.lower() and "id" in c.lower()), None)
     cent = top.geometry.representative_point()
@@ -207,23 +221,26 @@ def run(archive: Path, boundary_cache: Path, out: Path = OUT, *, force: bool = F
         "inspire_id": top[id_col] if id_col else None,
         "area_ha": top.area_ha.round(2),
         "easting": cent.x.round(), "northing": cent.y.round(),
-    }).to_csv(out / "largest-100-parcels.csv", index=False)
+    }).to_csv(out / f"{area}-largest-100-parcels.csv", index=False)
     summary = dict(stats, county_coverage=coverage, inspire_timestamp=stamp,
-                   county_code=NORTHUMBERLAND)
-    (out / "summary.json").write_text(json.dumps(summary, indent=2))
+                   county_code=code, area=name)
+    (out / f"{area}-summary.json").write_text(json.dumps(summary, indent=2))
     return summary
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--archive", type=Path, default=Path("data/raw/inspire-northumberland.zip"))
+    parser.add_argument("--area", choices=sorted(AREAS), default="northumberland")
+    parser.add_argument("--archive", type=Path, help="local INSPIRE zip (default: data/raw/inspire-<area>.zip)")
     parser.add_argument("--download", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args()
-    if args.download or not args.archive.exists():
-        download_inspire("Northumberland", args.archive, force=args.force)
-    summary = run(args.archive, Path("data/raw/ctyua-northumberland.gpkg"), args.out, force=args.force)
+    archive = args.archive or Path(f"data/raw/inspire-{args.area}.zip")
+    if args.download or not archive.exists():
+        download_inspire(AREAS[args.area][1], archive, force=args.force)
+    summary = run(archive, Path(f"data/raw/ctyua-{args.area}.gpkg"), args.out,
+                  area=args.area, force=args.force)
     print(json.dumps(summary, indent=2))
 
 

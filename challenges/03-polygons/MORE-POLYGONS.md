@@ -11,7 +11,7 @@ Four smaller questions alongside the woodland piece. Each runs on its own and wr
 
 ## 1. How few parcels cover Northumberland?
 
-`maps/land_parcels.py` · [HM Land Registry INSPIRE Index Polygons](https://use-land-property-data.service.gov.uk/datasets/inspire), Northumberland file, plus the ONS December 2025 county boundary.
+`maps/land_parcels.py` · [HM Land Registry INSPIRE Index Polygons](https://use-land-property-data.service.gov.uk/datasets/inspire), Northumberland and County Durham files (`--area northumberland` or `--area county-durham`), plus ONS December 2025 county boundaries.
 
 Ranks every index polygon by area and asks how many it takes to cover half the registered land. Map bands the largest 1%, next 9% and the rest; an inset shows the cumulative curve.
 

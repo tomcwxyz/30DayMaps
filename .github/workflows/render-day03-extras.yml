@@ -20,7 +20,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        map: [land_parcels, access_land, watersheds, footprints]
+        include:
+          - {map: land_parcels, args: "--area northumberland", label: parcels-northumberland}
+          - {map: land_parcels, args: "--area county-durham", label: parcels-county-durham}
+          - {map: access_land, args: "", label: access_land}
+          - {map: watersheds, args: "", label: watersheds}
+          - {map: footprints, args: "", label: footprints}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,7 +36,7 @@ jobs:
       - name: Download and render
         env:
           PYTHONUNBUFFERED: '1'
-        run: python -u -m maps.${{ matrix.map }}
+        run: python -u -m maps.${{ matrix.map }} ${{ matrix.args }}
       - name: Small previews in the log (for checking without the artifact)
         if: always()
         run: |
@@ -46,7 +51,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: day03-${{ matrix.map }}
+          name: day03-${{ matrix.label }}
           path: challenges/03-polygons/outputs/
           if-no-files-found: warn
           retention-days: 30
