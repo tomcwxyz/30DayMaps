@@ -76,7 +76,7 @@ def draw_city(buildings, bounds, filename):
     frame_to(ax, bounds, pad=0)
     fig.text(0.06, 0.955, KICKER, color=GREEN, fontsize=10, weight="bold")
     fig.text(0.06, 0.918, "Footprints only", color=INK, fontsize=20, weight="bold")
-    fig.text(0.06, 0.890, "Newcastle and Gateshead, every building and nothing else. The Tyne is the gap.",
+    fig.text(0.06, 0.890, "Newcastle and Gateshead, every building and nothing else. Name the gaps!",
              color=INK, fontsize=10)
     footer(fig, [ATTRIBUTION, "Building outlines are generalised; terraces can appear as single blocks."],
            x=0.06, top=0.055)
