@@ -153,11 +153,11 @@ def draw(parcels: gpd.GeoDataFrame, boundary, stats: dict, coverage: float,
     inset.plot(x, np.cumsum(a) / a.sum() * 100, color=GREEN, lw=1.6)
     inset.plot([0, 100], [0, 100], color=MUTED, lw=0.6, ls=(0, (3, 3)))
     inset.axvline(1, color=GOLD, lw=0.8)
-    inset.set_xlim(0, 100); inset.set_ylim(0, 100)
+    inset.set_xlim(0, 10); inset.set_ylim(0, 100)  # the action is in the first 10%
     for side in ("top", "right"):
         inset.spines[side].set_visible(False)
     inset.tick_params(labelsize=7, colors=INK, length=2)
-    inset.set_xlabel("% of parcels, largest first", fontsize=7.5, color=INK)
+    inset.set_xlabel("Largest parcels first (% of all parcels)", fontsize=7.5, color=INK)
     inset.set_ylabel("% of registered area", fontsize=7.5, color=INK)
 
     keyy = 0.78

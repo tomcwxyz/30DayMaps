@@ -26,9 +26,9 @@ CITY_CENTRE = (54.9738, -1.6132)  # Grey's Monument
 CITY_W, CITY_H = 9_000, 11_000    # metres, the page's own proportions
 DETAIL_SIDE = 1_400
 DETAILS = [  # (label, lat, lon, note)
-    ("Byker", 54.9737, -1.5866, "Ralph Erskine's Byker Wall wraps the estate"),
+    ("Byker", 54.9742, -1.5789, "Ralph Erskine's Byker Wall wraps the estate"),
     ("Heaton", 54.9842, -1.5808, "Tyneside flats in parallel rows"),
-    ("Bensham", 54.9532, -1.6172, "Gateshead's terraces step down to the Tyne"),
+    ("Bensham", 54.9532, -1.6172, "Gateshead's terraced streets on the slope above the Tyne"),
 ]
 ATTRIBUTION = "Contains OS data © Crown copyright and database right 2026 · OS OpenMap – Local, OGL v3.0"
 

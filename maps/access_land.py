@@ -111,8 +111,8 @@ def draw(access, area, distance_km, bounds, stats, filename):
                Patch(color=DEDICATED_COLOUR, label="Dedicated access land only (mostly forestry)")]
     labels = ["under 1 km", "1–2 km", "2–5 km", "5–10 km", "over 10 km"]
     handles += [Patch(color=c, label=f"{l} to the nearest access land") for c, l in zip(DISTANCE_COLOURS, labels)]
-    ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=7.5,
-              labelcolor=INK, handlelength=1.2, borderaxespad=0)
+    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.60, 0.80), frameon=False,
+               fontsize=7.5, labelcolor=INK, handlelength=1.2)
     header(fig, f"Right to roam covers {stats['share_of_region']:.0%} of the North East",
            f"{stats['islands']:,} separate patches of CRoW access land; the largest holds "
            f"{stats['largest_island_share']:.0%} of it. {stats['share_of_region_over_5km_from_access_land']:.0%} "
