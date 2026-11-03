@@ -6,26 +6,20 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Probe catchment names and item provenance
+      - name: Probe boundaries, INSPIRE GML and CRoW values
         shell: bash
         run: |
           set +e
-          WB='https://services3.arcgis.com/Bb8lfThdhugyc4G3/ArcGIS/rest/services/England_WFD_River_Water_Body_Catchments_Cycle_3/FeatureServer/0'
-          curl -s "$WB?f=json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("item", d.get("serviceItemId"))'
-          curl -s -G "$WB/query" --data-urlencode 'where=1=1' --data-urlencode 'geometry=290000,440000,480000,670000' \
-            --data-urlencode 'geometryType=esriGeometryEnvelope' --data-urlencode 'inSR=27700' \
-            --data-urlencode 'outFields=RBD_NAME,MNCAT_NAME' --data-urlencode 'returnDistinctValues=true' \
-            --data-urlencode 'returnGeometry=false' --data-urlencode 'f=json' | python3 -c 'import json,sys
+          curl -s 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services?f=json' | python3 -c 'import json,sys
           d=json.load(sys.stdin)
-          for f in sorted(d.get("features",[]), key=lambda f:(f["attributes"]["RBD_NAME"],f["attributes"]["MNCAT_NAME"])): print("CAT", f["attributes"])
-          print(d.get("error"))'
-          curl -s -G "$WB/query" --data-urlencode 'where=1=1' --data-urlencode 'returnCountOnly=true' --data-urlencode 'f=json'; echo
-          for item in $(curl -s "$WB?f=json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["serviceItemId"])') 54b7adec13ae4710a018c5d5590993a0; do
-            curl -s "https://www.arcgis.com/sharing/rest/content/items/$item?f=json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ITEM", {k:d.get(k) for k in ["title","owner","orgId","accessInformation","licenseInfo","modified","url"]})'
+          print("SVC", [s["name"] for s in d["services"] if ("Local_Authority_Districts_December_202" in s["name"] or "Counties_and_Unitary_Authorities_December_202" in s["name"]) and "BGC" in s["name"]])'
+          curl -sL -c jar -b jar --max-redirs 5 --max-time 200 -o n.zip 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip'
+          unzip -p n.zip Land_Registry_Cadastral_Parcels.gml | head -c 3000; echo
+          echo "== GML count"; unzip -p n.zip Land_Registry_Cadastral_Parcels.gml | grep -c '<LR:PREDEFINED' 
+          L='https://services.arcgis.com/JJzESW51TqeY9uat/arcgis/rest/services/CRoW_Act_2000_Access_Layer/FeatureServer/0/query'
+          for fld in Descrip OC RCL S16; do
+          curl -s -G "$L" --data-urlencode 'where=1=1' --data-urlencode 'geometry=360000,500000,480000,660000' --data-urlencode 'geometryType=esriGeometryEnvelope' --data-urlencode 'inSR=27700' \
+            --data-urlencode "outFields=$fld" --data-urlencode 'returnDistinctValues=true' --data-urlencode 'returnGeometry=false' --data-urlencode 'f=json' | python3 -c "import json,sys; print('VAL $fld', [f['attributes'] for f in json.load(sys.stdin).get('features',[])][:30])"
           done
-          curl -s 'https://www.arcgis.com/sharing/rest/portals/Bb8lfThdhugyc4G3?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ORG", d.get("name"), d.get("urlKey"))'
-          curl -s 'https://www.arcgis.com/sharing/rest/portals/JJzESW51TqeY9uat?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ORG", d.get("name"), d.get("urlKey"))'
-          echo "== OML NZ shapefile names"
-          curl -sL --max-time 300 -o oml.zip 'https://api.os.uk/downloads/v1/products/OpenMapLocal/downloads?area=NZ&format=ESRI%C2%AE+Shapefile&redirect'; unzip -l oml.zip | grep -iE 'build|licen|readme' | head
