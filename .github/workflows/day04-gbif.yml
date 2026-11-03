@@ -1,0 +1,53 @@
+name: Day 04 — fetch GBIF starling observations
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/day04-where-sky-gathers]
+    paths:
+      - maps/gbif_starlings.py
+      - tests/test_gbif_starlings.py
+      - .github/workflows/day04-gbif.yml
+
+permissions:
+  contents: write
+
+jobs:
+  download-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test filters and complete pagination
+        run: python -m unittest discover -s tests -p 'test_gbif_starlings.py' -v
+      - name: Download actual GBIF occurrences
+        run: python -m maps.gbif_starlings
+      - name: Validate output
+        run: |
+          test -s challenges/04-clusters/data/gbif_sturnus_vulgaris_gb_2025_11.csv
+          python - <<'PY'
+          import csv, json, pathlib
+          folder=pathlib.Path("challenges/04-clusters/data")
+          manifest=json.loads((folder/"gbif_manifest.json").read_text())
+          with (folder/manifest["csv_file"]).open(newline="") as fp:
+              count=sum(1 for _ in csv.DictReader(fp))
+          assert count == manifest["exported_records"] and count > 0, (count, manifest)
+          print(f"Verified {count:,} GBIF occurrence rows")
+          PY
+      - name: Commit data and manifest to source branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add challenges/04-clusters/data/gbif_sturnus_vulgaris_gb_2025_11.csv challenges/04-clusters/data/gbif_manifest.json
+          if git diff --cached --quiet; then
+            echo "Snapshot unchanged"
+          else
+            git commit -m "data(day04): GBIF UK starling November 2025 occurrence snapshot"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
