@@ -35,10 +35,7 @@ def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | 
     frames, offset = [], 0
     for _ in range(max_pages):
         page = dict(params, resultOffset=str(offset)) if paginate else params
-        response = http.get(f"{layer_url.rstrip('/')}/query", params=page,
-                            timeout=(20, 180), headers=HEADERS)
-        response.raise_for_status()
-        payload = response.json()
+        payload = _get_json(http, f"{layer_url.rstrip('/')}/query", page)
         if "error" in payload:
             raise RuntimeError(f"ArcGIS error from {layer_url}: {payload['error']}")
         features = payload.get("features", [])
@@ -59,6 +56,23 @@ def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | 
         raise ValueError(f"No features returned from {layer_url}")
     combined = gpd.GeoDataFrame(pd.concat(frames, ignore_index=True), crs="EPSG:4326")
     return combined.to_crs(27700)
+
+
+def _get_json(http, url, params, attempts: int = 4):
+    """Retry gateway timeouts and dropped connections; ArcGIS Online has off moments."""
+    import time
+    for attempt in range(attempts):
+        try:
+            response = http.get(url, params=params, timeout=(20, 180), headers=HEADERS)
+            if getattr(response, "status_code", 200) in (502, 503, 504) and attempt < attempts - 1:
+                time.sleep(5 * 2 ** attempt)
+                continue
+            response.raise_for_status()
+            return response.json()
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == attempts - 1:
+                raise
+            time.sleep(5 * 2 ** attempt)
 
 
 def cached_query(cache: Path, layer_url: str, *, force: bool = False, **query) -> gpd.GeoDataFrame:
