@@ -81,7 +81,7 @@ class Ambiguous:
 
 
 def test_ambiguous_service_fails_closed():
-    with pytest.raises(RuntimeError,match="Ambiguous"):
+    with pytest.raises(RuntimeError,match="Pinned Scottish Forestry"):
         find_project_layer(Ambiguous())
 
 
