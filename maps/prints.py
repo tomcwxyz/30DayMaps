@@ -15,6 +15,7 @@ import hashlib
 import json
 import re
 import textwrap
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -202,18 +203,22 @@ def osm_buildings(bounds_lonlat, crs, cache=Path("data/raw")) -> gpd.GeoDataFram
     if cached.exists():
         payload = json.loads(cached.read_text())
     else:
-        last = None
-        for url in OVERPASS:
-            try:
-                r = requests.post(url, data={"data": query}, timeout=(20, 300),
-                                  headers={"User-Agent": "30DayMaps-prints/0.1"})
-                r.raise_for_status()
-                payload = r.json()
+        payload, last = None, None
+        for attempt in range(3):  # public Overpass servers drop connections when busy
+            for url in OVERPASS:
+                try:
+                    r = requests.post(url, data={"data": query}, timeout=(20, 300),
+                                      headers={"User-Agent": "30DayMaps-prints/0.1"})
+                    r.raise_for_status()
+                    payload = r.json()
+                    break
+                except (requests.RequestException, ValueError) as err:
+                    last = err
+            if payload is not None:
                 break
-            except (requests.RequestException, ValueError) as err:
-                last = err
-        else:
-            raise RuntimeError(f"Overpass unavailable: {last}")
+            time.sleep(30 * (attempt + 1))
+        if payload is None:
+            raise RuntimeError(f"Overpass unavailable after retries: {last}")
         cached.parent.mkdir(parents=True, exist_ok=True)
         cached.write_text(json.dumps(payload))
     polys = osm_polygons(payload)
