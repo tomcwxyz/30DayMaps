@@ -5,7 +5,9 @@ on:
     paths:
       - 'maps/woods_wcc.py'
       - 'maps/woods_motion.py'
+      - 'maps/woods_motion_mobile.py'
       - 'tests/test_woods_motion.py'
+      - 'tests/test_woods_motion_mobile.py'
       - '.github/workflows/woodland-motion.yml'
       - 'pyproject.toml'
 
@@ -21,7 +23,7 @@ jobs:
       - name: Install geospatial, animation and test dependencies
         run: python -m pip install -e '.[test,motion]'
       - name: Test data provenance, geometry and actual video output
-        run: python -m pytest -q tests/test_woods_motion.py
+        run: python -m pytest -q tests/test_woods_motion.py tests/test_woods_motion_mobile.py
       - name: Download Natural England ancient woodland polygons
         shell: bash
         run: |
@@ -47,6 +49,14 @@ jobs:
           PYTHONUNBUFFERED: '1'
         run: |
           python -u -m maps.woods_motion \
+            --ancient challenges/03-polygons/outputs/north-east-ancient-woodland.gpkg \
+            --projects data/raw/wcc-projects.geojson \
+            --output challenges/03-polygons/outputs/motion
+      - name: Render mobile-first 9:16 North East and Tees Valley detail
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python -u -m maps.woods_motion_mobile \
             --ancient challenges/03-polygons/outputs/north-east-ancient-woodland.gpkg \
             --projects data/raw/wcc-projects.geojson \
             --output challenges/03-polygons/outputs/motion
