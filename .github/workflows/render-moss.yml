@@ -1,6 +1,11 @@
 name: UK moss observations from NBN Atlas
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/moss.py'
+      - 'tests/test_moss.py'
+      - '.github/workflows/render-moss.yml'
   push:
     branches: [main]
     paths:
@@ -30,6 +35,7 @@ jobs:
             web/moss/moss-manifest.json
           if-no-files-found: error
       - name: Commit source data snapshot
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
