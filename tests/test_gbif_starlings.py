@@ -29,7 +29,7 @@ class TestGbifStarlingDownloader(unittest.TestCase):
         def rec(i):
             return {"key":i,"decimalLatitude":54+i*.001,"decimalLongitude":-2,"year":2025,"month":11,"countryCode":"GB","license":"CC0_1_0","datasetKey":"set","datasetName":"Test"}
         taxon={"usageKey":1234,"matchType":"EXACT","rank":"SPECIES","scientificName":"Sturnus vulgaris Linnaeus, 1758"}
-        pages=[taxon,{"count":301,"results":[rec(i) for i in range(300)]},{"count":301,"results":[rec(300)]}]
+        pages=[taxon,{"count":301,"results":[rec(i+1) for i in range(300)]},{"count":301,"results":[rec(301)]}]
         with patch("maps.gbif_starlings.get_json",side_effect=pages),patch("maps.gbif_starlings.time.sleep"):
             rows,meta=fetch()
         self.assertEqual(len(rows),301)
