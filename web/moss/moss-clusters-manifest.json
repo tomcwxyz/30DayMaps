@@ -1,0 +1,133 @@
+{
+  "title": "A rolling stone gathers no moss — Day 04: Clusters",
+  "generated_at_utc": "2026-11-03T22:56:55.427700+00:00",
+  "source_generated_at": "2026-11-03T22:56:54.786191+00:00",
+  "source_file": "moss.geojson",
+  "input_grids": 2777,
+  "profiles": {
+    "all-broad": {
+      "eligible_cells": 450,
+      "clusters": 25,
+      "cells_in_clusters": 383,
+      "min_species": 7,
+      "min_records": 120,
+      "min_adjacent_cells": 3
+    },
+    "all-focus": {
+      "eligible_cells": 197,
+      "clusters": 20,
+      "cells_in_clusters": 130,
+      "min_species": 8,
+      "min_records": 0,
+      "min_adjacent_cells": 3
+    },
+    "all-strong": {
+      "eligible_cells": 139,
+      "clusters": 18,
+      "cells_in_clusters": 92,
+      "min_species": 8,
+      "min_records": 100,
+      "min_adjacent_cells": 3
+    },
+    "bog-broad": {
+      "eligible_cells": 384,
+      "clusters": 29,
+      "cells_in_clusters": 300,
+      "min_species": 2,
+      "min_records": 0,
+      "min_adjacent_cells": 3
+    },
+    "bog-focus": {
+      "eligible_cells": 339,
+      "clusters": 26,
+      "cells_in_clusters": 270,
+      "min_species": 2,
+      "min_records": 5,
+      "min_adjacent_cells": 3
+    },
+    "bog-strong": {
+      "eligible_cells": 274,
+      "clusters": 25,
+      "cells_in_clusters": 211,
+      "min_species": 2,
+      "min_records": 10,
+      "min_adjacent_cells": 3
+    },
+    "woodland-broad": {
+      "eligible_cells": 697,
+      "clusters": 28,
+      "cells_in_clusters": 647,
+      "min_species": 2,
+      "min_records": 40,
+      "min_adjacent_cells": 3
+    },
+    "woodland-focus": {
+      "eligible_cells": 442,
+      "clusters": 26,
+      "cells_in_clusters": 394,
+      "min_species": 2,
+      "min_records": 60,
+      "min_adjacent_cells": 3
+    },
+    "woodland-strong": {
+      "eligible_cells": 286,
+      "clusters": 22,
+      "cells_in_clusters": 229,
+      "min_species": 2,
+      "min_records": 80,
+      "min_adjacent_cells": 3
+    },
+    "grassland-broad": {
+      "eligible_cells": 752,
+      "clusters": 27,
+      "cells_in_clusters": 695,
+      "min_species": 1,
+      "min_records": 25,
+      "min_adjacent_cells": 3
+    },
+    "grassland-focus": {
+      "eligible_cells": 412,
+      "clusters": 21,
+      "cells_in_clusters": 356,
+      "min_species": 1,
+      "min_records": 40,
+      "min_adjacent_cells": 3
+    },
+    "grassland-strong": {
+      "eligible_cells": 310,
+      "clusters": 17,
+      "cells_in_clusters": 272,
+      "min_species": 1,
+      "min_records": 50,
+      "min_adjacent_cells": 3
+    },
+    "stone-broad": {
+      "eligible_cells": 543,
+      "clusters": 14,
+      "cells_in_clusters": 517,
+      "min_species": 3,
+      "min_records": 45,
+      "min_adjacent_cells": 3
+    },
+    "stone-focus": {
+      "eligible_cells": 375,
+      "clusters": 12,
+      "cells_in_clusters": 347,
+      "min_species": 3,
+      "min_records": 60,
+      "min_adjacent_cells": 3
+    },
+    "stone-strong": {
+      "eligible_cells": 228,
+      "clusters": 9,
+      "cells_in_clusters": 195,
+      "min_species": 3,
+      "min_records": 80,
+      "min_adjacent_cells": 3
+    }
+  },
+  "method": "Thresholded eight-neighbour connected components of NBN 10 km recording squares",
+  "geometry_note": "Smoothed footprints of recording squares, not actual moss cover; may include sea, urban land or other unsuitable habitat.",
+  "interpretation": "Clusters of recorded observations and co-occurrences; observer effort varies. No absence, abundance or habitat extent inferred.",
+  "sensitivity": "Broad/focus/strong thresholds were calibrated to the 3 November 2026 eight-species snapshot, not an ecological benchmark."
+}
