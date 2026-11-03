@@ -55,6 +55,9 @@ def test_portrait_video_and_teesside_detail_keep_provenance(tmp_path):
     for detail in (False,True):
         path=portrait(old,new,region,output,focus=detail,fps=1,gif=False)
         assert path.stat().st_size>5000
+        import imageio.v2 as imageio
+        with imageio.get_reader(path, format="FFMPEG") as reader:
+            assert tuple(reader.get_meta_data()["size"]) == (WIDTH, HEIGHT)
         assert Image.open(output/f"{path.stem}-poster.png").size==(WIDTH,HEIGHT)
         data=json.loads((output/f"{path.stem}-manifest.json").read_text())
         assert data["is_time_series"] is False
