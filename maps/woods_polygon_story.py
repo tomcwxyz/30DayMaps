@@ -202,7 +202,7 @@ def layout(image, chapter, step, *, region_label, counts, local=False):
            if chapter==0 else
            "Project boundaries ≠ confirmed tree cover.")
     draw.text((65,1812),label,font=font(23),fill=MUTED)
-    draw.text((58,1901),
+    draw.text((58,1885),
               "GB only (not NI) · Not a chronological planting animation",
               font=font(20),fill=(93,113,101))
     if local:
@@ -252,7 +252,6 @@ def render(ancient,projects,region,output,*,fps=10,gif=True):
         ("North East England",ne_region,ne_region),
         ("County Durham & Tees Valley",TEES_BOX,ne_region),
     ]
-    chapter_frames=[]
     master=output/"woods-returning-three-chapter-master.mp4"
     meta={"chapters":[],"is_chronological":False,
           "woodland_creation_polygon_coverage":"WCC only, validation stage or later",
@@ -289,7 +288,7 @@ def render(ancient,projects,region,output,*,fps=10,gif=True):
                                      duration=300,loop=0,optimize=True)
             meta["chapters"].append({"chapter":ci+1,"name":name,
                                      "ancient_polygon_features":actual_old,
-                                     "project_polygon_features":actual_new,
+                                     "project_polygon_parts":actual_new,
                                      "contains_local_polygon_zoom":ci==2})
             print(f"Rendered {clip} ({actual_old:,} ancient polygons, {actual_new:,} WCC features)",flush=True)
     finally:
