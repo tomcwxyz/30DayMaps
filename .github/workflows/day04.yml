@@ -1,0 +1,25 @@
+name: Day 04 site checks
+on:
+  push:
+    branches: [main, feat/day04-where-sky-gathers]
+    paths:
+      - 'web/day04/**'
+      - 'tests/day04.test.mjs'
+      - '.github/workflows/day04.yml'
+  pull_request:
+    paths:
+      - 'web/day04/**'
+      - 'tests/day04.test.mjs'
+      - '.github/workflows/day04.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/day04.test.mjs
+      - name: Syntax check modules
+        run: |
+          for file in web/day04/*.js; do node --check "$file"; done
