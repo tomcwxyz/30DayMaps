@@ -11,9 +11,12 @@ jobs:
       - name: Probe candidate sources
         shell: bash
         run: |
+          set +e +o pipefail
           h() { printf '%s  ' "$(curl -s -o /dev/null -w '%{http_code} %{size_download} %{content_type} -> %{url_effective}' -L --max-time 60 -r 0-2000 "$1")"; echo "$1"; }
           echo "== INSPIRE"; h 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip'
-          curl -sIL --max-time 60 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip' | grep -iE '^(HTTP|content-length|content-type|location)'
+          curl -sL -c jar -b jar --max-redirs 5 --max-time 120 -o nland.zip -w 'cookiejar: %{http_code} %{size_download} %{content_type}\n' 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip'
+          cat jar | tail -3; ls -l nland.zip; unzip -l nland.zip | head -8
+          curl -s --max-time 60 'https://use-land-property-data.service.gov.uk/datasets/inspire/download' | grep -oiE 'href="[^"]*(northumberland|newcastle)[^"]*"' | head
           echo "== CRoW EA"
           curl -s --max-time 60 'https://environment.data.gov.uk/arcgis/rest/services/NE/CountrysideandRightsOfWayAct2000AccessLayerEngland/FeatureServer/0?f=json' | head -c 2500; echo
           echo "== CRoW AGOL"
