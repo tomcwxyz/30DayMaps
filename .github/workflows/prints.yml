@@ -2,6 +2,9 @@ name: Footprints print maker
 on:
   workflow_dispatch:
     inputs:
+      recipe:
+        description: "Shop order: paste the recipe from the Stripe payment's metadata. Leave blank to use the boxes below."
+        default: ""
       place:
         description: "Preset place (see maps/print_places.json), or leave blank and give lat/lon"
         default: "newcastle"
@@ -84,6 +87,7 @@ jobs:
           WIDTH_KM: ${{ inputs.width_km }}
           THEME: ${{ inputs.theme }}
           SOURCE: ${{ inputs.source }}
+          RECIPE: ${{ inputs.recipe }}
         shell: bash
         run: |
           set -euo pipefail
@@ -93,6 +97,10 @@ jobs:
             barcelona) args=(--place barcelona --paper square --theme night --width-km 4 --subtitle "The Eixample grid") ;;
             york)      args=(--place york --paper A3 --landscape --theme blue --width-km 6) ;;
             form)
+              if [[ -n "$RECIPE" ]]; then
+                python -u -m maps.prints --recipe "$RECIPE" --formats print,web,pdf
+                exit 0
+              fi
               [[ -n "$PLACE" ]] && args+=(--place "$PLACE")
               [[ -n "$LAT" ]] && args+=(--lat "$LAT")
               [[ -n "$LON" ]] && args+=(--lon "$LON")

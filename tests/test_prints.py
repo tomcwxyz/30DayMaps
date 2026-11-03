@@ -80,3 +80,21 @@ def test_render_writes_png_and_pdf(tmp_path):
     png = prints.draw(spec, b, bounds, "os", tmp_path / "t.png", dpi=100)
     pdf = prints.draw(spec, b, bounds, "osm", tmp_path / "t.pdf", dpi=100, vector=True)
     assert png.stat().st_size > 5000 and pdf.stat().st_size > 5000
+
+
+def test_shop_recipe_rebuilds_the_design():
+    recipe = ('{"v":1,"lat":54.97383,"lon":-1.6132,"name":"Newcastle","title":"Home",'
+              '"subtitle":"Where we met","kicker":"","paper":"A3","orient":"landscape",'
+              '"width_km":4.5,"theme":"night","source":"osm"}')
+    spec = prints.spec_from_recipe(recipe)
+    assert (spec.title, spec.subtitle, spec.paper, spec.landscape, spec.width_km, spec.theme, spec.source) == \
+        ("Home", "Where we met", "A3", True, 4.5, "night", "osm")
+
+
+@pytest.mark.parametrize("change", [{"paper": "A0"}, {"width_km": 50}, {"title": ""},
+                                    {"title": "x" * 61}, {"v": 2}, {"theme": "neon"}])
+def test_bad_recipes_are_refused(change):
+    base = {"v": 1, "lat": 54.97, "lon": -1.61, "name": "N", "title": "T", "subtitle": "",
+            "kicker": "", "paper": "A3", "orient": "portrait", "width_km": 4, "theme": "paper"}
+    with pytest.raises(ValueError):
+        prints.spec_from_recipe({**base, **change})

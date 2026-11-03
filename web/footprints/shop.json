@@ -1,0 +1,15 @@
+{
+  "_help": "Prices are in pence. A size with price null is not for sale. Set your own prices from your print company's base cost plus postage plus margin.",
+  "currency": "gbp",
+  "countries": ["GB"],
+  "sizes": {
+    "A4": {"label": "A4 print, unframed", "price": null},
+    "A3": {"label": "A3 print, unframed", "price": null},
+    "A2": {"label": "A2 print, unframed", "price": null},
+    "A1": {"label": "A1 print, unframed", "price": null},
+    "50x70": {"label": "50 × 70 cm print, unframed", "price": null},
+    "square": {"label": "30 × 30 cm print, unframed", "price": null}
+  },
+  "shipping": {"label": "UK delivery", "price": null},
+  "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged."
+}
