@@ -162,7 +162,6 @@ def draw(parcels: gpd.GeoDataFrame, boundary, stats: dict, coverage: float,
     x = np.arange(1, len(a) + 1) / len(a) * 100
     inset.plot(x, np.cumsum(a) / a.sum() * 100, color=GREEN, lw=1.6)
     inset.plot([0, 100], [0, 100], color=MUTED, lw=0.6, ls=(0, (3, 3)))
-    inset.axvline(1, color=GOLD, lw=0.8)
     inset.set_xlim(0, 10); inset.set_ylim(0, 100)  # the action is in the first 10%
     for side in ("top", "right"):
         inset.spines[side].set_visible(False)
