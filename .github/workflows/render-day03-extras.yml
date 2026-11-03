@@ -1,0 +1,52 @@
+name: Day 03 polygon extras
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/arcgis.py'
+      - 'maps/polygon_frame.py'
+      - 'maps/land_parcels.py'
+      - 'maps/access_land.py'
+      - 'maps/watersheds.py'
+      - 'maps/footprints.py'
+      - 'tests/test_polygon_extras.py'
+      - '.github/workflows/render-day03-extras.yml'
+  push:
+    branches: ["feat/day03-four-more-polygons"]
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        map: [land_parcels, access_land, watersheds, footprints]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e '.[test]'
+      - run: python -m pytest -q tests/test_polygon_extras.py
+      - name: Download and render
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: python -u -m maps.${{ matrix.map }}
+      - name: Small previews in the log (for checking without the artifact)
+        if: always()
+        run: |
+          python - <<'PY'
+          import base64, io, pathlib
+          from PIL import Image
+          for p in sorted(pathlib.Path("challenges/03-polygons/outputs").rglob("*.png")):
+              im = Image.open(p).convert("RGB"); im.thumbnail((1400, 1400))
+              buf = io.BytesIO(); im.save(buf, "JPEG", quality=72)
+              print(f"PREVIEW-BEGIN {p}"); print(base64.b64encode(buf.getvalue()).decode()); print("PREVIEW-END")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day03-${{ matrix.map }}
+          path: challenges/03-polygons/outputs/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: 30daymaps
+Version: 0.1.0
+Summary: Small reproducible cartographic investigations
+Requires-Python: >=3.11
+Requires-Dist: geopandas>=1.0
+Requires-Dist: matplotlib>=3.9
+Requires-Dist: pandas>=2.2
+Requires-Dist: requests>=2.31
+Requires-Dist: scipy>=1.13
+Provides-Extra: test
+Requires-Dist: pytest>=8; extra == "test"
+Requires-Dist: Pillow>=11; extra == "test"
+Requires-Dist: imageio>=2.36; extra == "test"
+Requires-Dist: imageio-ffmpeg>=0.6; extra == "test"
+Provides-Extra: motion
+Requires-Dist: Pillow>=11; extra == "motion"
+Requires-Dist: imageio>=2.36; extra == "motion"
+Requires-Dist: imageio-ffmpeg>=0.6; extra == "motion"
