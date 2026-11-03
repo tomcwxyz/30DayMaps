@@ -77,9 +77,23 @@ def actual_polygon_layer(geometries, xy, colour, *, width=0, view=None):
             path=[xy(x,y) for x,y in poly.exterior.coords]
             if len(path) < 3:
                 continue
-            draw.polygon(path,fill=colour)
-            for hole in poly.interiors:
-                draw.polygon([xy(x,y) for x,y in hole.coords],fill=(0,0,0,0))
+            if poly.interiors:
+                # A transparent cut-out in the shared canvas would erase *other*
+                # mapped woodland already drawn inside this polygon's holes.
+                # Compose each perforated polygon through its own small local mask.
+                x0=max(0,min(x for x,y in path)); y0=max(0,min(y for x,y in path))
+                x1=min(WIDTH,max(x for x,y in path)+1)
+                y1=min(HEIGHT,max(y for x,y in path)+1)
+                if x0 < x1 and y0 < y1:
+                    mask=Image.new("L",(x1-x0,y1-y0),0)
+                    mask_draw=ImageDraw.Draw(mask)
+                    mask_draw.polygon([(x-x0,y-y0) for x,y in path],fill=255)
+                    for hole in poly.interiors:
+                        mask_draw.polygon([(px-x0,py-y0) for px,py in
+                                           [xy(x,y) for x,y in hole.coords]],fill=0)
+                    canvas.paste(colour,(x0,y0,x1,y1),mask)
+            else:
+                draw.polygon(path,fill=colour)
             # Outline visible shapes only; don't inflate subpixel polygons.
             if width and max(x for x,y in path)-min(x for x,y in path)>=5:
                 draw.line(path+[path[0]],fill=colour[:3]+(255,),width=width,
@@ -232,7 +246,7 @@ def render(ancient,projects,region,output,*,fps=10,gif=True):
         raise ValueError("North East ONS boundary absent")
     ne_region=northeast.geometry.union_all()
     localview,pair_distance=choose_local_view(ancient,projects,TEES_BOX)
-    gb_extent=box(*ancient.total_bounds.buffer(0).bounds) if False else box(*ancient.total_bounds)
+    gb_extent=box(*ancient.total_bounds)
     chapters=[
         ("Great Britain",gb_extent,None),
         ("North East England",ne_region,ne_region),
