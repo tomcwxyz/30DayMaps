@@ -16,11 +16,11 @@ def test_grid_reference(grid):
     assert len(ring) == 5
     assert ring[0] == ring[-1]
 
-def test_newcastle_location():
+def test_north_east_location():
     ring = moss.square("NZ25")
     lon = sum(p[0] for p in ring[:4]) / 4
     lat = sum(p[1] for p in ring[:4]) / 4
-    assert -1.9 < lon < -1.3 and 54.9 < lat < 55.2
+    assert -1.9 < lon < -1.3 and 54.8 < lat < 55.0
 
 def test_facet_api_formats():
     rows = [{"label": "CC-BY", "count": 10}]
