@@ -136,6 +136,8 @@ def run(out: Path = OUT, *, force: bool = False) -> dict:
     id_col = next((c for c in raw.columns if c.lower() == "objectid"), None)
     if id_col:
         raw = raw.drop_duplicates(id_col)
+    raw = raw.loc[raw.geometry.notna()].copy()
+    raw["geometry"] = shapely.make_valid(raw.geometry.values)
     nearby = classify(raw)
     access = nearby.loc[nearby.intersects(area)].copy()
     access["geometry"] = access.geometry.intersection(area)

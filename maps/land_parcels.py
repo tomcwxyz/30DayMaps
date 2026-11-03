@@ -97,7 +97,7 @@ def _polygonal(geom):
 
 
 def county_boundary(cache: Path, code: str = NORTHUMBERLAND, *, force: bool = False):
-    counties = cached_query(cache, COUNTIES, bbox=NORTHUMBERLAND_BBOX, force=force)
+    counties = cached_query(cache, COUNTIES, bbox=NORTHUMBERLAND_BBOX, paginate=False, force=force)
     match = counties.loc[counties.apply(lambda r: code in set(map(str, r.values)), axis=1)]
     if len(match) != 1:
         raise ValueError(f"Expected one boundary for {code}; got {len(match)}")

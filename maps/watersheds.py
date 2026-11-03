@@ -83,7 +83,7 @@ def draw(seas, catchments, watershed, north_east, filename):
     for _, row in seas.iterrows():
         gpd.GeoSeries([row.geometry], crs=27700).plot(ax=ax, color=SEA_COLOURS[row.sea], lw=0, zorder=1)
     catchments.boundary.plot(ax=ax, color=PAPER, lw=0.6, zorder=2)
-    gpd.GeoSeries([north_east], crs=27700).boundary.plot(ax=ax, color=INK, lw=0.5, ls=(0, (4, 3)), zorder=3)
+    gpd.GeoSeries([north_east], crs=27700).boundary.plot(ax=ax, color=INK, lw=0.5, linestyle="--", zorder=3)
     gpd.GeoSeries([watershed], crs=27700).plot(ax=ax, color=INK, lw=2.2, zorder=4)
     for _, row in catchments.iterrows():
         if row.area_km2 < 600:

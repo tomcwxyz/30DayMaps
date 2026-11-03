@@ -12,7 +12,7 @@ HEADERS = {"User-Agent": "30DayMaps/0.1 (open-data research)"}
 
 def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | None = None,
                    where: str = "1=1", out_fields: str = "*", page_size: int = 500,
-                   max_pages: int = 400, session=None) -> gpd.GeoDataFrame:
+                   max_pages: int = 400, paginate: bool = True, session=None) -> gpd.GeoDataFrame:
     """Fetch every feature matching a query, page by page, into British National Grid.
 
     Requests GeoJSON in WGS84 (the only CRS GeoJSON promises) and reprojects locally.
@@ -24,6 +24,8 @@ def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | 
         "where": where, "outFields": out_fields, "returnGeometry": "true",
         "outSR": "4326", "f": "geojson", "resultRecordCount": str(page_size),
     }
+    if not paginate:  # some services reject paging parameters outright
+        params.pop("resultRecordCount")
     if bbox is not None:
         params.update({
             "geometry": ",".join(str(v) for v in bbox),
@@ -32,7 +34,7 @@ def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | 
         })
     frames, offset = [], 0
     for _ in range(max_pages):
-        page = dict(params, resultOffset=str(offset))
+        page = dict(params, resultOffset=str(offset)) if paginate else params
         response = http.get(f"{layer_url.rstrip('/')}/query", params=page,
                             timeout=(20, 180), headers=HEADERS)
         response.raise_for_status()
@@ -44,6 +46,10 @@ def query_features(layer_url: str, *, bbox: tuple[float, float, float, float] | 
             frames.append(gpd.GeoDataFrame.from_features(features, crs="EPSG:4326"))
         exceeded = payload.get("exceededTransferLimit") or payload.get(
             "properties", {}).get("exceededTransferLimit")
+        if not paginate:
+            if exceeded:
+                raise RuntimeError(f"Unpaginated query to {layer_url} was truncated")
+            break
         if not features or (len(features) < page_size and not exceeded):
             break
         offset += len(features)
