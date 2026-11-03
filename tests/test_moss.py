@@ -31,7 +31,8 @@ def test_facet_api_formats():
 
 def test_exclude_noncommercial(monkeypatch):
     monkeypatch.setattr(moss, "SPECIES", {"Grimmia pulvinata": ("Grimmia", "Stone")})
-    def fake_query(session, species, fields, licence=None):
+    monkeypatch.setattr(moss, "resolve_tvk", lambda *a: None)
+    def fake_query(session, species, fields, licence=None, tvk=None):
         if licence is None:
             return {"totalRecords": 80, "facetResults": [
                 {"fieldName": "license", "fieldResult": [
