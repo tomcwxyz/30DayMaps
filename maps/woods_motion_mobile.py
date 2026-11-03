@@ -15,7 +15,7 @@ import geopandas as gpd
 import imageio.v2 as imageio
 import numpy as np
 from PIL import Image, ImageDraw
-from shapely.geometry import Polygon, MultiPolygon, box
+from shapely.geometry import Polygon, MultiPolygon, LineString, box
 
 from maps.woods_motion import (
     prepare, proximity_lines, font, PAPER, INK, HISTORIC, RETURNING,
@@ -119,14 +119,26 @@ def connection_overlay(lines, xy, view):
     return canvas, included
 
 
-def background(view, xy):
+def background(view, xy, *, actual_region=None):
     canvas=Image.new("RGBA",(WIDTH,HEIGHT),PAPER_RGB+(255,))
     draw=ImageDraw.Draw(canvas)
     draw.rounded_rectangle((38,430,1042,1475),radius=30,
                            fill=(250,251,247),outline=(225,229,218),width=2)
-    for polygon in clipped_geometries((view,), view):
-        draw.line([xy(x,y) for x,y in polygon.exterior.coords],
-                  fill=(159,175,162),width=4,joint="curve")
+    # Clip the *real* regional boundary. Don't draw the cut edge of an inset
+    # rectangle as though it were the edge of County Durham or Tees Valley.
+    actual = actual_region if actual_region is not None else view
+    border = actual.boundary.intersection(view)
+    def draw_real_lines(geom):
+        if geom.is_empty:
+            return
+        if geom.geom_type == "LineString":
+            if len(geom.coords)>1:
+                draw.line([xy(x,y) for x,y in geom.coords],
+                          fill=(159,175,162),width=4,joint="curve")
+        elif hasattr(geom, "geoms"):
+            for part in geom.geoms:
+                draw_real_lines(part)
+    draw_real_lines(border)
     return canvas
 
 
@@ -166,8 +178,10 @@ def labels(canvas, *, scene, area, counts, symbols, nearby):
         draw.rounded_rectangle((65,y+10,95,y+40),radius=7,fill=colour)
         draw.text((119,y),title,font=font(34,bold=True),fill=INK)
         draw.text((119,y+41),detail,font=font(25),fill=GREY)
-    draw.text((60,1882),"Small woodland areas marked at real locations; dots not to scale.",
-              font=font(21),fill=GREY)
+    footer=("Small sites marked at real coordinates; dots not to scale."
+            if "detail crop" not in area.lower()
+            else "Detail crop is not a boundary; site dots are not to scale.")
+    draw.text((60,1882),footer,font=font(21),fill=GREY)
 
 
 def compose(base, old_layer, new_layer, connection_layer, scene, progress,
@@ -190,7 +204,7 @@ def portrait(woods, projects, region, output, *, focus=False,
     view=region.intersection(TEES_VIEW) if focus else region
     if view.is_empty:
         raise ValueError("Tees detail view does not intersect North East")
-    area="County Durham & Tees Valley" if focus else "North East England"
+    area="County Durham & Tees Valley · detail crop" if focus else "North East England"
     suffix="tees-detail" if focus else "north-east"
     name=f"woods-returning-{suffix}-portrait"
     output=Path(output)
@@ -198,12 +212,14 @@ def portrait(woods, projects, region, output, *, focus=False,
     xy=geographic_transform(view)
     ancient,ancient_dots=polygon_overlay(woods.geometry,xy,HISTORIC,view)
     planting,planting_dots=polygon_overlay(projects.geometry,xy,RETURNING,view)
-    nearby_lines=proximity_lines(woods,projects,threshold_m=1500,limit=22)
+    local_old = woods.loc[woods.geometry.intersects(view)]
+    local_new = projects.loc[projects.geometry.intersects(view)]
+    nearby_lines=proximity_lines(local_old,local_new,threshold_m=1500,limit=22)
     connections,nearby=connection_overlay(nearby_lines,xy,view)
-    bg=background(view,xy)
-    # Counts represent sites *visible in the viewport*, not nationally.
-    old_count=sum(1 for _ in clipped_geometries(woods.geometry,view))
-    new_count=sum(1 for _ in clipped_geometries(projects.geometry,view))
+    bg=background(view,xy,actual_region=region)
+    # Count source features, not fragments produced by clipping a multipolygon.
+    old_count=len(local_old)
+    new_count=len(local_new)
     counts=(old_count,new_count)
     parts=(bg,ancient,planting,connections)
     poster=output/f"{name}-poster.png"
@@ -213,7 +229,7 @@ def portrait(woods, projects, region, output, *, focus=False,
     frame_count=int(3.25*fps)
     gif_frames=[]
     with imageio.get_writer(video_path,format="FFMPEG",fps=fps,codec="libx264",
-                            macro_block_size=16,quality=7,
+                            macro_block_size=2,quality=7,
                             output_params=["-pix_fmt","yuv420p"]) as writer:
         for scene in range(4):
             for f in range(frame_count):
