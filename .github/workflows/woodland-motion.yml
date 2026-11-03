@@ -1,0 +1,60 @@
+name: Day 03 woodland motion
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/woods_wcc.py'
+      - 'maps/woods_motion.py'
+      - 'tests/test_woods_motion.py'
+      - '.github/workflows/woodland-motion.yml'
+      - 'pyproject.toml'
+
+jobs:
+  motion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install geospatial, animation and test dependencies
+        run: python -m pip install -e '.[test,motion]'
+      - name: Test data provenance, geometry and actual video output
+        run: python -m pytest -q tests/test_woods_motion.py
+      - name: Download Natural England ancient woodland polygons
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/raw
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 360 \
+            --speed-time 40 --speed-limit 2048 --progress-bar \
+            'https://environment.data.gov.uk/api/file/download?fileDataSetId=008cdfcf-893b-48f6-937a-3891a2a698c9&fileName=Ancient_Woodland_England.gpkg.zip' \
+            -o data/raw/england-ancient-woodland.gpkg.zip
+          unzip -tqq data/raw/england-ancient-woodland.gpkg.zip
+      - name: Produce verified North East ancient woodland base
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python -u -m maps.woods --england data/raw/england-ancient-woodland.gpkg.zip \
+            --output challenges/03-polygons/outputs
+      - name: Fetch Woodland Carbon Code polygon dataset
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: python -u -m maps.woods_wcc --output data/raw/wcc-projects.geojson
+      - name: Render four-scene North East animation
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python -u -m maps.woods_motion \
+            --ancient challenges/03-polygons/outputs/north-east-ancient-woodland.gpkg \
+            --projects data/raw/wcc-projects.geojson \
+            --output challenges/03-polygons/outputs/motion
+      - name: Upload the poster, MP4, GIF and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day03-woods-motion
+          path: challenges/03-polygons/outputs/motion/
+          retention-days: 30
+          if-no-files-found: warn
