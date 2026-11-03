@@ -14,6 +14,11 @@ import requests
 
 SEARCH = "https://www.arcgis.com/sharing/rest/search"
 EXPECTED_TITLE = "woodland carbon code projects"
+# Independently identified from the live Scottish Forestry ArcGIS publication.
+# Avoid using an arbitrary third-party layer merely sharing the right title.
+PUBLISHER_SERVICE = ("https://services9.arcgis.com/RCPJF8Z8BrfjscvL/arcgis/rest/"
+                     "services/Woodland_Carbon_Code_Projects_Read_Only_View/FeatureServer")
+PUBLISHER_OWNER = "deborah.dunleavy_sf"
 
 
 def _json(session, url, params):
@@ -54,20 +59,19 @@ def find_project_layer(session=None) -> str:
     # Dedupe by URL, score exact publisher dataset title.
     candidates = list({x["url"]: x for x in candidates}.values())
     print("Woodland Carbon Code ArcGIS candidates:", json.dumps(candidates, indent=2), flush=True)
-    exact = [x for x in candidates if x["title"] == EXPECTED_TITLE]
-    if len(exact) == 1:
-        selected = exact[0]
-    elif len(exact) == 0 and len(candidates) == 1:
-        selected = candidates[0]
-    else:
-        raise RuntimeError("Ambiguous or missing official WCC project FeatureServer; specify verified service URL")
-    return selected["url"]
+    verified = [x for x in candidates
+                if x["owner"] == PUBLISHER_OWNER
+                and x["url"].lower() == PUBLISHER_SERVICE.lower()]
+    if len(verified) != 1:
+        raise RuntimeError("Pinned Scottish Forestry WCC layer absent from ArcGIS discovery")
+    return PUBLISHER_SERVICE
 
 
 def download_polygons(output: Path, *, service: str | None = None, session=None) -> Path:
     """Page the ArcGIS project layer and reject incomplete or non-polygon output."""
     http = session or requests.Session()
-    url = (service or find_project_layer(http)).rstrip("/")
+    url = (service or PUBLISHER_SERVICE).rstrip("/")
+    print(f"Using pinned Scottish Forestry WCC publisher service: {url}", flush=True)
     if not url.startswith("https://"):
         raise ValueError("ArcGIS source must be HTTPS")
     metadata = _json(http, url, {"f": "json"})
