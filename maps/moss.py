@@ -11,6 +11,7 @@ import requests
 from pyproj import Transformer
 
 API = "https://records-ws.nbnatlas.org/occurrences/search"
+SPECIES_API = "https://species-ws.nbnatlas.org/search"
 SPECIES = {
     "Sphagnum palustre": ("Blunt-leaved bog-moss", "Bog"),
     "Sphagnum capillifolium": ("Red bog-moss", "Bog"),
@@ -49,8 +50,28 @@ def facet_rows(payload, field):
     return []
 
 
-def query(session, species, fields, licence=None):
-    params = [("q", 'taxon_name:"' + species + '"'),
+def resolve_tvk(session, species):
+    """Resolve an accepted UKSI taxon key, avoiding authorship/name ambiguity."""
+    params = [("q", "*:*"), ("fq", "idxtype:TAXON"),
+              ("fq", 'scientificName:"' + species + '"'), ("pageSize", 25)]
+    try:
+        response = session.get(SPECIES_API, params=params, timeout=30)
+        response.raise_for_status()
+        items = response.json().get("searchResults", {}).get("results", [])
+    except (requests.RequestException, ValueError, AttributeError):
+        return None
+    exact = [item for item in items
+             if item.get("scientificName", "").casefold() == species.casefold()]
+    exact.sort(key=lambda item: item.get("taxonomicStatus") != "accepted")
+    for item in exact:
+        key = item.get("acceptedConceptID") or item.get("guid")
+        if key and re.fullmatch(r"[A-Z]+[0-9]+", str(key)):
+            return key
+    return None
+
+
+def query(session, species, fields, licence=None, tvk=None):
+    params = [("q", "lsid:" + tvk if tvk else 'taxon_name:"' + species + '"'),
               ("fq", '-occurrence_status:"absent"'),
               ("pageSize", 0), ("flimit", -1)]
     if licence is not None:
@@ -106,15 +127,23 @@ def retrieve(session):
     providers = Counter()
     rejected_grids = Counter()
     for scientific, (common, habitat) in SPECIES.items():
-        licences = query(session, scientific, ("license",))
+        print("Checking NBN taxon:", scientific, flush=True)
+        tvk = resolve_tvk(session, scientific)
+        licences = query(session, scientific, ("license",), tvk=tvk)
         licence_facets = facet_rows(licences, "license")
         if not licence_facets:
+            if not int(licences.get("totalRecords", 0)):
+                species_info.append({"name": scientific, "common": common, "type": habitat,
+                                     "licences": [], "mapped_records": 0,
+                                     "all_licence_records": 0, "taxon_key": tvk,
+                                     "status": "not returned by NBN occurrence query"})
+                continue
             raise ValueError("No licence facets for " + scientific + "; cannot verify data use")
         permitted = sorted({str(item["label"]) for item in licence_facets
                             if open_licence(item.get("label"))})
         mapped_records = 0
         for licence in permitted:
-            response = query(session, scientific, ("cl18", "data_provider"), licence)
+            response = query(session, scientific, ("cl18", "data_provider"), licence, tvk=tvk)
             grids = facet_rows(response, "cl18")
             if response.get("totalRecords", 0) and not grids:
                 raise ValueError("No 10 km grid facets for " + scientific)
@@ -132,7 +161,8 @@ def retrieve(session):
                 providers[str(entry.get("label", "unknown"))] += int(entry.get("count", 0))
         species_info.append({"name": scientific, "common": common, "type": habitat,
                              "licences": permitted, "mapped_records": mapped_records,
-                             "all_licence_records": int(licences.get("totalRecords", 0))})
+                             "all_licence_records": int(licences.get("totalRecords", 0)),
+                             "taxon_key": tvk, "status": "mapped" if mapped_records else "no open mapped records"})
     if not cells:
         raise ValueError("No open-licence NBN moss grid data; refusing to create empty map")
     features = [{"type": "Feature",
