@@ -39,9 +39,9 @@ jobs:
           import base64, io, pathlib
           from PIL import Image
           for p in sorted(pathlib.Path("challenges/03-polygons/outputs").rglob("*.png")):
-              im = Image.open(p).convert("RGB"); im.thumbnail((1400, 1400))
+              im = Image.open(p).convert("RGB"); im.thumbnail((1200, 1200))
               buf = io.BytesIO(); im.save(buf, "JPEG", quality=72)
-              print(f"PREVIEW-BEGIN {p}"); print(base64.b64encode(buf.getvalue()).decode()); print("PREVIEW-END")
+              print(f"PREVIEW-BEGIN {p}"); b = base64.b64encode(buf.getvalue()).decode(); print("\n".join(b[i:i+400] for i in range(0, len(b), 400))); print("PREVIEW-END")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
