@@ -8,32 +8,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Probe candidate sources
+      - name: Probe catchment names and item provenance
         shell: bash
         run: |
-          set +e +o pipefail
-          h() { printf '%s  ' "$(curl -s -o /dev/null -w '%{http_code} %{size_download} %{content_type} -> %{url_effective}' -L --max-time 60 -r 0-2000 "$1")"; echo "$1"; }
-          echo "== INSPIRE"; h 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip'
-          curl -sL -c jar -b jar --max-redirs 5 --max-time 120 -o nland.zip -w 'cookiejar: %{http_code} %{size_download} %{content_type}\n' 'https://use-land-property-data.service.gov.uk/datasets/inspire/download/Northumberland.zip'
-          cat jar | tail -3; ls -l nland.zip; unzip -l nland.zip | head -8
-          curl -s --max-time 60 'https://use-land-property-data.service.gov.uk/datasets/inspire/download' | grep -oiE 'href="[^"]*(northumberland|newcastle)[^"]*"' | head
-          echo "== CRoW EA"
-          curl -s --max-time 60 'https://environment.data.gov.uk/arcgis/rest/services/NE/CountrysideandRightsOfWayAct2000AccessLayerEngland/FeatureServer/0?f=json' | head -c 2500; echo
-          echo "== CRoW AGOL"
-          curl -s --max-time 60 'https://services.arcgis.com/JJzESW51TqeY9uat/arcgis/rest/services/CRoW_Act_2000_Access_Layer/FeatureServer/0?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ["name","maxRecordCount","supportedQueryFormats","geometryType","copyrightText"]}); print([f["name"] for f in d.get("fields",[])]); print(d.get("advancedQueryCapabilities"))'
-          curl -s --max-time 60 'https://services.arcgis.com/JJzESW51TqeY9uat/arcgis/rest/services/CRoW_Act_2000_Access_Layer/FeatureServer/0/query?where=1%3D1&geometry=360000,500000,480000,660000&geometryType=esriGeometryEnvelope&inSR=27700&spatialRel=esriSpatialRelIntersects&returnCountOnly=true&f=json'; echo
-          echo "== EA services directory"
-          curl -s --max-time 60 'https://environment.data.gov.uk/arcgis/rest/services/EA?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print([s["name"] for s in d.get("services",[]) if any(t in s["name"].lower() for t in ["wfd","catch","basin"])])' || true
-          echo "== AGOL WFD water body catchments C3"
-          curl -s --max-time 60 'https://services3.arcgis.com/Bb8lfThdhugyc4G3/ArcGIS/rest/services/England_WFD_River_Water_Body_Catchments_Cycle_3/FeatureServer/0?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ["name","maxRecordCount","supportedQueryFormats","copyrightText","description"]}); print([f["name"] for f in d.get("fields",[])])'
-          echo "== data.gov.uk CKAN search"
-          for q in 'WFD River Water Body Catchments Cycle 3' 'WFD Surface Water Management Catchments Cycle 3' 'WFD River Basin Districts Cycle 3'; do
-            curl -s --max-time 60 -G 'https://www.data.gov.uk/api/action/package_search' --data-urlencode "q=$q" --data-urlencode 'rows=4' | python3 -c 'import json,sys; d=json.load(sys.stdin)["result"]["results"]
-          for p in d:
-              print("PKG", p["title"], "|", p.get("organization",{}).get("title"))
-              for r in p.get("resources",[]): print("   ", r.get("format"), r.get("url"))' || true
+          set +e
+          WB='https://services3.arcgis.com/Bb8lfThdhugyc4G3/ArcGIS/rest/services/England_WFD_River_Water_Body_Catchments_Cycle_3/FeatureServer/0'
+          curl -s "$WB?f=json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("item", d.get("serviceItemId"))'
+          curl -s -G "$WB/query" --data-urlencode 'where=1=1' --data-urlencode 'geometry=290000,440000,480000,670000' \
+            --data-urlencode 'geometryType=esriGeometryEnvelope' --data-urlencode 'inSR=27700' \
+            --data-urlencode 'outFields=RBD_NAME,MNCAT_NAME' --data-urlencode 'returnDistinctValues=true' \
+            --data-urlencode 'returnGeometry=false' --data-urlencode 'f=json' | python3 -c 'import json,sys
+          d=json.load(sys.stdin)
+          for f in sorted(d.get("features",[]), key=lambda f:(f["attributes"]["RBD_NAME"],f["attributes"]["MNCAT_NAME"])): print("CAT", f["attributes"])
+          print(d.get("error"))'
+          curl -s -G "$WB/query" --data-urlencode 'where=1=1' --data-urlencode 'returnCountOnly=true' --data-urlencode 'f=json'; echo
+          for item in $(curl -s "$WB?f=json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["serviceItemId"])') 54b7adec13ae4710a018c5d5590993a0; do
+            curl -s "https://www.arcgis.com/sharing/rest/content/items/$item?f=json" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ITEM", {k:d.get(k) for k in ["title","owner","orgId","accessInformation","licenseInfo","modified","url"]})'
           done
-          echo "== OS OML"
-          curl -s --max-time 60 'https://api.os.uk/downloads/v1/products/OpenMapLocal/downloads?area=NZ' | head -c 3000; echo
-          echo "== Geofabrik"
-          curl -sIL --max-time 60 'https://download.geofabrik.de/europe/united-kingdom/england/tyne-and-wear-latest-free.shp.zip' | grep -iE '^(HTTP|content-length)'
+          curl -s 'https://www.arcgis.com/sharing/rest/portals/Bb8lfThdhugyc4G3?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ORG", d.get("name"), d.get("urlKey"))'
+          curl -s 'https://www.arcgis.com/sharing/rest/portals/JJzESW51TqeY9uat?f=json' | python3 -c 'import json,sys; d=json.load(sys.stdin); print("ORG", d.get("name"), d.get("urlKey"))'
+          echo "== OML NZ shapefile names"
+          curl -sL --max-time 300 -o oml.zip 'https://api.os.uk/downloads/v1/products/OpenMapLocal/downloads?area=NZ&format=ESRI%C2%AE+Shapefile&redirect'; unzip -l oml.zip | grep -iE 'build|licen|readme' | head
