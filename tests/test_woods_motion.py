@@ -9,7 +9,7 @@ from maps.woods_motion import (
     prepare, proximity_lines, transform, polygon_layer, frame, base_layer,
     read_projects, read_woodlands, animate, NORTH_EAST_CODE,
 )
-from maps.woods_wcc import find_project_layer
+from maps.woods_wcc import find_project_layer, PUBLISHER_SERVICE
 
 
 def fixture_layers(tmp_path):
@@ -64,12 +64,12 @@ class Response:
 class FakeDiscovery:
     def get(self,url,*,params,timeout):
         return Response({"results":[{"title":"Woodland Carbon Code Projects",
-            "url":"https://services1.arcgis.com/example/arcgis/rest/services/WCC/FeatureServer",
-            "owner":"ScottishForestry"}]})
+            "url": PUBLISHER_SERVICE,
+            "owner":"deborah.dunleavy_sf"}]})
 
 
 def test_discovery_targets_named_project_polygons():
-    assert find_project_layer(FakeDiscovery()).endswith("/FeatureServer")
+    assert find_project_layer(FakeDiscovery()) == PUBLISHER_SERVICE
 
 
 class Ambiguous:
@@ -98,3 +98,17 @@ def test_invalid_wcc_polygon_is_repaired_before_clipping(tmp_path):
     repaired=read_projects(file,region)
     assert len(repaired)>0
     assert repaired.geometry.is_valid.all()
+
+
+class ImpostorWCC:
+    def get(self, url, *, params, timeout):
+        return Response({"results": [
+            {"title":"Woodland Carbon Code Projects",
+             "url":"https://services1.arcgis.com/impostor/arcgis/rest/services/WCC/FeatureServer",
+             "owner":"unrelated-user"},
+        ]})
+
+
+def test_impostor_same_title_cannot_be_used_as_publisher():
+    with pytest.raises(RuntimeError,match="Pinned Scottish Forestry"):
+        find_project_layer(ImpostorWCC())
