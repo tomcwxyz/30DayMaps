@@ -9,6 +9,7 @@ dependencies = [
   "pandas>=2.2",
   "requests>=2.31",
   "scipy>=1.13",
+  "mapbox-vector-tile>=2.1",
 ]
 
 [project.optional-dependencies]
