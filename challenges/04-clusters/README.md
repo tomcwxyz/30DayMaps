@@ -41,6 +41,12 @@ Each tuple below is (minimum distinct species in each square, minimum records of
 
 These thresholds were explored against the 3 November 2026 NBN source snapshot. The interface deliberately fixes the all-eight comparison to (8, 0), while its larger connected components remain available for inspection. Simply connecting every square containing any moss would create one enormous cluster containing more than 2,500 grid squares. We instead explore stronger co-recorded concentrations. The thresholds are editorial and explanatory, **not validated ecological abundance cut-offs**.
 
+## Interpreting an uncoloured area
+
+**This is a map of where records gather into thresholded clusters, not a map of where moss exists.** In the default **Stone & walls → Focused** profile, a qualifying grid square needs records of all three selected species **and at least 60 combined observation records**, with at least three qualifying neighbouring 10 km squares needed for a visible cluster. Thus, an area can have many verified sightings and still appear blank.
+
+The optional **Reveal recorded squares outside clusters** layer draws muted 10 km evidence squares containing *any* species in the selected habitat-associated group, even when they do not meet the concentration threshold. The viewer shows both the number of source squares with sightings and the number contained in visible clusters. These are different quantities; neither is moss extent or abundance.
+
 ## Provenance and limitations
 
 - Source retrieval and licence filtering: maps/moss.py; 10 km source observations: web/moss/moss.geojson.
