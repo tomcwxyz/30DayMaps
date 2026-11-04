@@ -74,7 +74,7 @@ async function capture(name, viewport, { mobile = false, view = 'coverage' } = {
     await page.waitForTimeout(2200);
 
     // Genuine overlay geometries must render; do not accept a blank map.
-    const overlayCount = await page.locator('.leaflet-overlay-pane canvas').count();
+    const overlayCount = await page.locator('.leaflet-coverage-pane canvas').count();
     assert(overlayCount > 0, 'Real source squares did not render to canvas');
     assert.deepEqual(errors, [], 'Browser JavaScript exceptions');
     const filename = root + '/' + name + '.png';
