@@ -69,7 +69,7 @@ async function capture(name, viewport, { mobile = false, view = 'coverage' } = {
     await page.locator('[data-group="bog"]').click();
     assert.equal(await page.locator('#strength-section').isVisible(), true);
     assert((await page.locator('#status').innerText())
-      .includes('concentrations of bog mosses recordings'));
+      .includes('recording clusters for bog mosses'));
 
     // A sparse cluster map must not be mistaken for an absence map:
     // stone/wall moss has many sighting squares even if there are few
