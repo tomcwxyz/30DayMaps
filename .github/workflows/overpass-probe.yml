@@ -9,46 +9,53 @@ jobs:
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - run: pip install -q requests mapbox-vector-tile shapely
+      - run: pip install -q requests mapbox-vector-tile shapely matplotlib
       - shell: bash
         run: |
           python - <<'PY'
-          import requests, json, math, time, concurrent.futures as cf
+          import requests, math, time, concurrent.futures as cf, base64, io
           import mapbox_vector_tile
-          UA = {"User-Agent": "30DayMaps-footprints-probe/0.1 (github.com/tomcwxyz/30DayMaps)",
-                "Origin": "https://30daymaps-footprints.vercel.app"}
-          style = requests.get("https://tiles.openfreemap.org/styles/liberty", headers=UA, timeout=30).json()
-          src = style["sources"]
-          print("sources:", {k: v.get("url") for k, v in src.items()})
-          tj_url = next(v["url"] for v in src.values() if v.get("type") == "vector")
-          r = requests.get(tj_url, headers=UA, timeout=30); tj = r.json()
-          print("tilejson:", tj_url, "| tiles:", tj.get("tiles"), "| zoom", tj.get("minzoom"), tj.get("maxzoom"),
-                "| CORS:", r.headers.get("access-control-allow-origin"))
-          print("attribution:", tj.get("attribution"))
-          print("layers:", [l["id"] for l in tj.get("vector_layers", [])])
-          tmpl = tj["tiles"][0]
+          from shapely.geometry import shape
+          from shapely import affinity
+          UA = {"User-Agent": "30DayMaps-footprints-probe/0.1 (github.com/tomcwxyz/30DayMaps)"}
+          tmpl = requests.get("https://tiles.openfreemap.org/planet", headers=UA, timeout=30).json()["tiles"][0]
           def tile_xy(lat, lon, z):
               n = 2 ** z; x = (lon + 180) / 360 * n
               y = (1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * n
               return int(x), int(y)
-          # Newcastle 9 x 11.7 km window
           s, w, n, e = 54.921, -1.692, 55.026, -1.534
-          for z in (14, 13):
-              x0, y0 = tile_xy(n, w, z); x1, y1 = tile_xy(s, e, z)
-              tiles = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
-              def get(t):
-                  r = requests.get(tmpl.format(z=z, x=t[0], y=t[1]), headers=UA, timeout=60)
-                  return t, r.status_code, r.content, r.headers
-              t0 = time.time(); total = 0; buildings = 0; verts = 0; codes = set(); hdr = None
-              with cf.ThreadPoolExecutor(4) as ex:
-                  for t, code, body, h in ex.map(get, tiles):
-                      codes.add(code); total += len(body); hdr = hdr or h
-                      if code == 200 and body:
-                          d = mapbox_vector_tile.decode(body)
-                          b = d.get("building", {}).get("features", [])
-                          buildings += len(b)
-                          verts += sum(len(str(f["geometry"]["coordinates"])) for f in b)
-                          extent = d.get("building", {}).get("extent")
-              print(f"z{z}: {len(tiles)} tiles, HTTP {codes}, {total/1e6:.1f} MB, {buildings} building features, extent {extent}, {time.time()-t0:.1f}s")
-              print("   headers:", {k: v for k, v in hdr.items() if k.lower() in ("access-control-allow-origin", "content-encoding", "content-type", "cache-control")})
+          z = 14
+          x0, y0 = tile_xy(n, w, z); x1, y1 = tile_xy(s, e, z)
+          tiles = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
+          def get(t):
+              return t, requests.get(tmpl.format(z=z, x=t[0], y=t[1]), headers=UA, timeout=60).content
+          polys, props, bld_bytes = [], {}, 0
+          with cf.ThreadPoolExecutor(4) as ex:
+              for (x, y), body in ex.map(get, tiles):
+                  d = mapbox_vector_tile.decode(body, default_options={"y_coord_down": True})
+                  layer = d.get("building", {})
+                  for f in layer.get("features", []):
+                      for k in f["properties"]: props[k] = props.get(k, 0) + 1
+                      g = shape(f["geometry"])
+                      g = affinity.translate(g, x * 4096, y * 4096)
+                      polys.extend(getattr(g, "geoms", [g]))
+          print("PARTS", len(polys), "| property keys", props)
+          verts = sum(len(p.exterior.coords) for p in polys)
+          print("VERTS", verts, "avg", round(verts / max(1, len(polys)), 1))
+          import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
+          from matplotlib.patches import Polygon as MP
+          from matplotlib.collections import PatchCollection
+          # Byker crop: 1.4 km square
+          cx, cy = tile_xy(54.9742, -1.5789, z)
+          def frac(lat, lon):
+              n2 = 2 ** z; X = (lon + 180) / 360 * n2 * 4096
+              Y = (1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * n2 * 4096
+              return X, Y
+          X, Y = frac(54.9742, -1.5789); half = 1.4 / 2 / (40075 * math.cos(math.radians(54.97)) / 2 ** z) * 4096
+          fig, ax = plt.subplots(figsize=(6, 6), dpi=110)
+          ax.add_collection(PatchCollection([MP(list(p.exterior.coords)) for p in polys
+              if abs(p.centroid.x - X) < half * 1.1 and abs(p.centroid.y - Y) < half * 1.1], color="#1E353B", lw=0))
+          ax.set_xlim(X - half, X + half); ax.set_ylim(Y + half, Y - half); ax.set_aspect("equal"); ax.axis("off")
+          buf = io.BytesIO(); fig.savefig(buf, format="jpeg"); b = base64.b64encode(buf.getvalue()).decode()
+          print("PREVIEW-BEGIN prints/byker.png"); print("\n".join(b[i:i+400] for i in range(0, len(b), 400))); print("PREVIEW-END")
           PY
