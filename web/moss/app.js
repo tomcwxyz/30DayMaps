@@ -331,6 +331,7 @@
     el('strength-section').hidden = isCoverage() || isAllEight();
     el('evidence-section').hidden = isCoverage() || isAllEight();
     el('cluster-explainer').hidden = isCoverage() || isAllEight();
+    document.querySelector('.swatch-cluster').style.backgroundColor = GROUPS[state.group].colour;
     el('ranked-section').hidden = isCoverage();
   }
 
@@ -366,8 +367,8 @@
     const withoutShownCluster = recordedSquares - profile.cells_in_clusters;
     el('threshold').textContent = thresholdDescription(profile);
     el('status').textContent = format(features.length) +
-      ' concentrations of ' + GROUPS[state.group].label.toLowerCase() +
-      ' recordings · ' + format(profile.cells_in_clusters) +
+      ' recording clusters for ' + GROUPS[state.group].label.toLowerCase() +
+      ' · ' + format(profile.cells_in_clusters) +
       ' clustered squares of ' + format(recordedSquares) +
       ' squares with sightings';
     el('evidence-description').textContent =
