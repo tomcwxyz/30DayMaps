@@ -16,24 +16,35 @@
     <header class="masthead">
       <div class="masthead-top"><span class="eyebrow">30 Day Map Challenge / 2026</span><span class="day-label">04 <span>/ CLUSTERS</span></span></div>
       <h1>A rolling stone <em>gathers no moss.</em></h1>
-      <p>But where does moss gather? Follow the patterns left by eight species in Britain's natural history records.</p>
+      <p>But where does moss gather? Explore every recorded location for eight selected species, then discover the places where all eight appear together.</p>
     </header>
     <main class="map-layout">
       <aside class="controls" aria-label="Map controls and interpretation">
         <p class="panel-kicker">The living map</p>
-        <p class="panel-intro">These are clusters of <strong>recorded sightings</strong>, not measured patches of moss.</p>
+        <p class="panel-intro">First see <strong>all recorded moss squares</strong>. Then explore where species gather.</p>
         <div id="status" role="status" aria-live="polite">Loading the NBN Atlas snapshot…</div>
         <section aria-labelledby="groups-title">
           <h2 id="groups-title">Gatherings</h2>
           <div class="choices" id="groups" role="group" aria-label="Moss species group">
-            <button type="button" class="chip selected" data-group="all" aria-pressed="true">All eight species</button>
+            <button type="button" class="chip selected" data-group="coverage" aria-pressed="true">All moss records</button>
+            <button type="button" class="chip" data-group="all" aria-pressed="false">All 8 recorded together</button>
             <button type="button" class="chip" data-group="bog" aria-pressed="false">Bog mosses</button>
             <button type="button" class="chip" data-group="woodland" aria-pressed="false">Woodland</button>
             <button type="button" class="chip" data-group="grassland" aria-pressed="false">Grassland</button>
             <button type="button" class="chip" data-group="stone" aria-pressed="false">Stone &amp; walls</button>
           </div>
+          <p class="hint">“All moss” means every record for <strong>our eight selected species</strong> — not every UK moss species.</p>
         </section>
-        <section aria-labelledby="strength-title">
+        <section id="colour-section" aria-labelledby="colour-title">
+          <h2 id="colour-title">Colour all recorded squares by</h2>
+          <div class="segmented two-option" role="group" aria-label="Map colour scheme">
+            <button type="button" data-colour="leading" aria-pressed="true">Leading species</button>
+            <button type="button" data-colour="richness" aria-pressed="false">Species richness</button>
+          </div>
+          <p id="colour-explain" class="hint"></p>
+          <div id="colour-legend" class="colour-legend" aria-label="Map colour key"></div>
+        </section>
+        <section aria-labelledby="strength-title" id="strength-section">
           <div class="section-head"><h2 id="strength-title">Concentration</h2><span class="help" title="These are thresholds for forming recording clusters, not estimates of moss abundance.">?</span></div>
           <div class="segmented" role="group" aria-label="Cluster concentration">
             <button type="button" data-level="broad" aria-pressed="false">Broader</button>
@@ -42,11 +53,11 @@
           </div>
           <p id="threshold" class="hint">Select a group to see the clustering criteria.</p>
         </section>
-        <section aria-labelledby="evidence-title">
+        <section aria-labelledby="evidence-title" id="evidence-section">
           <h2 id="evidence-title">Look beneath</h2>
           <label class="switch"><input type="checkbox" id="show-grid"><span>Show original 10 km evidence squares</span></label>
         </section>
-        <section class="discovery" aria-labelledby="clusters-title">
+        <section class="discovery" aria-labelledby="clusters-title" id="ranked-section">
           <div class="section-head"><h2 id="clusters-title">Largest gatherings</h2><span class="hint">by grid squares</span></div>
           <div id="ranked" class="ranked"><p class="hint">Loading…</p></div>
         </section>
@@ -57,12 +68,12 @@
       </aside>
       <div class="map-frame">
         <div id="map" role="region" aria-label="Interactive UK map of moss observation clusters"></div>
-        <div class="map-note"><span class="key-dot"></span> Shapes are <strong>recording clusters</strong>, not moss cover <span class="divider-dot">·</span> 10 km source resolution</div>
+        <div class="map-note" id="map-note"><span class="key-dot"></span> Each coloured square contains a record from our eight-species dataset <span class="divider-dot">·</span> 10 km source resolution</div>
         <button type="button" id="reset-view" class="reset-view">View whole UK</button>
       </div>
     </main>
     <footer class="foot">
-      <div><strong>How it works.</strong> Neighbouring 10 km recording squares are grouped when they pass species and observation thresholds. At least three touching squares form a cluster. The softly rounded outlines are illustrative, not habitat boundaries. Gaps may mean nobody recorded moss.</div>
+      <div><strong>How it works.</strong> “All moss records” includes any of the eight selected species in each 10 km source square, with colours showing either the most frequently recorded species or how many distinct species were recorded. “All 8 recorded together” displays every square where all eight have records, highlighting contiguous clusters of three or more squares. Habitat-group views use their own thresholds. The shapes are recording patterns, not moss cover; missing observations do not prove absence.</div>
       <div class="foot-links">Data: <a href="https://nbnatlas.org/" target="_blank" rel="noopener noreferrer">NBN Atlas</a> and contributing recorders. <a href="./moss-manifest.json">Source records and licences</a> · <a href="./moss-clusters-manifest.json">Clustering method and thresholds</a> · <a href="https://github.com/tomcwxyz/30DayMaps/tree/main/challenges/04-clusters">Source and methodology</a>. Basemap © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>.</div>
     </footer>
   </div>
