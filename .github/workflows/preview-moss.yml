@@ -60,5 +60,17 @@ jobs:
           git add web/moss/preview-desktop.png web/moss/preview-mobile.png web/moss/preview-all-eight.png
           if ! git diff --cached --quiet; then
             git commit -m "Preview: screenshots of real Day 04 moss cluster map"
-            git push
+            # Another generated-asset workflow may have pushed after checkout.
+            # Rebase this independent asset commit before trying to push main.
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              echo "Push raced with another workflow; retrying ($attempt/5)"
+              sleep $(( attempt * 2 ))
+            done
+            echo "Failed to publish generated assets after five attempts" >&2
+            exit 1
           fi
