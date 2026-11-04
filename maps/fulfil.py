@@ -1,12 +1,15 @@
 """Turn paid footprints shop orders into Prodigi print orders.
 
     python -m maps.fulfil prepare --session cs_...   render the print and store the file
+                                                    (digital orders: render, store and email)
     python -m maps.fulfil submit  --session cs_...   send the order to Prodigi
     python -m maps.fulfil status                     check recent orders, tidy up shipped files
 
 The "Print order" GitHub workflow runs prepare, waits for approval, then runs submit.
+Digital orders finish in prepare: the files are emailed to the customer as download links.
 Stripe is the record: each order's progress is kept in its payment's metadata
-(print_status, print_preview, print_file, prodigi_order, tracking, print_error).
+(print_status, print_preview, print_file, prodigi_order, tracking, print_error;
+digital_png, digital_pdf, digital_sent for digital orders).
 
 This repository is public, so its Actions logs are too. Nothing here prints a
 customer's name, address, email, map title or file URL; logs name orders only by the
@@ -35,6 +38,7 @@ PRODIGI = {"sandbox": "https://api.sandbox.prodigi.com/v4.0", "live": "https://a
 SHIPPING_METHODS = {"Budget", "Standard", "StandardPlus", "Express", "Overnight"}
 SESSION_ID = re.compile(r"^cs_(test|live)_[A-Za-z0-9]{10,200}$")
 APPROVAL_GRACE_HOURS = 48
+RESEND = os.environ.get("RESEND_API_BASE", "https://api.resend.com")
 
 
 class FulfilError(Exception):
@@ -115,6 +119,7 @@ class Order:
     shipping: dict
     email: str | None
     created: int
+    product: str = "print"
 
 
 def load_order(http, key: str, session_id: str) -> Order:
@@ -133,13 +138,18 @@ def order_from_session(s: dict) -> Order:
     pi = s.get("payment_intent")
     if not isinstance(pi, dict) or not pi.get("id"):
         raise FulfilError("Stripe didn't return the payment for this order")
+    product = (s.get("metadata") or {}).get("product") or "print"
+    if product not in ("print", "digital"):
+        raise FulfilError("Unknown product on this order")
+    email = (s.get("customer_details") or {}).get("email")
     # Older Stripe API versions put the address at shipping_details; newer ones under collected_information.
     shipping = s.get("shipping_details") or (s.get("collected_information") or {}).get("shipping_details")
-    if not shipping or not shipping.get("address"):
+    if product == "print" and (not shipping or not shipping.get("address")):
         raise FulfilError("This order has no delivery address")
+    if product == "digital" and not email:
+        raise FulfilError("This order has no email address")
     return Order(session_id=s["id"], pi_id=pi["id"], metadata=pi.get("metadata") or {}, recipe=recipe,
-                 shipping=shipping, email=(s.get("customer_details") or {}).get("email"),
-                 created=int(s.get("created") or 0))
+                 shipping=shipping or {}, email=email, created=int(s.get("created") or 0), product=product)
 
 
 def recipient(shipping: dict, email: str | None) -> dict:
@@ -182,26 +192,76 @@ def blob(*args: str) -> dict:
     return json.loads(done.stdout or "{}")
 
 
-def render(recipe: str, out: Path) -> tuple[Path, Path]:
+DIGITAL_MIN_LONG_PX = 7016  # A2 at 300 dpi: digital files stay sharp printed up to A2, whatever size was chosen
+
+
+def render(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | None = None) -> dict[str, Path]:
+    """Render the recipe. Returns {"print": PNG, "web": preview PNG, "pdf": vector PDF}.
+
+    The PNG is 300 dpi at the chosen paper size, or finer if min_long_px asks for more pixels.
+    """
     from maps import prints
     spec = prints.spec_from_recipe(recipe)
-    spec.dpi, spec.formats = 300, ["print", "web"]
+    dpi = 300
+    if min_long_px:
+        long_in = max(prints.paper_mm(spec.paper, spec.landscape)) / prints.MM_PER_INCH
+        dpi = max(dpi, int(-(-min_long_px // long_in)))
+    spec.dpi, spec.formats = dpi, list(kinds)
     files = [Path(f) for f in prints.make(spec, out)["files"]]
-    print_file = next(f for f in files if f.name.endswith("dpi.png"))
-    preview = next(f for f in files if f.name.endswith("-web.png"))
-    return print_file, preview
+    found = {"print": [f for f in files if f.name.endswith("dpi.png")],
+             "web": [f for f in files if f.name.endswith("-web.png")],
+             "pdf": [f for f in files if f.suffix == ".pdf"]}
+    return {k: found[k][0] for k in kinds}
+
+
+# --- Email (digital orders) ----------------------------------------------------
+
+def _esc(text: str) -> str:
+    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def digital_email(title: str, png_url: str, pdf_url: str, days: int) -> tuple[str, str, str]:
+    subject = f"Your footprints print: {title}"[:150]
+    text = (f"Thanks for your order. Here's your print, \"{title}\".\n\n"
+            f"High-resolution PNG, sharp printed up to A2, for printing or screens:\n{png_url}\n\n"
+            f"PDF, which prints sharp at any size:\n{pdf_url}\n\n"
+            f"These links work for {days} days, so save the files somewhere safe.\n\n"
+            "The file is for your own use. Please keep the map data credit on it if you print or share it.\n\n"
+            "Any problem? Just reply to this email.")
+    html = (f"<p>Thanks for your order. Here's your print, <strong>{_esc(title)}</strong>.</p>"
+            f'<p><a href="{_esc(png_url)}">Download the high-resolution PNG</a>, sharp printed up to A2, for printing or screens.</p>'
+            f'<p><a href="{_esc(pdf_url)}">Download the PDF</a>, which prints sharp at any size.</p>'
+            f"<p>These links work for {days} days, so save the files somewhere safe.</p>"
+            "<p>The file is for your own use. Please keep the map data credit on it if you print or share it.</p>"
+            "<p>Any problem? Just reply to this email.</p>")
+    return subject, text, html
+
+
+def send_email(http, to: str, subject: str, text: str, html: str, idempotency: str):
+    key, sender = os.environ.get("RESEND_API_KEY"), os.environ.get("SHOP_EMAIL_FROM")
+    if not key or not sender:
+        raise FulfilError("Email isn't set up (RESEND_API_KEY and SHOP_EMAIL_FROM)")
+    body = {"from": sender, "to": [to], "subject": subject, "text": text, "html": html}
+    if os.environ.get("SHOP_REPLY_TO"):
+        body["reply_to"] = os.environ["SHOP_REPLY_TO"]
+    r = http.post(f"{RESEND}/emails", json=body, timeout=60,
+                  headers={"Authorization": f"Bearer {key}", "Idempotency-Key": idempotency})
+    if r.status_code >= 400:
+        raise FulfilError(f"Sending the email failed (HTTP {r.status_code})")
 
 
 # --- Steps -------------------------------------------------------------------
 
 def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer=render, shop=None) -> str:
-    """Render and store the print. Returns 'submit', or 'skip' when already sent to print."""
+    """Render and store the print. Returns 'submit', or 'skip' when nothing more is needed."""
     key = key or os.environ["STRIPE_SECRET_KEY"]
     order = load_order(http, key, session_id)
+    shop = shop or load_shop()
+    if order.product == "digital":
+        return deliver_digital(order, http=http, key=key, uploader=uploader, renderer=renderer, shop=shop)
     if order.metadata.get("prodigi_order"):
         print(f"{ref(order.pi_id)}: already sent to print; nothing to do")
         return "skip"
-    shop = shop or load_shop()
     from maps import prints
     sku_for(shop, prints.spec_from_recipe(order.recipe).paper)  # fail early if the size can't be printed
     if order.metadata.get("print_file"):
@@ -209,9 +269,9 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
         return "submit"
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            print_file, preview = renderer(order.recipe, Path(tmp))
-            file_url = uploader("put", str(print_file), f"orders/{order.pi_id}-print.png")["url"]
-            preview_url = uploader("put", str(preview), f"orders/{order.pi_id}-preview.png")["url"]
+            files = renderer(order.recipe, Path(tmp), ("print", "web"))
+            file_url = uploader("put", str(files["print"]), f"orders/{order.pi_id}-print.png")["url"]
+            preview_url = uploader("put", str(files["web"]), f"orders/{order.pi_id}-preview.png")["url"]
     except FulfilError:
         raise
     except Exception as e:  # keep tracebacks (which can contain URLs) out of public logs
@@ -222,10 +282,39 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     return "submit"
 
 
+def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str:
+    """Render the PNG and PDF, store them, and email the customer download links."""
+    if order.metadata.get("digital_sent"):
+        print(f"{ref(order.pi_id)}: digital file already emailed; nothing to do")
+        return "skip"
+    days = int((shop.get("digital") or {}).get("link_days") or 30)
+    try:
+        png_url, pdf_url = order.metadata.get("digital_png"), order.metadata.get("digital_pdf")
+        if not (png_url and pdf_url):  # a retry after a failed email reuses the stored files
+            with tempfile.TemporaryDirectory() as tmp:
+                files = renderer(order.recipe, Path(tmp), ("print", "pdf"), DIGITAL_MIN_LONG_PX)
+                png_url = uploader("put", str(files["print"]), f"digital/{order.pi_id}-print.png")["url"]
+                pdf_url = uploader("put", str(files["pdf"]), f"digital/{order.pi_id}-print.pdf")["url"]
+            stripe_set_metadata(http, key, order.pi_id, {"print_status": "file made, emailing",
+                                                         "digital_png": png_url, "digital_pdf": pdf_url})
+    except FulfilError:
+        raise
+    except Exception as e:
+        raise FulfilError(f"Rendering the digital file failed ({type(e).__name__})") from None
+    title = json.loads(order.recipe).get("title") or "your map"
+    send_email(http, order.email, *digital_email(title, png_url, pdf_url, days), idempotency=f"digital-{order.pi_id}")
+    stripe_set_metadata(http, key, order.pi_id, {"print_status": "emailed", "print_error": "",
+                                                 "digital_sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+    print(f"{ref(order.pi_id)}: digital file emailed")
+    return "skip"
+
+
 def submit(session_id: str, *, http=requests, key=None, prodigi_key=None, shop=None) -> str | None:
     key = key or os.environ["STRIPE_SECRET_KEY"]
     prodigi_key = prodigi_key or os.environ["PRODIGI_API_KEY"]
     order = load_order(http, key, session_id)
+    if order.product != "print":
+        raise FulfilError("Digital orders aren't sent to Prodigi")
     if order.metadata.get("prodigi_order"):
         print(f"{ref(order.pi_id)}: already sent to print; nothing to do")
         return order.metadata["prodigi_order"]
@@ -262,7 +351,8 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
     prodigi_key = prodigi_key or os.environ.get("PRODIGI_API_KEY")
     now = now or time.time()
     shop = shop or load_shop()
-    counts = {"in production": 0, "shipped": 0, "awaiting approval": 0, "needs attention": 0}
+    counts = {"in production": 0, "shipped": 0, "awaiting approval": 0, "digital emailed": 0, "needs attention": 0}
+    link_days = int((shop.get("digital") or {}).get("link_days") or 30)
     notes = list(config_problems(shop))
     params = {"limit": 100, "created[gte]": int(now - days * 86400), "expand[]": "data.payment_intent"}
     while True:
@@ -273,6 +363,18 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
             pi = s.get("payment_intent") or {}
             meta, pid = pi.get("metadata") or {}, pi.get("id", "")
             age_h = (now - int(s.get("created") or now)) / 3600
+            if (s.get("metadata") or {}).get("product") == "digital":
+                if meta.get("digital_sent"):
+                    counts["digital emailed"] += 1
+                    old = [meta[k] for k in ("digital_png", "digital_pdf") if meta.get(k)]
+                    if old and age_h > link_days * 24:  # links expire as promised in the email
+                        uploader("del", *old)
+                        stripe_set_metadata(http, key, pid, {"digital_png": "", "digital_pdf": "",
+                                                             "print_status": "emailed; links expired"})
+                elif age_h > 2:
+                    counts["needs attention"] += 1
+                    notes.append(f"{ref(pid)}: digital file not emailed (see the payment in Stripe)")
+                continue
             if meta.get("print_status") == "shipped":
                 counts["shipped"] += 1
                 continue

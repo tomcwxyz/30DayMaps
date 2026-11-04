@@ -89,6 +89,12 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .sheet canvas { display: block; width: 100%; height: auto; }
 .meta { font: 12px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
 .shopnote { margin: 0; font-size: 14px; }
+.choices { display: grid; gap: 6px; }
+.choice { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); font-size: 14px; cursor: pointer; }
+.choice:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice input { accent-color: var(--accent); margin: 0; }
+.choice span { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; flex: 1; }
+.choice .price { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 .credit { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
 .credit a { color: inherit; }
 @media (prefers-reduced-motion: no-preference) { button { transition: background .15s, border-color .15s; } }
@@ -144,7 +150,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     </fieldset>
 
     <fieldset id="shop" hidden>
-      <legend>Order a print</legend>
+      <legend>Order</legend>
+      <div class="choices" role="radiogroup" aria-label="What to order">
+        <label class="choice" id="choicePrint"><input type="radio" name="product" value="print" id="prodPrint" checked>
+          <span><strong>Printed and posted</strong><span class="price" id="printPrice"></span></span></label>
+        <label class="choice" id="choiceDigital"><input type="radio" name="product" value="digital" id="prodDigital">
+          <span><strong>Digital file by email</strong><span class="price" id="digitalPrice"></span></span></label>
+      </div>
       <p class="shopnote" id="shopPrice"></p>
       <button type="button" class="primary" id="order" disabled>Order this print</button>
       <div class="status" id="orderStatus" role="status"></div>
@@ -495,18 +507,34 @@ async function loadShop() {
     const r = await fetch("api/config", { cache: "no-store" });
     if (!r.ok) return;
     const c = await r.json();
-    if (c.open) { shop = c; $("shop").hidden = false; render(); }
+    if (c.open) {
+      shop = c;
+      const canPrint = Object.keys(c.sizes || {}).length > 0 && c.shipping;
+      $("choicePrint").hidden = !canPrint; $("choiceDigital").hidden = !c.digital;
+      $(canPrint ? "prodPrint" : "prodDigital").checked = true;
+      $("shop").hidden = false; render();
+    }
   } catch { /* no order API here: the page still works as a free tool */ }
 }
+function product() { return $("prodDigital").checked ? "digital" : "print"; }
 function updateShop(ready) {
   if (!shop) return;
   const size = shop.sizes[$("paper").value];
-  if (!size) {
-    $("shopPrice").textContent = "This paper size isn't for sale. Choose another to order.";
-    $("order").disabled = true; return;
+  $("printPrice").textContent = size ? `${money(size.price)} + ${money(shop.shipping.price)} delivery` : "not in this size";
+  if (shop.digital) $("digitalPrice").textContent = money(shop.digital.price);
+  let sellable = true;
+  if (product() === "digital") {
+    $("shopPrice").textContent = `A high-resolution PNG, sharp printed up to A2, and a PDF that scales to any size. ` +
+      `Emailed to you, usually within 10 minutes; the download links work for ${shop.digital.linkDays} days.`;
+    $("order").textContent = `Buy the digital file · ${money(shop.digital.price)}`;
+  } else if (size) {
+    $("shopPrice").textContent = `${size.label}: ${money(size.price)} + ${money(shop.shipping.price)} ${shop.shipping.label}.`;
+    $("order").textContent = "Order this print";
+  } else {
+    $("shopPrice").textContent = "This paper size isn't for sale as a print. Choose another size, or the digital file.";
+    $("order").textContent = "Order this print"; sellable = false;
   }
-  $("shopPrice").textContent = `${size.label}: ${money(size.price)} + ${money(shop.shipping.price)} ${shop.shipping.label}.`;
-  $("order").disabled = !ready || !words().title;
+  $("order").disabled = !sellable || !ready || !words().title;
   if (!ready) $("orderStatus").textContent = "Draw buildings first, so you see exactly what gets printed.";
   else if ($("orderStatus").textContent.startsWith("Draw buildings")) $("orderStatus").textContent = "";
 }
@@ -521,7 +549,7 @@ async function order() {
   btn.disabled = true; st.classList.remove("warn"); st.textContent = "Opening the payment page…";
   try {
     const r = await fetch("api/checkout", { method: "POST", headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({ recipe: recipe() }) });
+                                            body: JSON.stringify({ recipe: recipe(), product: product() }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok || !data.url) throw new Error(data.error || "The payment page couldn't be opened.");
     location.href = data.url;
@@ -553,6 +581,7 @@ $("load").addEventListener("click", load);
 $("png").addEventListener("click", exportPNG);
 $("svg").addEventListener("click", exportSVG);
 $("order").addEventListener("click", order);
+["prodPrint", "prodDigital"].forEach(id => $(id).addEventListener("change", render));
 ["title", "subtitle", "kicker", "paper", "orient", "width"].forEach(id => $(id).addEventListener("input", render));
 window.addEventListener("resize", render);
 (document.fonts ? document.fonts.load('800 20px "Archivo"').then(() => document.fonts.ready) : Promise.resolve()).then(render);

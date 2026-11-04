@@ -28,42 +28,61 @@ module.exports = async (req, res) => {
   const shop = loadShop();
   if (!shop.open) return res.status(503).json({ error: "The shop isn't open yet." });
 
-  let recipe;
+  let recipe, product;
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     recipe = validateRecipe(body && body.recipe);
+    product = (body && body.product) || "print";
+    if (product !== "print" && product !== "digital") throw new Error("Choose a printed copy or a digital file");
   } catch (e) {
     return res.status(400).json({ error: e.message });
   }
-  const size = shop.sizes[recipe.paper];
-  if (!size) return res.status(400).json({ error: "That size isn't for sale. Choose another paper size." });
-
   const site = originOf(req);
-  const params = form({
+  const recipeJson = JSON.stringify(recipe);
+  const common = {
     mode: "payment",
-    success_url: `${site}/thanks.html?order={CHECKOUT_SESSION_ID}`,
     cancel_url: `${site}/`,
-    line_items: [{
-      quantity: 1,
-      price_data: {
-        currency: shop.currency,
-        unit_amount: size.price,
+    phone_number_collection: { enabled: false },
+    metadata: { recipe: recipeJson, product, place: recipe.name, paper: recipe.paper },
+    payment_intent_data: { metadata: { recipe: recipeJson, product } },
+  };
+  let order;
+  if (product === "digital") {
+    if (!shop.digital) return res.status(400).json({ error: "Digital files aren't for sale at the moment." });
+    order = {
+      ...common,
+      success_url: `${site}/thanks.html?order={CHECKOUT_SESSION_ID}&type=digital`,
+      line_items: [{ quantity: 1, price_data: {
+        currency: shop.currency, unit_amount: shop.digital.price,
+        product_data: {
+          name: `Footprints digital print: ${recipe.title}`.slice(0, 250),
+          description: `High-resolution PNG (sharp printed up to A2) and a PDF that scales to any size, by email · ${recipe.name}`,
+        },
+      } }],
+      custom_text: shop.digitalNote ? { submit: { message: shop.digitalNote.slice(0, 1200) } } : undefined,
+    };
+  } else {
+    const size = shop.sizes[recipe.paper];
+    if (!size) return res.status(400).json({ error: "That size isn't for sale as a print. Choose another paper size." });
+    order = {
+      ...common,
+      success_url: `${site}/thanks.html?order={CHECKOUT_SESSION_ID}`,
+      line_items: [{ quantity: 1, price_data: {
+        currency: shop.currency, unit_amount: size.price,
         product_data: {
           name: `Footprints print: ${recipe.title}`.slice(0, 250),
           description: `${size.label}, ${recipe.orient} · ${recipe.theme} colours · ${recipe.width_km} km across · ${recipe.name}`,
         },
-      },
-    }],
-    shipping_address_collection: { allowed_countries: shop.countries },
-    shipping_options: [{ shipping_rate_data: {
-      type: "fixed_amount", display_name: shop.shipping.label,
-      fixed_amount: { amount: shop.shipping.price, currency: shop.currency },
-    } }],
-    phone_number_collection: { enabled: false },
-    custom_text: shop.note ? { submit: { message: shop.note.slice(0, 1200) } } : undefined,
-    metadata: { recipe: JSON.stringify(recipe), place: recipe.name, paper: recipe.paper },
-    payment_intent_data: { metadata: { recipe: JSON.stringify(recipe) } },
-  });
+      } }],
+      shipping_address_collection: { allowed_countries: shop.countries },
+      shipping_options: [{ shipping_rate_data: {
+        type: "fixed_amount", display_name: shop.shipping.label,
+        fixed_amount: { amount: shop.shipping.price, currency: shop.currency },
+      } }],
+      custom_text: shop.note ? { submit: { message: shop.note.slice(0, 1200) } } : undefined,
+    };
+  }
+  const params = form(order);
 
   try {
     const r = await fetch(`${process.env.STRIPE_API_BASE || "https://api.stripe.com"}/v1/checkout/sessions`, {

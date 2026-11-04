@@ -1,5 +1,5 @@
 {
-  "_help": "Prices are in pence. A size with price null is not for sale. Set your own prices from your print company's base cost plus postage plus margin. prodigi_sku is the Prodigi product code for that size, from the Prodigi product catalogue; every size you sell needs one.",
+  "_help": "Prices are in pence. A size with price null is not for sale. Set your own prices from your print company's base cost plus postage plus margin. prodigi_sku is the Prodigi product code for that size, from the Prodigi product catalogue; every size you sell needs one. digital is the emailed high-resolution file, sold for any size; set its price to null to stop selling it.",
   "currency": "gbp",
   "countries": ["GB"],
   "sizes": {
@@ -11,6 +11,8 @@
     "square": {"label": "30 × 30 cm print, unframed", "price": null, "prodigi_sku": null}
   },
   "shipping": {"label": "UK delivery", "price": null},
+  "digital": {"label": "Digital file by email", "price": 500, "link_days": 30},
   "fulfilment": {"provider": "prodigi", "shipping_method": "Standard"},
-  "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged."
+  "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged.",
+  "digital_note": "Your file is made for you and emailed straight away. By paying you agree to that, and that you lose the 14-day right to cancel once it's sent."
 }

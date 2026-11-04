@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   prepare:
-    name: Render the print
+    name: Render the print (digital orders are emailed here)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -41,6 +41,10 @@ jobs:
           SESSION: ${{ inputs.session }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          # Digital orders are emailed from here
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SHOP_EMAIL_FROM: ${{ vars.SHOP_EMAIL_FROM }}
+          SHOP_REPLY_TO: ${{ vars.SHOP_REPLY_TO }}
         run: python -u -m maps.fulfil prepare --session "$SESSION" --github-output "$GITHUB_OUTPUT"
 
   submit:

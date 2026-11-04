@@ -19,14 +19,19 @@ a { color: var(--accent); }
 </head>
 <body>
 <main>
-  <h1>Thanks, your print is ordered.</h1>
-  <p>We print each one to order. You'll get a receipt by email now, and a tracking email when it's posted.</p>
-  <p>If anything's wrong with your print when it arrives, reply to your receipt email and we'll put it right.</p>
+  <h1 id="head">Thanks, your print is ordered.</h1>
+  <p id="line1">We print each one to order. You'll get a receipt by email now, and a tracking email when it's posted.</p>
+  <p id="line2">If anything's wrong with your print when it arrives, reply to your receipt email and we'll put it right.</p>
   <p class="ref" id="ref"></p>
   <p><a href="./">Make another print</a></p>
 </main>
 <script>
-  const id = new URLSearchParams(location.search).get("order");
+  const q = new URLSearchParams(location.search), id = q.get("order");
+  if (q.get("type") === "digital") {
+    document.getElementById("head").textContent = "Thanks, your file is on its way.";
+    document.getElementById("line1").textContent = "We're making your high-resolution file now. It'll arrive by email, usually within 10 minutes, with links to the PNG and the PDF.";
+    document.getElementById("line2").textContent = "Nothing after half an hour? Check your spam folder, then reply to your receipt email and we'll sort it.";
+  }
   if (id) document.getElementById("ref").textContent = "Order reference: " + id.slice(-12);
 </script>
 </body>

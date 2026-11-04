@@ -10,7 +10,8 @@ module.exports = (req, res) => {
     open: shop.open,
     currency: shop.currency,
     sizes: shop.open ? shop.sizes : {},
-    shipping: shop.open ? { label: shop.shipping.label, price: shop.shipping.price } : null,
+    shipping: shop.open && shop.shipping ? { label: shop.shipping.label, price: shop.shipping.price } : null,
+    digital: shop.open && shop.digital ? { label: shop.digital.label, price: shop.digital.price, linkDays: shop.digital.linkDays } : null,
     limits: LIMITS,
   });
 };
