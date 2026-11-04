@@ -1,0 +1,68 @@
+name: Print order
+# Started by the shop's Stripe webhook for each paid order; you can also run it by hand
+# with a Checkout session ID (cs_…) from Stripe to retry an order.
+#
+# This repository is public, so these logs are too. The steps print no customer details
+# and upload no files here: the print goes to Vercel Blob, and its preview link is saved
+# on the payment in Stripe.
+on:
+  workflow_dispatch:
+    inputs:
+      session:
+        description: "Stripe Checkout session ID (cs_…)"
+        required: true
+
+run-name: Print order
+
+concurrency:
+  group: print-order-${{ inputs.session }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Render the print
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      next: ${{ steps.prepare.outputs.next }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: python -m pip install -e .
+      - run: npm ci --prefix web/footprints/scripts --no-audit --no-fund
+      - id: prepare
+        env:
+          SESSION: ${{ inputs.session }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: python -u -m maps.fulfil prepare --session "$SESSION" --github-output "$GITHUB_OUTPUT"
+
+  submit:
+    name: Send to Prodigi
+    needs: prepare
+    # Off until the repository variable PRINT_ORDERS is 'on'. Until then orders stop
+    # after rendering, and you can re-run this workflow once you're ready.
+    if: needs.prepare.outputs.next == 'submit' && vars.PRINT_ORDERS == 'on'
+    # With yourself as a required reviewer on this environment (Settings → Environments
+    # → print-orders), each order waits for your approval before going to Prodigi.
+    # Without a reviewer, orders go straight to print.
+    environment: print-orders
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e .
+      - env:
+          SESSION: ${{ inputs.session }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
+          PRODIGI_ENV: ${{ vars.PRODIGI_ENV || 'sandbox' }}
+        run: python -u -m maps.fulfil submit --session "$SESSION"

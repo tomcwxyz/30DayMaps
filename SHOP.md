@@ -1,43 +1,61 @@
-# Footprints shop (first version)
+# Footprints shop
 
-Customers design a print on the web page and pay by card. Each paid order in Stripe carries a **recipe** of the design. You turn the recipe into a print file with the GitHub form, then send it to a print company by hand. Nothing is automated after payment yet; that is deliberate while testing demand.
+Customers design a print on the web page and pay by card. Stripe tells the shop, a GitHub workflow renders the print, waits for your approval, and sends the order to Prodigi, who print and post it. A daily check records tracking and flags anything stuck.
 
-## How it fits together
+## How an order flows
 
-- `web/footprints/index.html` shows **Order a print** only when it's served with its order API and the shop is open. Opened as a plain file, or on GitHub Pages, it stays a free design tool.
-- `web/footprints/api/checkout.js` checks the design, prices it from `shop.json` (never from the browser) and opens Stripe Checkout with the recipe in the payment's metadata.
-- `web/footprints/shop.json` holds your prices (in pence), delivery price, countries and the note shown at checkout. A size with `"price": null` isn't for sale.
-- `web/footprints/thanks.html` is where customers land after paying.
+1. **Pay.** `web/footprints/api/checkout.js` checks the design, prices it from `shop.json` and opens Stripe Checkout. The design's **recipe** is saved on the payment.
+2. **Start.** Stripe calls `api/stripe-webhook.js`. It re-checks the event with Stripe (so a forged call can't start a print) and starts the **Print order** workflow with the Checkout session ID.
+3. **Render.** `python -m maps.fulfil prepare` renders the 300 dpi print, stores it in Vercel Blob, and saves a preview link on the payment in Stripe (`print_preview`).
+4. **Approve.** The workflow pauses for your approval. GitHub emails you; check the preview link on the payment in Stripe, then press **Approve and deploy** on the run.
+5. **Print.** `python -m maps.fulfil submit` creates the Prodigi order. It's keyed to the Stripe payment, so the same order can't be printed twice. The Prodigi order ID is saved on the payment (`prodigi_order`).
+6. **Track.** The daily **Print orders check** saves the tracking link on the payment once Prodigi ships it, deletes the print file, and fails (so GitHub emails you) if an order has a problem or has waited over two days for approval.
 
-## Going live
+Stripe is the record: each payment's metadata shows `print_status` and any `print_error`.
 
-1. **Prices.** Fill in `shop.json`: price per size and the delivery price, in pence. Base them on your print company's base cost plus postage plus margin.
-2. **Host.** Create a Vercel project from this repo with **Root Directory** set to `web/footprints` and no build step. Any host that runs Node functions from an `api/` folder works.
-3. **Stripe key.** In the host's environment variables, set `STRIPE_SECRET_KEY`. Start with a test key (`sk_test_…`). Optionally set `SITE_URL` to your public address. The key never reaches the browser.
-4. **Notifications.** In Stripe, turn on email notifications for successful payments, and customer receipts.
-5. **Test.** In test mode, order a print with Stripe's test card, check the payment shows the recipe, and run it through the steps below. Then switch to your live key.
+**Privacy.** This repository is public, so its Actions logs are public too. The workflows print no names, addresses, emails or map titles, and upload no files to GitHub. Detail stays in Stripe; print files sit in Vercel Blob under long random addresses and are deleted after shipping.
 
-The shop opens only when the key is set, at least one size has a price and delivery has a price.
+## Setting it up
 
-## Fulfilling an order
+You need accounts with Stripe, Prodigi and Vercel. Do it all in test mode first.
 
-1. In Stripe, open the payment and copy the `recipe` value from its metadata.
-2. In GitHub: **Actions → Footprints print maker → Run workflow**, paste it into **Shop order**, run.
-3. Download the artifact. Upload the 300 dpi PNG (or the PDF) to your print company, with the customer's shipping address from Stripe.
-4. Send the tracking number to the customer when the print company dispatches.
+**Shop settings** in `web/footprints/shop.json`:
+- `price` per size and the `shipping` price, in pence. A size with no price isn't for sale.
+- `prodigi_sku` per size you sell: the Prodigi product code, from their product catalogue or dashboard. The renderer makes the exact paper size with a built-in margin, and Prodigi fills the print area, so a little trimmed for bleed comes off the margin, not the map.
+- `fulfilment.shipping_method`: one of Budget, Standard, StandardPlus, Express, Overnight.
 
-The recipe always prints from OpenStreetMap, the same data the customer saw on the page, so the print matches the preview.
+**Vercel** (hosts the page and the two functions):
+1. New project from this repo, **Root Directory** `web/footprints`, no build step.
+2. Create a **Blob** store for the project (Storage tab) and copy its `BLOB_READ_WRITE_TOKEN`.
+3. Environment variables: `STRIPE_SECRET_KEY`, `GITHUB_TOKEN` (a fine-grained token for this repository only, with **Actions: read and write**), and optionally `SITE_URL`.
 
-## Before the first real order
+**Stripe:**
+1. Developers → Webhooks → add endpoint `https://<your site>/api/stripe-webhook`, events `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
+2. Turn on customer receipts and your own payment notifications.
 
-- **Print company file sizes.** Check the exact sizes and bleed your print company wants for each product. The renderer makes exact A-series and 50×70 cm sheets with a built-in margin but no bleed.
-- **Text.** Customers write their own titles (max 60 characters, subtitle 140). Look at each recipe before printing.
-- **Credit line.** The OpenStreetMap credit is part of every print and must stay.
-- **Terms, privacy and VAT.** You'll hold customer names and addresses via Stripe.
+**GitHub** (Settings of this repository):
+1. Secrets → Actions: `STRIPE_SECRET_KEY`, `PRODIGI_API_KEY`, `BLOB_READ_WRITE_TOKEN`.
+2. Environments → New environment `print-orders` → add yourself under **Required reviewers**, and limit it to the `main` branch.
+3. Variables → Actions: `PRINT_ORDERS` = `on`. Until this is set, orders stop after rendering.
+4. Leave `PRODIGI_ENV` unset while testing: orders go to Prodigi's sandbox, which doesn't print, post or charge.
 
-## Trying it locally
+**Prodigi:** add a payment method to your account, or live orders wait on hold. If your account offers branded customer emails, turn them on so customers get dispatch and tracking emails.
 
-    node web/footprints/test/devserver.js                     # page + API, shop closed
+## Testing, then going live
+
+1. With Stripe test keys and the Prodigi sandbox, order a print using Stripe's test card `4242 4242 4242 4242`.
+2. Check: the Print order run starts, the preview link appears on the test payment, approving sends a sandbox order to Prodigi, and `prodigi_order` appears on the payment.
+3. To go live: switch Vercel's and GitHub's `STRIPE_SECRET_KEY` to live keys, add a live Stripe webhook, put a live `PRODIGI_API_KEY` in GitHub, and set the variable `PRODIGI_ENV` = `live`.
+
+## When something goes wrong
+
+- **A run failed.** GitHub emails you. The log says which step stopped; the detail is in `print_error` on the payment in Stripe. Fix the cause and **Re-run** the workflow, or run **Print order** by hand with the Checkout session ID (`cs_…`) from Stripe.
+- **Stripe couldn't reach the webhook.** Stripe retries for three days. You can also start **Print order** by hand.
+- **Skip approval.** Remove yourself as a reviewer on `print-orders`. Orders then go straight to print; you lose the chance to check customers' titles first.
+
+## Local testing
+
+    node web/footprints/test/devserver.js                      # page and API, shop closed
     MOCK_STRIPE=1 SHOP_JSON=my-prices.json node web/footprints/test/devserver.js
 
-With `MOCK_STRIPE=1` the server answers Stripe itself and logs what would have been sent, so the whole flow can be tried without an account. Tests: `node --test web/footprints/test/*.test.js` and `python -m pytest tests/test_prints.py`.
+With `MOCK_STRIPE=1` the server stands in for Stripe and GitHub and logs what would be sent. Tests: `node --test web/footprints/test/*.test.js` and `python -m pytest tests/test_prints.py tests/test_fulfil.py`.

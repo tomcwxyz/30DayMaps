@@ -1,0 +1,195 @@
+"""Fulfilment against fake Stripe, Prodigi and file storage. No network."""
+import json
+from pathlib import Path
+
+import pytest
+
+from maps import fulfil
+
+RECIPE = json.dumps({"v": 1, "lat": 54.97, "lon": -1.61, "name": "Heaton", "title": "Home",
+                     "subtitle": "Where we met", "kicker": "", "paper": "A3", "orient": "portrait",
+                     "width_km": 3, "theme": "night", "source": "osm"})
+SHOP = {"sizes": {"A3": {"price": 3500, "prodigi_sku": "TEST-SKU-A3"}, "A4": {"price": None, "prodigi_sku": None}},
+        "fulfilment": {"shipping_method": "Standard"}}
+ADDRESS = {"line1": "12 Secret Street", "line2": None, "city": "Newcastle upon Tyne", "state": None,
+           "postal_code": "NE6 5XX", "country": "GB"}
+PERSONAL = ["Jo Bloggs", "Secret Street", "NE6 5XX", "jo@example.com", "Where we met", "blob.example"]
+
+
+def session(meta=None, *, paid=True, new_api=False, created=1_000_000):
+    shipping = {"name": "Jo Bloggs", "address": ADDRESS}
+    s = {"id": "cs_test_a1b2c3d4e5f6g7h8", "payment_status": "paid" if paid else "unpaid", "created": created,
+         "metadata": {"recipe": RECIPE}, "customer_details": {"email": "jo@example.com"},
+         "payment_intent": {"id": "pi_3Abcdefgh12345678", "metadata": meta or {}}}
+    if new_api:
+        s["collected_information"] = {"shipping_details": shipping}
+    else:
+        s["shipping_details"] = shipping
+    return s
+
+
+class Resp:
+    def __init__(self, status, body):
+        self.status_code, self._body = status, body
+
+    def json(self):
+        return self._body
+
+
+class FakeHTTP:
+    """Records calls; answers from a list of (method, url fragment, status, body) rules."""
+    def __init__(self, rules):
+        self.rules, self.calls = rules, []
+
+    def _answer(self, method, url, **kw):
+        self.calls.append((method, url, kw))
+        for m, frag, status, body in self.rules:
+            if m == method and frag in url:
+                return Resp(status, body(kw) if callable(body) else body)
+        raise AssertionError(f"unexpected {method} {url}")
+
+    def get(self, url, **kw):
+        return self._answer("GET", url, **kw)
+
+    def post(self, url, **kw):
+        return self._answer("POST", url, **kw)
+
+
+def fake_render(recipe, out):
+    a, b = Path(out) / "x-300dpi.png", Path(out) / "x-web.png"
+    a.write_bytes(b"png"), b.write_bytes(b"png")
+    return a, b
+
+
+def uploads():
+    log = []
+    def up(cmd, *args):
+        log.append((cmd, args))
+        return {"url": f"https://blob.example/{args[1] if cmd == 'put' else ''}-rnd"} if cmd == "put" else {}
+    return up, log
+
+
+def test_prepare_renders_stores_and_records_on_the_payment(capsys):
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session()), ("POST", "/payment_intents/", 200, {})])
+    up, log = uploads()
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up,
+                          renderer=fake_render, shop=SHOP) == "submit"
+    assert [a[1] for _, a in log] == ["orders/pi_3Abcdefgh12345678-print.png", "orders/pi_3Abcdefgh12345678-preview.png"]
+    meta = http.calls[-1][2]["data"]
+    assert meta["metadata[print_status]"] == "awaiting approval"
+    assert meta["metadata[print_file]"].startswith("https://blob.example/")
+    out = capsys.readouterr().out
+    assert not any(p in out for p in PERSONAL)
+
+
+def test_prepare_skips_orders_already_sent():
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"prodigi_order": "ord_1"}))])
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=None, renderer=None, shop=SHOP) == "skip"
+
+
+def test_prepare_refuses_unpaid_and_bad_ids():
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session(paid=False))])
+    with pytest.raises(fulfil.FulfilError, match="isn't paid"):
+        fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", shop=SHOP)
+    with pytest.raises(fulfil.FulfilError, match="session ID"):
+        fulfil.prepare("cs_test_x/../../charges", http=http, key="sk", shop=SHOP)
+
+
+def test_size_without_a_prodigi_product_stops_before_rendering():
+    shop = {"sizes": {"A3": {"price": 3500, "prodigi_sku": None}}}
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session())])
+    with pytest.raises(fulfil.FulfilError, match="prodigi_sku"):
+        fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", renderer=None, shop=shop)
+
+
+@pytest.mark.parametrize("new_api", [False, True])
+def test_submit_sends_one_idempotent_order_to_prodigi_sandbox(new_api, monkeypatch, capsys):
+    monkeypatch.delenv("PRODIGI_ENV", raising=False)
+    sent = {}
+    def created(kw):
+        sent.update(kw)
+        return {"outcome": "Created", "order": {"id": "ord_829"}}
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "https://blob.example/f.png"}, new_api=new_api)),
+                     ("POST", "api.sandbox.prodigi.com/v4.0/orders", 200, created),
+                     ("POST", "/payment_intents/", 200, {})])
+    assert fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP) == "ord_829"
+    body = sent["json"]
+    assert sent["headers"] == {"X-API-Key": "pk"}
+    assert body["idempotencyKey"] == body["merchantReference"] == "pi_3Abcdefgh12345678"
+    assert body["shippingMethod"] == "Standard"
+    assert body["recipient"] == {"name": "Jo Bloggs", "email": "jo@example.com", "address": {
+        "line1": "12 Secret Street", "postalOrZipCode": "NE6 5XX", "countryCode": "GB", "townOrCity": "Newcastle upon Tyne"}}
+    item = body["items"][0]
+    assert (item["sku"], item["copies"], item["sizing"]) == ("TEST-SKU-A3", 1, "fillPrintArea")
+    assert item["assets"] == [{"printArea": "default", "url": "https://blob.example/f.png"}]
+    assert http.calls[-1][2]["data"]["metadata[prodigi_order]"] == "ord_829"
+    assert not any(p in capsys.readouterr().out for p in PERSONAL)
+
+
+def test_submit_goes_live_only_when_told(monkeypatch):
+    monkeypatch.setenv("PRODIGI_ENV", "live")
+    assert fulfil.prodigi_base() == "https://api.prodigi.com/v4.0"
+    monkeypatch.setenv("PRODIGI_ENV", "production")
+    with pytest.raises(fulfil.FulfilError):
+        fulfil.prodigi_base()
+
+
+def test_refused_order_is_recorded_privately_and_stops(capsys):
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "https://blob.example/f.png"})),
+                     ("POST", "/orders", 400, {"outcome": "ValidationFailed", "failures": {"recipient.address": ["Jo Bloggs NE6 5XX invalid"]}}),
+                     ("POST", "/payment_intents/", 200, {})])
+    with pytest.raises(fulfil.FulfilError, match="ValidationFailed") as err:
+        fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP)
+    assert not any(p in str(err.value) for p in PERSONAL)
+    assert "NE6 5XX" in http.calls[-1][2]["data"]["metadata[print_error]"]  # detail kept in Stripe only
+
+
+def test_submit_does_nothing_for_an_order_already_sent():
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"prodigi_order": "ord_1"}))])
+    assert fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP) == "ord_1"
+    assert len(http.calls) == 1
+
+
+def test_incomplete_address_is_refused():
+    with pytest.raises(fulfil.FulfilError, match="incomplete"):
+        fulfil.recipient({"name": "Jo", "address": {"line1": "1 Road", "country": "GB"}}, None)
+
+
+def test_status_records_tracking_and_deletes_shipped_files():
+    shipped = session({"prodigi_order": "ord_1", "print_file": "https://blob.example/f", "print_preview": "https://blob.example/p"})
+    waiting = session({"print_file": "https://blob.example/g", "print_status": "awaiting approval"}, created=1_000_000 - 3 * 86400)
+    waiting["payment_intent"]["id"] = "pi_waiting000001"
+    http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [shipped, waiting], "has_more": False}),
+                     ("GET", "/orders/ord_1", 200, {"order": {"status": {"stage": "Complete", "issues": []},
+                      "shipments": [{"status": "Shipped", "tracking": {"url": "https://track.example/1", "number": "1"}}]}}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, log = uploads()
+    result = fulfil.status(http=http, key="sk", prodigi_key="pk", uploader=up, shop=SHOP, now=1_000_000 + 3600)
+    assert result["counts"]["shipped"] == 1 and result["counts"]["awaiting approval"] == 1
+    assert log == [("del", ("https://blob.example/f", "https://blob.example/p"))]
+    posted = [c[2]["data"] for c in http.calls if c[0] == "POST"]
+    assert posted[0] == {"metadata[print_status]": "shipped", "metadata[tracking]": "https://track.example/1"}
+    assert any("over 48 hours" in n for n in result["notes"])  # the waiting order is 3 days old
+
+
+def test_status_flags_sizes_that_cannot_be_printed():
+    shop = {"sizes": {"A2": {"price": 4500, "prodigi_sku": None}}, "fulfilment": {"shipping_method": "Standard"}}
+    http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [], "has_more": False})])
+    assert fulfil.status(http=http, key="sk", shop=shop)["notes"] == ["Size A2 is for sale but has no prodigi_sku"]
+
+
+def test_cli_never_prints_tracebacks(monkeypatch, capsys):
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk")
+    def boom(*a, **k):
+        raise RuntimeError("https://blob.example/secret Jo Bloggs")
+    monkeypatch.setattr(fulfil, "prepare", boom)
+    with pytest.raises(SystemExit):
+        fulfil.main(["prepare", "--session", "cs_test_a1b2c3d4e5f6g7h8"])
+    out = capsys.readouterr()
+    assert "RuntimeError" in out.out and "Jo Bloggs" not in out.out + out.err
+
+
+def test_shop_json_in_repo_is_valid_and_closed():
+    shop = fulfil.load_shop()
+    assert all("prodigi_sku" in s for s in shop["sizes"].values())
+    assert fulfil.shipping_method(shop) == "Standard"

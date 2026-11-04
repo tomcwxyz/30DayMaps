@@ -13,6 +13,8 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", "
 if (process.env.MOCK_STRIPE) {
   process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "sk_test_mock";
   process.env.STRIPE_API_BASE = `http://localhost:${PORT}/__mock_stripe`;
+  process.env.GITHUB_TOKEN = process.env.GITHUB_TOKEN || "ghp_mock";
+  process.env.GITHUB_API_BASE = `http://localhost:${PORT}/__mock_github`;
 }
 
 function shim(res) {
@@ -27,13 +29,22 @@ http.createServer((req, res) => {
   let body = "";
   req.on("data", c => body += c);
   req.on("end", async () => {
+    if (url.pathname.startsWith("/__mock_github/")) {
+      console.log("MOCK GITHUB", url.pathname, body);
+      res.statusCode = 204; return res.end();
+    }
+    if (url.pathname.startsWith("/__mock_stripe/v1/events/")) {
+      console.log("MOCK STRIPE event lookup", url.pathname);
+      return res.status(200).json({ id: url.pathname.split("/").pop(), type: "checkout.session.completed",
+        data: { object: { id: "cs_test_mock123456789", payment_status: "paid", metadata: { recipe: "{}" } } } });
+    }
     if (url.pathname.startsWith("/__mock_stripe/")) {
       const params = new URLSearchParams(body);
       console.log("MOCK STRIPE", url.pathname, JSON.stringify(Object.fromEntries(params)));
       return res.status(200).json({ id: "cs_test_mock123456789", url: `http://localhost:${PORT}/thanks.html?order=cs_test_mock123456789` });
     }
     if (url.pathname.startsWith("/api/")) {
-      const name = url.pathname.slice(5).replace(/[^a-z]/g, "");
+      const name = url.pathname.slice(5).replace(/[^a-z-]/g, "");
       const file = path.join(ROOT, "api", name + ".js");
       if (!fs.existsSync(file)) return res.status(404).json({ error: "not found" });
       req.body = body && (req.headers["content-type"] || "").includes("json") ? JSON.parse(body) : body;
