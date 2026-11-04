@@ -49,6 +49,7 @@ jobs:
           path: |
             web/moss/preview-desktop.png
             web/moss/preview-mobile.png
+            web/moss/preview-all-eight.png
           if-no-files-found: error
           retention-days: 30
       - name: Commit previews to the repository on main
@@ -56,7 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/moss/preview-desktop.png web/moss/preview-mobile.png
+          git add web/moss/preview-desktop.png web/moss/preview-mobile.png web/moss/preview-all-eight.png
           if ! git diff --cached --quiet; then
             git commit -m "Preview: screenshots of real Day 04 moss cluster map"
             git push

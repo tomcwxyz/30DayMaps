@@ -15,13 +15,17 @@ Open http://localhost:8000/web/moss/. The web viewer is split into index.html, a
 ## What is a cluster here?
 
 1. Start with NBN's open-licence, 10 km-square records, not exact species locations.
-2. Select a moss group (all eight, bog, woodland-associated, grassland-associated, stone and walls).
+2. Choose **All moss records** to see every 10 km square containing at least one of the eight chosen species, regardless of clustering. Alternatively select **All 8 recorded together** to see all squares where all eight were recorded, plus connected-cluster outlines. Bog, woodland-associated, grassland-associated and stone-and-wall groupings remain separate cluster views.
 3. Keep only squares meeting a minimum number of different selected species and a minimum sum of observations from those species.
 4. Connect qualifying squares using **eight-neighbour (queen) adjacency**, sharing an edge or a corner. British and Irish National Grid coordinates are treated as separate coordinate systems, so they cannot connect accidentally.
 5. Retain connected components with at least three cells. Excluded, isolated cells are still represented in the optional original-data grid.
 6. Dissolve squares in their native projected coordinates, round edges subtly with a 1.2 km positive and negative buffer, simplify by 450 m and convert to WGS84 for Leaflet.
 
-These are **spatial connected-component clusters**, not a choropleth, heatmap, or a statistically significant hotspot analysis. The outlines are graphical footprints of selected recording squares, **not areas covered by moss**.
+The **All moss records** overview is deliberately a colour-coded grid map: it must show every observed square, including isolated ones. It can colour by (a) the species with the most observation records in a square (eight distinct colours), or (b) the number of different species recorded (a sequential scale from 1 to 8). It does **not** colour exclusively occupied patches: other species may also occur in a square. Counts reflect recording effort, not ecological dominance.
+
+The **All 8 recorded together** view is a strict co-occurrence comparison. Its 197 qualifying squares each contain records of all eight species; 130 of those form 20 clusters of at least three neighbours and the remaining 67 appear as individual pale-gold squares. It always uses the `all-focus` profile (8 of 8, without an observation-count cut-off); we do not offer a misleading 7-of-8 "broader" setting under this label.
+
+The **habitat group** views are true **spatial connected-component clusters**, not choropleths, heatmaps, or statistically significant hotspots. The outlines are graphical footprints of selected recording squares, **not areas covered by moss**.
 
 ### Reproducible thresholds
 
@@ -29,13 +33,13 @@ Each tuple below is (minimum distinct species in each square, minimum records of
 
 | Group | Broader | Focused (default) | Strongest |
 |---|---|---|---|
-| All eight species | (7, 120) | (8, 0) | (8, 100) |
+| All eight *cluster calculation* (historic profiles) | (7, 120) | (8, 0) | (8, 100) |
 | Bog mosses (two Sphagnum species) | (2, 0) | (2, 5) | (2, 10) |
 | Woodland-associated (two species) | (2, 40) | (2, 60) | (2, 80) |
 | Grassland-associated (one species) | (1, 25) | (1, 40) | (1, 50) |
 | Stone and wall species (three) | (3, 45) | (3, 60) | (3, 80) |
 
-These thresholds were explored against the 3 November 2026 NBN source snapshot. Simply connecting every square containing any moss would create one enormous cluster containing more than 2,500 grid squares. We instead explore stronger co-recorded concentrations. The thresholds are editorial and explanatory, **not validated ecological abundance cut-offs**.
+These thresholds were explored against the 3 November 2026 NBN source snapshot. The interface deliberately fixes the all-eight comparison to (8, 0), while its larger connected components remain available for inspection. Simply connecting every square containing any moss would create one enormous cluster containing more than 2,500 grid squares. We instead explore stronger co-recorded concentrations. The thresholds are editorial and explanatory, **not validated ecological abundance cut-offs**.
 
 ## Provenance and limitations
 
@@ -50,6 +54,6 @@ These thresholds were explored against the 3 November 2026 NBN source snapshot. 
 
 ## Map features and quality checks
 
-Species-group buttons, three concentration levels, zoomable clickable cluster polygons, ranked gatherings, cluster summaries and an optional click-through source grid. Responsive layout for desktop and mobile. No new Vercel project or service required.
+An all-records colour-coded overview with a full eight-species key and richness toggle, a strict all-eight-recorded view including isolated cells, habitat-group buttons, three concentration levels for habitat clusters, zoomable clickable cluster polygons, ranked gatherings, cluster summaries and an optional click-through source grid. Responsive layout for desktop and mobile. No new Vercel project or service required.
 
 Offline tests in tests/test_moss_clusters.py cover the grid conversion, diagonal links, separation of grid projections, thresholds, output geometry and minimum cluster size. GitHub Actions also validates the live NBN retrieval and the real derived files, then commits both source and clusters on main.
