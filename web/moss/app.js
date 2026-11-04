@@ -32,7 +32,7 @@
     attribution: '© OpenStreetMap contributors', maxZoom: 16
   }).addTo(map);
 
-  for (const [name, order] of [['coverage', 405], ['clusters', 420], ['evidence', 435]]) {
+  for (const [name, order] of [['coverage', 405], ['evidence', 412], ['clusters', 420]]) {
     map.createPane(name);
     map.getPane(name).style.zIndex = String(order);
   }
@@ -58,6 +58,16 @@
   }
   function isAllEight() {
     return state.group === 'all';
+  }
+  function groupSpecies() {
+    if (isCoverage() || isAllEight()) return sourceSpecies().map(s => s.name);
+    return sourceSpecies()
+      .filter(s => state.group === 'stone'
+        ? s.type === 'Stone and walls' : s.type.toLowerCase() === state.group)
+      .map(s => s.name);
+  }
+  function groupObservations(properties, names = groupSpecies()) {
+    return names.reduce((total, name) => total + Number(properties.species?.[name] || 0), 0);
   }
 
   // A square can have many taxa; the categorical colour is the one with
@@ -262,34 +272,45 @@
 
   function thresholdDescription(profile) {
     if (!profile) return '';
-    const names = sourceSpecies().filter(s =>
-      state.group === 'all' ? true : state.group === 'stone'
-        ? s.type === 'Stone and walls' : s.type.toLowerCase() === state.group);
+    const species = groupSpecies().length;
+    const count = profile.min_species === species
+      ? 'all ' + species + ' selected species'
+      : 'at least ' + profile.min_species + ' of ' + species + ' selected species';
     const records = profile.min_records
-      ? ' and ' + format(profile.min_records) + '+ observations' : '';
-    return 'At least ' + profile.min_species + ' of ' + names.length +
-      ' selected species' + records + ' per square, in clusters of three or more adjoining squares.';
+      ? ' and at least ' + format(profile.min_records) + ' combined observation records'
+      : '';
+    return 'A cluster is shown only when at least three neighbouring 10 km squares each contain ' +
+      count + records + '. These are recording concentrations, not habitat or moss abundance.';
   }
 
   function renderEvidence() {
     removeLayer('evidenceLayer');
-    if (!state.grid || !state.source || isCoverage()) return;
-    const selected = new Set(profileFeatures().flatMap(f => f.properties.grid_refs));
+    // The all-eight view already displays ALL of its eligible source squares
+    // in gold; the overview already shows the full source.
+    if (!state.grid || !state.source || isCoverage() || isAllEight()) return;
+    const names = groupSpecies();
+    const clusteredGrids = new Set(profileFeatures().flatMap(f => f.properties.grid_refs));
     state.evidenceLayer = L.geoJSON(state.source, {
       pane: 'evidence', renderer: evidenceRenderer,
-      style: f => {
-        const included = selected.has(f.properties.grid);
+      filter: feature => groupObservations(feature.properties, names) > 0,
+      style: feature => {
+        const clustered = clusteredGrids.has(feature.properties.grid);
         return {
           pane: 'evidence', renderer: evidenceRenderer,
-          color: included ? '#395743' : '#889b8f',
-          weight: included ? 0.8 : 0.42,
-          opacity: included ? 0.8 : 0.58,
-          fillColor: '#ffffff', fillOpacity: included ? 0.04 : 0.01
+          color: clustered ? '#547055' : '#b08f5c',
+          weight: clustered ? 0.45 : 0.65,
+          opacity: clustered ? 0.35 : 0.75,
+          fillColor: clustered ? '#ffffff' : '#d5bb86',
+          fillOpacity: clustered ? 0.03 : 0.40
         };
       },
       onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        const number = names.filter(name => Number(p.species?.[name] || 0) > 0).length;
+        const records = groupObservations(p, names);
         layer.bindTooltip(
-          escapeHTML(feature.properties.grid) + ' · original 10 km source',
+          escapeHTML(p.grid) + ' · ' + number + ' of ' + names.length +
+          ' selected species recorded · ' + format(records) + ' records',
           { sticky: true, className: 'moss-tooltip' });
         layer.on('click', () => showSquare(feature));
       }
@@ -308,7 +329,8 @@
       button.setAttribute('aria-pressed', String(button.dataset.colour === state.colour)));
     el('colour-section').hidden = !isCoverage();
     el('strength-section').hidden = isCoverage() || isAllEight();
-    el('evidence-section').hidden = isCoverage();
+    el('evidence-section').hidden = isCoverage() || isAllEight();
+    el('cluster-explainer').hidden = isCoverage() || isAllEight();
     el('ranked-section').hidden = isCoverage();
   }
 
@@ -338,13 +360,25 @@
       return;
     }
     const profile = state.report.profiles[state.group + '-' + state.level];
+    const names = groupSpecies();
+    const recordedSquares = state.source.features.filter(feature =>
+      groupObservations(feature.properties, names) > 0).length;
+    const withoutShownCluster = recordedSquares - profile.cells_in_clusters;
     el('threshold').textContent = thresholdDescription(profile);
-    el('status').textContent = format(features.length) + ' ' +
-      GROUPS[state.group].label.toLowerCase() + ' clusters · ' +
-      format(profile.cells_in_clusters) + ' recorded squares connected';
-    el('details').textContent = 'Select a coloured cluster, or a gathering in the list, to explore it.';
+    el('status').textContent = format(features.length) +
+      ' concentrations of ' + GROUPS[state.group].label.toLowerCase() +
+      ' recordings · ' + format(profile.cells_in_clusters) +
+      ' clustered squares of ' + format(recordedSquares) +
+      ' squares with sightings';
+    el('evidence-description').textContent =
+      format(withoutShownCluster) + ' recorded 10 km squares for this group are ' +
+      'outside the currently highlighted clusters. Reveal them as muted squares ' +
+      'to inspect the underlying observations.';
+    el('details').textContent =
+      'Select a highlighted gathering, or reveal source squares to inspect sightings outside the clusters.';
     el('map-note').innerHTML =
-      '<span class="key-dot"></span> Rounded patches group neighbouring recording squares, not moss-covered land';
+      '<span class="key-dot"></span> Highlighted = qualifying recording clusters. ' +
+      'No highlighted area does <strong>not</strong> mean no moss sightings.';
   }
 
   function refresh() {
