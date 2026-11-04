@@ -66,7 +66,7 @@ module.exports = async (req, res) => {
         Authorization: `Bearer ${github}`, Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", "User-Agent": "footprints-shop",
       },
-      body: JSON.stringify({ ref: process.env.GITHUB_REF_NAME || "main", inputs: { session: session.id } }),
+      body: JSON.stringify({ ref: process.env.PRINT_WORKFLOW_BRANCH || "main", inputs: { session: session.id } }),
     });
     if (r.status !== 204) throw new Error(`GitHub ${r.status}`);
   } catch (e) {
