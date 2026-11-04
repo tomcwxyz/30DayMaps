@@ -41,21 +41,43 @@ def test_landscape_swaps_paper():
     assert prints.paper_mm("A3", landscape=True) == (420, 297)
 
 
-def test_overpass_ways_and_multipolygons_become_polygons():
-    sq = lambda x: [{"lon": x, "lat": 0}, {"lon": x + 1, "lat": 0}, {"lon": x + 1, "lat": 1},
-                    {"lon": x, "lat": 1}, {"lon": x, "lat": 0}]
-    payload = {"elements": [
-        {"type": "way", "geometry": sq(0)},
-        {"type": "way", "geometry": sq(5)[:-1]},  # not closed: ignored
-        {"type": "relation", "members": [
-            {"type": "way", "role": "outer", "geometry": [{"lon": 10, "lat": 0}, {"lon": 14, "lat": 0}, {"lon": 14, "lat": 4}]},
-            {"type": "way", "role": "outer", "geometry": [{"lon": 14, "lat": 4}, {"lon": 10, "lat": 4}, {"lon": 10, "lat": 0}]},
-            {"type": "way", "role": "inner", "geometry": [{"lon": 11, "lat": 1}, {"lon": 13, "lat": 1}, {"lon": 13, "lat": 3}, {"lon": 11, "lat": 3}, {"lon": 11, "lat": 1}]},
-        ]},
-    ]}
-    polys = prints.osm_polygons(payload)
-    assert len(polys) == 2
-    assert sorted(p.area for p in polys) == pytest.approx([1, 12])
+def _tile(features, extent=4096):
+    import mapbox_vector_tile
+    return mapbox_vector_tile.encode([{"name": "building", "features": features}],
+                                     default_options={"extents": extent, "y_coord_down": True, "quantize_bounds": None})
+
+
+def test_tile_buildings_keep_holes_and_land_in_the_right_place():
+    from maps import osm_tiles
+    from shapely.geometry import Polygon
+    courtyard = Polygon([(100, 100), (500, 100), (500, 500), (100, 500)], [[(200, 200), (400, 200), (400, 400), (200, 400)]])
+    data = _tile([{"geometry": courtyard.wkt, "properties": {}}, {"geometry": "POINT (5 5)", "properties": {}}])
+    polys = osm_tiles.decode_buildings(data, 8100, 5100)
+    assert len(polys) == 1 and len(polys[0].interiors) == 1
+    unit = osm_tiles.EARTH / (4096 * 2 ** 14)
+    assert polys[0].area == pytest.approx((400 ** 2 - 200 ** 2) * unit ** 2, rel=0.01)
+    minx, miny, maxx, maxy = polys[0].bounds
+    assert minx == pytest.approx(8100 * 4096 * unit - osm_tiles.EARTH / 2 + 100 * unit, abs=unit)
+    assert maxy == pytest.approx(osm_tiles.EARTH / 2 - (5100 * 4096 + 100) * unit, abs=unit)  # y flipped to north-up
+
+
+def test_tile_margins_are_trimmed_so_neighbours_only_just_overlap():
+    from maps import osm_tiles
+    from shapely.geometry import box
+    # a building straddling the tile edge appears in both tiles' margins
+    left = osm_tiles.decode_buildings(_tile([{"geometry": box(4000, 10, 4150, 60).wkt, "properties": {}}]), 10, 10)[0]
+    right = osm_tiles.decode_buildings(_tile([{"geometry": box(-96, 10, 54, 60).wkt, "properties": {}}]), 11, 10)[0]
+    unit = osm_tiles.EARTH / (4096 * 2 ** 14)
+    overlap = left.intersection(right).area / (50 * unit * unit)
+    assert 0 < overlap <= 2 * osm_tiles.OVERLAP + 0.01                 # a sliver, not the whole margin
+    assert left.union(right).area == pytest.approx(150 * 50 * unit ** 2, rel=0.02)
+
+
+def test_tile_range_covers_newcastle_at_zoom_14():
+    from maps import osm_tiles
+    xs, ys = osm_tiles.tile_range(-1.692, 54.921, -1.534, 55.026)
+    assert (len(xs), len(ys)) == (9, 9)
+    assert xs.start == 8114 and ys.start == 5180  # standard slippy-map tile numbers
 
 
 def test_spec_from_preset_and_overrides():

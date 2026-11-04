@@ -1,0 +1,79 @@
+name: Day 04 real map screenshots
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/preview_moss.mjs'
+      - '.github/workflows/preview-moss.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/preview_moss.mjs'
+      - '.github/workflows/preview-moss.yml'
+      - 'web/moss/index.html'
+      - 'web/moss/app.js'
+      - 'web/moss/style.css'
+      - 'web/moss/moss-clusters.geojson'
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser automation
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Render the actual map on desktop and phone
+        shell: bash
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/moss-server.log 2>&1 &
+          echo $! >/tmp/moss-server.pid
+          for i in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8765/web/moss/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8765/web/moss/ >/dev/null
+          node scripts/preview_moss.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: day04-real-moss-preview
+          path: |
+            web/moss/preview-desktop.png
+            web/moss/preview-mobile.png
+            web/moss/preview-all-eight.png
+          if-no-files-found: error
+          retention-days: 30
+      - name: Commit previews to the repository on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/moss/preview-desktop.png web/moss/preview-mobile.png web/moss/preview-all-eight.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Preview: screenshots of real Day 04 moss cluster map"
+            # Ignore tracked by-products left by installs or generators; all
+            # intended published assets have already been committed above.
+            git reset --hard HEAD
+            # Another generated-asset workflow may have pushed after checkout.
+            # Rebase this independent asset commit before trying to push main.
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              echo "Push raced with another workflow; retrying ($attempt/5)"
+              sleep $(( attempt * 2 ))
+            done
+            echo "Failed to publish generated assets after five attempts" >&2
+            exit 1
+          fi

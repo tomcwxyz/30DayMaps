@@ -9,7 +9,7 @@ Any place drawn as buildings and nothing else, sized for print or the web, with 
 - **PNG**: web size (2000 px long edge), or 150/300 dpi for print. Phones may refuse very large images; use 150 dpi or the SVG.
 - **SVG**: vector, prints sharp at any size. It names the Archivo font; a printer without it substitutes a similar sans.
 
-It uses OpenStreetMap everywhere (buildings from the Overpass API, search from Nominatim), so it works worldwide but differs a little from the OS-based prints. Open it locally by double-clicking the file, or host it (GitHub Pages serves it at `/web/footprints/`).
+It uses OpenStreetMap everywhere (buildings from OpenFreeMap's OpenMapTiles vector tiles, search from Nominatim), so it works worldwide but differs a little from the OS-based prints. Prints made from it carry the credit "Data from OpenStreetMap · © OpenMapTiles · OpenFreeMap". Open it locally by double-clicking the file, or host it (GitHub Pages serves it at `/web/footprints/`).
 
 ## 2. Terminal
 
@@ -24,7 +24,7 @@ Options: `--paper` A4, A3, A2, A1, 50x70, square · `--landscape` · `--width-km
 
 Output goes to `prints/<place>/` (not committed): a 300 dpi PNG, a web PNG, and a vector PDF.
 
-**Data**: in Great Britain it uses OS OpenMap – Local, downloading the 100 km tiles it needs (about 70 MB each, cached in `data/raw/`). Elsewhere, or with `--source osm`, it uses OpenStreetMap. Each print carries the right credit line automatically. Preset places live in `maps/print_places.json`; add your own there.
+**Data**: in Great Britain it uses OS OpenMap – Local, downloading the 100 km tiles it needs (about 70 MB each, cached in `data/raw/`). Elsewhere, or with `--source osm`, it uses OpenStreetMap buildings from OpenFreeMap's vector tiles (the same ones the web page uses). Each print carries the right credit line automatically. Preset places live in `maps/print_places.json`; add your own there.
 
 ## 3. GitHub
 

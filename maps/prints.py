@@ -1,7 +1,7 @@
 """Footprints print maker: any place, buildings and nothing else, sized for print and web.
 
 Great Britain uses OS OpenMap – Local (downloaded per 100 km tile); anywhere else,
-or when asked, uses OpenStreetMap buildings from the Overpass API.
+or when asked, uses OpenStreetMap buildings from OpenFreeMap's vector tiles.
 
     python -m maps.prints --list
     python -m maps.prints --place york --paper A3
@@ -11,11 +11,9 @@ or when asked, uses OpenStreetMap buildings from the Overpass API.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import textwrap
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -25,9 +23,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import requests
-import shapely
 from pyproj import CRS, Transformer
-from shapely.geometry import LineString, Polygon, box
 
 from maps.common import download
 from maps.footprints import building_layer, clip
@@ -35,8 +31,6 @@ from maps.footprints import building_layer, clip
 PLACES = json.loads((Path(__file__).with_name("print_places.json")).read_text())
 OML_TILE = ("https://api.os.uk/downloads/v1/products/OpenMapLocal/downloads?"
             "area={tile}&format=ESRI%C2%AE+Shapefile&redirect")
-OVERPASS = ["https://overpass-api.de/api/interpreter",
-            "https://overpass.kumi.systems/api/interpreter"]
 OUT = Path("prints")
 MM_PER_INCH = 25.4
 
@@ -52,7 +46,7 @@ THEMES = {  # buildings, background, secondary text
 }
 CREDITS = {
     "os": "Contains OS data © Crown copyright and database right {year} · OS OpenMap – Local, OGL v3.0",
-    "osm": "Buildings © OpenStreetMap contributors, ODbL · openstreetmap.org/copyright",
+    "osm": "Data from OpenStreetMap (openstreetmap.org/copyright) · © OpenMapTiles · OpenFreeMap",
 }
 
 
@@ -167,64 +161,10 @@ def os_buildings(bounds, cache=Path("data/raw")) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(pd.concat(frames, ignore_index=True), crs=27700)
 
 
-def overpass_query(south, west, north, east) -> str:
-    b = f"{south:.6f},{west:.6f},{north:.6f},{east:.6f}"
-    return (f'[out:json][timeout:240];(way["building"]({b});'
-            f'relation["building"]["type"="multipolygon"]({b}););out geom;')
-
-
-def osm_polygons(payload: dict) -> list[Polygon]:
-    """Turn Overpass 'out geom' JSON into polygons in lon/lat."""
-    polys = []
-    for el in payload.get("elements", []):
-        if el.get("type") == "way":
-            pts = [(p["lon"], p["lat"]) for p in el.get("geometry", [])]
-            if len(pts) >= 4 and pts[0] == pts[-1]:
-                polys.append(Polygon(pts))
-        elif el.get("type") == "relation":
-            rings = {"outer": [], "inner": []}
-            for m in el.get("members", []):
-                if m.get("type") == "way" and m.get("geometry") and m.get("role") in rings:
-                    rings[m["role"]].append(LineString([(p["lon"], p["lat"]) for p in m["geometry"]]))
-            outer = shapely.union_all(list(shapely.polygonize(rings["outer"]).geoms)) if rings["outer"] else None
-            if outer is None or outer.is_empty:
-                continue
-            if rings["inner"]:
-                outer = outer.difference(shapely.union_all(list(shapely.polygonize(rings["inner"]).geoms)))
-            polys.extend(g for g in shapely.get_parts(outer) if g.geom_type == "Polygon")
-    return [shapely.make_valid(p) if not p.is_valid else p for p in polys]
-
-
 def osm_buildings(bounds_lonlat, crs, cache=Path("data/raw")) -> gpd.GeoDataFrame:
-    west, south, east, north = bounds_lonlat
-    query = overpass_query(south, west, north, east)
-    key = hashlib.sha1(query.encode()).hexdigest()[:12]
-    cached = cache / f"overpass-{key}.json"
-    if cached.exists():
-        payload = json.loads(cached.read_text())
-    else:
-        payload, last = None, None
-        for attempt in range(3):  # public Overpass servers drop connections when busy
-            for url in OVERPASS:
-                try:
-                    r = requests.post(url, data={"data": query}, timeout=(20, 300),
-                                      headers={"User-Agent": "30DayMaps-prints/0.1"})
-                    r.raise_for_status()
-                    payload = r.json()
-                    break
-                except (requests.RequestException, ValueError) as err:
-                    last = err
-            if payload is not None:
-                break
-            time.sleep(30 * (attempt + 1))
-        if payload is None:
-            raise RuntimeError(f"Overpass unavailable after retries: {last}")
-        cached.parent.mkdir(parents=True, exist_ok=True)
-        cached.write_text(json.dumps(payload))
-    polys = osm_polygons(payload)
-    if not polys:
-        raise ValueError("No OpenStreetMap buildings in this window")
-    return gpd.GeoDataFrame(geometry=polys, crs=4326).to_crs(crs)
+    """OpenStreetMap buildings, from OpenFreeMap's vector tiles (see maps/osm_tiles.py)."""
+    from maps import osm_tiles
+    return osm_tiles.buildings(bounds_lonlat, crs, cache)
 
 
 # --- Rendering ---------------------------------------------------------------
