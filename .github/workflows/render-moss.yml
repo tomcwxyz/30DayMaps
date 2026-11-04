@@ -80,6 +80,9 @@ jobs:
                   web/moss/moss-clusters.geojson web/moss/moss-clusters-manifest.json
           if ! git diff --cached --quiet; then
             git commit -m "Data: refresh NBN source and Day 04 moss clusters"
+            # Ignore tracked by-products left by installs or generators; all
+            # intended published assets have already been committed above.
+            git reset --hard HEAD
             # Another generated-asset workflow may have pushed after checkout.
             # Rebase this independent asset commit before trying to push main.
             for attempt in 1 2 3 4 5; do
