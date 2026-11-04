@@ -63,3 +63,28 @@ The optional **Reveal recorded squares outside clusters** layer draws muted 10 k
 An all-records colour-coded overview with a full eight-species key and richness toggle, a strict all-eight-recorded view including isolated cells, habitat-group buttons, three concentration levels for habitat clusters, zoomable clickable cluster polygons, ranked gatherings, cluster summaries and an optional click-through source grid. Responsive layout for desktop and mobile. No new Vercel project or service required.
 
 Offline tests in tests/test_moss_clusters.py cover the grid conversion, diagonal links, separation of grid projections, thresholds, output geometry and minimum cluster size. GitHub Actions also validates the live NBN retrieval and the real derived files, then commits both source and clusters on main.
+
+
+## Actual high-resolution static map exports
+
+This project produces **three genuine maps** from the same NBN GeoJSON source and precomputed connected-component cluster polygons as the live Leaflet site. These are **not AI-generated illustrations** or approximations of the map. The export is a dedicated browser print view, with no interactive UI, and fixed framing across all three maps.
+
+- **Bog mosses:** the `bog-focus` cluster polygons, matching **Bog mosses → Focused** on the interactive map.
+- **Stone and wall mosses:** the `stone-focus` cluster polygons, matching **Stone & walls → Focused**.
+- **All eight recorded together:** all original source squares with records of each selected species in gold, plus `all-focus` connected clusters of at least three qualifying squares in dark green. In this view, both colours satisfy the **eight-species co-recording** condition; gold means outside the larger clusters.
+
+Each export has the same natural geographic framing, a title, a restrained legend or map key, and a footer containing NBN/contributor licences plus © OpenStreetMap attribution. It also states that 10 km observation-grid clusters are **not moss cover or biological abundance**.
+
+The PNGs are **A3 portrait, ~3507 × 4962 pixels, with 300 dpi metadata**, and are reproducibly made by:
+
+    node scripts/export_moss_posters.mjs
+
+This Node command expects a local HTTP server running from the repo root on port 8765 and Playwright/Chromium installed. To generate the files without installing a browser yourself, use **Actions → Day 04 — print exports from real NBN moss maps → Run workflow**. The workflow re-renders each map, checks real GeoJSON and geometry counts, tests that basemap tiles loaded, stamps print DPI metadata, uploads the three files as a single downloadable artefact and, on `main`, commits the PNGs to `web/moss/exports/` and publishes them to GitHub Pages.
+
+Output filenames:
+
+    web/moss/exports/day04-bog-mosses-a3-300dpi.png
+    web/moss/exports/day04-stone-and-wall-mosses-a3-300dpi.png
+    web/moss/exports/day04-all-eight-recorded-a3-300dpi.png
+
+Do not use generative image tools to produce alternative maps in this workflow: the actual NBN grid counts and connected cluster geometries are the source of truth.
