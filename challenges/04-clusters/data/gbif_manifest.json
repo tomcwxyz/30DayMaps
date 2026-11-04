@@ -1,0 +1,110 @@
+{
+  "source": "GBIF occurrence search API",
+  "source_url": "https://www.gbif.org/",
+  "api_endpoint": "https://api.gbif.org/v1/occurrence/search",
+  "retrieved_utc": "2026-11-04T06:52:42+00:00",
+  "taxon": "Sturnus vulgaris",
+  "taxon_key": 9809229,
+  "gbif_match": {
+    "scientificName": "Sturnus vulgaris Linnaeus, 1758",
+    "rank": "SPECIES"
+  },
+  "query": {
+    "taxonKey": 9809229,
+    "country": "GB",
+    "year": 2025,
+    "month": 11,
+    "hasCoordinate": "true",
+    "hasGeospatialIssue": "false",
+    "occurrenceStatus": "PRESENT"
+  },
+  "partitioned_counts": [
+    {
+      "day_range": "1,5",
+      "gbif_count": 2559
+    },
+    {
+      "day_range": "6,10",
+      "gbif_count": 2756
+    },
+    {
+      "day_range": "11,15",
+      "gbif_count": 1817
+    },
+    {
+      "day_range": "16,20",
+      "gbif_count": 1961
+    },
+    {
+      "day_range": "21,25",
+      "gbif_count": 1944
+    },
+    {
+      "day_range": "26,30",
+      "gbif_count": 1827
+    }
+  ],
+  "partitioned_total": 12864,
+  "total_matching_gbif_occurrences": 12864,
+  "exported_records": 12687,
+  "skipped_records": {
+    "licence excludes redistribution": 159,
+    "outside bounding area": 18
+  },
+  "deduplication": "gbifID",
+  "record_identifier_url_template": "https://www.gbif.org/occurrence/{gbifID}",
+  "licence_policy": "Redistribute only CC0 and CC BY 4.0. CC BY-NC and unknown licence records are omitted.",
+  "dataset_attribution": [
+    {
+      "datasetKey": "4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+      "datasetName": "eBird",
+      "publisher": "Cornell Lab of Ornithology",
+      "licence": "CC BY 4.0",
+      "records": 11248
+    },
+    {
+      "datasetKey": "6ff8b3b0-ef0f-4f79-a310-5a5615c6aa0b",
+      "datasetName": "",
+      "publisher": "",
+      "licence": "CC BY 4.0",
+      "records": 1339
+    },
+    {
+      "datasetKey": "50c9509d-22c7-4a22-a47d-8c48425ef4a7",
+      "datasetName": "iNaturalist research-grade observations",
+      "publisher": "",
+      "licence": "CC0",
+      "records": 49
+    },
+    {
+      "datasetKey": "50c9509d-22c7-4a22-a47d-8c48425ef4a7",
+      "datasetName": "iNaturalist research-grade observations",
+      "publisher": "",
+      "licence": "CC BY 4.0",
+      "records": 43
+    },
+    {
+      "datasetKey": "191035ef-3971-4d54-ad69-dcdfcca858f5",
+      "datasetName": "MammalWeb records",
+      "publisher": "",
+      "licence": "CC BY 4.0",
+      "records": 6
+    },
+    {
+      "datasetKey": "5e43a220-a91d-485b-b608-58fd22693be7",
+      "datasetName": "All taxa records for Leicestershire and Rutland",
+      "publisher": "",
+      "licence": "CC BY 4.0",
+      "records": 2
+    }
+  ],
+  "limitations": [
+    "These are all eligible returned occurrence records for the bounded query, NOT murmuration or roost observations.",
+    "Observations are not independent birds, abundance, density estimates, population or confirmed active roosts.",
+    "Source licences and record quality vary. Spatial distribution reflects recorder effort and reporting bias.",
+    "The search API is not a DOI-backed GBIF download; for formal publication request a citable download DOI.",
+    "The file is a dated API snapshot and may change if GBIF publishers amend records."
+  ],
+  "csv_sha256": "969696d7b6396290e5ffac112f358fc1cb03d2196c9e19ec64a6e6be63b869c7",
+  "csv_file": "gbif_sturnus_vulgaris_gb_2025_11.csv"
+}
