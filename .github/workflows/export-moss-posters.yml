@@ -1,0 +1,136 @@
+name: Day 04 — print exports from real NBN moss maps
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/export_moss_posters.mjs'
+      - 'web/moss/poster.html'
+      - 'web/moss/poster.css'
+      - 'web/moss/poster.js'
+      - '.github/workflows/export-moss-posters.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/export_moss_posters.mjs'
+      - 'web/moss/poster.html'
+      - 'web/moss/poster.css'
+      - 'web/moss/poster.js'
+      - 'web/moss/moss.geojson'
+      - 'web/moss/moss-clusters.geojson'
+      - 'web/moss/moss-manifest.json'
+      - 'web/moss/moss-clusters-manifest.json'
+      - '.github/workflows/export-moss-posters.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    name: Render verified A3 PNG maps
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install headless Chromium and PNG metadata tools
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+          python -m pip install 'Pillow>=11'
+      - name: Export three true NBN map views at 3507 by 4962 pixels
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check web/moss/poster.js
+          node --check scripts/export_moss_posters.mjs
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/moss-print-server.log 2>&1 &
+          for try in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8765/web/moss/poster.html >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8765/web/moss/poster.html >/dev/null
+          node scripts/export_moss_posters.mjs
+      - name: Verify pixel dimensions, write 300-dpi print metadata and preserve original pixels
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          paths = sorted(Path("web/moss/exports").glob("day04-*-a3-300dpi.png"))
+          assert len(paths) == 3, f"Expected exactly three real map images, found {len(paths)}"
+          for path in paths:
+              with Image.open(path) as im:
+                  assert im.size == (3507, 4962), f"{path}: wrong A3 image size {im.size}"
+                  im.load()
+                  im.save(path, format="PNG", dpi=(300, 300), optimize=True)
+              with Image.open(path) as check:
+                  assert check.size == (3507, 4962)
+                  assert all(abs(value - 300) < 1 for value in check.info["dpi"])
+              print(f"VERIFIED PRINT {path} ({path.stat().st_size:,} bytes, A3 300 dpi)")
+          PY
+      - name: Upload real map images as individual downloadable files
+        uses: actions/upload-artifact@v4
+        with:
+          name: day04-real-moss-maps-a3-300dpi
+          path: web/moss/exports/*.png
+          if-no-files-found: error
+          retention-days: 90
+      - name: Commit verified print exports to repository
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/moss/exports/*.png
+          if git diff --cached --quiet; then
+            echo "Prints unchanged; no commit required"
+          else
+            git commit -m "Print: export real bog, stone and all-eight NBN maps at A3 300dpi"
+            git reset --hard HEAD
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then break; fi
+              if [[ "$attempt" == "5" ]]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Stage Pages site including verified static prints
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p _site
+          cp -a web/moss/. _site/
+          touch _site/.nojekyll
+          test -s _site/exports/day04-bog-mosses-a3-300dpi.png
+          test -s _site/exports/day04-stone-and-wall-mosses-a3-300dpi.png
+          test -s _site/exports/day04-all-eight-recorded-a3-300dpi.png
+      - name: Upload static site with the actual printable maps
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    name: Make printable PNGs available on GitHub Pages
+    needs: render
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: day04-github-pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - id: deployment
+        uses: actions/deploy-pages@v4
