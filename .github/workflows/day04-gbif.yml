@@ -25,7 +25,7 @@ jobs:
       - name: Test filters and complete pagination
         run: python -m unittest discover -s tests -p 'test_gbif_starlings.py' -v
       - name: Download actual GBIF occurrences
-        run: python -m maps.gbif_starlings
+        run: python -u -m maps.gbif_starlings
       - name: Validate output
         run: |
           test -s challenges/04-clusters/data/gbif_sturnus_vulgaris_gb_2025_11.csv
