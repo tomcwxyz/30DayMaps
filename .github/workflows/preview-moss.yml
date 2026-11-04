@@ -60,6 +60,9 @@ jobs:
           git add web/moss/preview-desktop.png web/moss/preview-mobile.png web/moss/preview-all-eight.png
           if ! git diff --cached --quiet; then
             git commit -m "Preview: screenshots of real Day 04 moss cluster map"
+            # Ignore tracked by-products left by installs or generators; all
+            # intended published assets have already been committed above.
+            git reset --hard HEAD
             # Another generated-asset workflow may have pushed after checkout.
             # Rebase this independent asset commit before trying to push main.
             for attempt in 1 2 3 4 5; do
