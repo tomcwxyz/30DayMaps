@@ -21,7 +21,7 @@
     <main class="map-layout">
       <aside class="controls" aria-label="Map controls and interpretation">
         <p class="panel-kicker">The living map</p>
-        <p class="panel-intro">First see <strong>all recorded moss squares</strong>. Then explore where species gather.</p>
+        <p class="panel-intro">Explore where moss records <strong>gather into clusters</strong> — and what lies outside them.</p>
         <div id="status" role="status" aria-live="polite">Loading the NBN Atlas snapshot…</div>
         <section aria-labelledby="groups-title">
           <h2 id="groups-title">Gatherings</h2>
@@ -45,7 +45,7 @@
           <div id="colour-legend" class="colour-legend" aria-label="Map colour key"></div>
         </section>
         <section aria-labelledby="strength-title" id="strength-section">
-          <div class="section-head"><h2 id="strength-title">Concentration</h2><span class="help" title="These are thresholds for forming recording clusters, not estimates of moss abundance.">?</span></div>
+          <div class="section-head"><h2 id="strength-title">How tightly do records gather?</h2><span class="help" title="These are thresholds for forming recording clusters, not estimates of moss abundance.">?</span></div>
           <div class="segmented" role="group" aria-label="Cluster concentration">
             <button type="button" data-level="broad" aria-pressed="false">Broader</button>
             <button type="button" data-level="focus" aria-pressed="true">Focused</button>
@@ -55,8 +55,15 @@
         </section>
         <section aria-labelledby="evidence-title" id="evidence-section">
           <h2 id="evidence-title">Look beneath</h2>
-          <label class="switch"><input type="checkbox" id="show-grid"><span>Show original 10 km evidence squares</span></label>
+          <label class="switch"><input type="checkbox" id="show-grid"><span>Reveal recorded squares outside clusters</span></label>
+          <p class="hint" id="evidence-description">Show places where selected mosses have been recorded, even if they do not meet the clustering threshold.</p>
         </section>
+        <div class="cluster-explainer" id="cluster-explainer" role="note" hidden>
+          <strong>Reading the map</strong>
+          <div class="cluster-key"><span class="swatch swatch-cluster"></span>Coloured areas: concentrations of records meeting this view’s cluster rules</div>
+          <div class="cluster-key"><span class="swatch swatch-other"></span>Muted squares (when revealed): sightings outside those clusters</div>
+          <p><strong>No highlighted cluster does not mean no sightings.</strong> It means the threshold wasn’t met.</p>
+        </div>
         <section class="discovery" aria-labelledby="clusters-title" id="ranked-section">
           <div class="section-head"><h2 id="clusters-title">Largest gatherings</h2><span class="hint">by grid squares</span></div>
           <div id="ranked" class="ranked"><p class="hint">Loading…</p></div>
@@ -73,7 +80,7 @@
       </div>
     </main>
     <footer class="foot">
-      <div><strong>How it works.</strong> “All moss records” includes any of the eight selected species in each 10 km source square, with colours showing either the most frequently recorded species or how many distinct species were recorded. “All 8 recorded together” displays every square where all eight have records, highlighting contiguous clusters of three or more squares. Habitat-group views use their own thresholds. The shapes are recording patterns, not moss cover; missing observations do not prove absence.</div>
+      <div><strong>How it works.</strong> “All moss records” shows every source square containing at least one of eight selected species. “All 8 recorded together” shows strict eight-species co-occurrence. Habitat-group views show only <em>clusters of concentrated recordings</em>, formed when neighbouring 10 km squares pass species and record-count thresholds. Turn on “Reveal recorded squares outside clusters” to inspect the observations that do not meet those rules. Missing a coloured cluster is never evidence that a species is absent. The shapes are recording patterns, not moss cover.</div>
       <div class="foot-links">Data: <a href="https://nbnatlas.org/" target="_blank" rel="noopener noreferrer">NBN Atlas</a> and contributing recorders. <a href="./moss-manifest.json">Source records and licences</a> · <a href="./moss-clusters-manifest.json">Clustering method and thresholds</a> · <a href="https://github.com/tomcwxyz/30DayMaps/tree/main/challenges/04-clusters">Source and methodology</a>. Basemap © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>.</div>
     </footer>
   </div>
