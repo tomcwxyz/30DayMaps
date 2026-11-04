@@ -1,0 +1,32 @@
+/* A3 portrait at approximately 300 dpi when captured with deviceScaleFactor 3. */
+* { box-sizing: border-box; }
+html, body { width: 1169px; min-width: 1169px; height: 1654px; margin: 0; }
+body { background: #f7f6f0; color: #263d30; font-family: Arial, Helvetica, sans-serif; }
+.poster { width: 1169px; height: 1654px; padding: 48px 60px 34px;
+  background: #f7f6f0; display: flex; flex-direction: column; overflow: hidden; }
+.poster-header { flex: 0 0 157px; overflow: hidden; }
+.kicker { display: flex; justify-content: space-between; align-items: baseline;
+  margin: 0 0 19px; font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.kicker span { letter-spacing: .08em; color: #697b6b; font-weight: 600; }
+h1 { margin: 0 0 7px; font: normal 70px/1.04 Georgia, 'Times New Roman', serif; letter-spacing: -.028em; color: #253f31; }
+.subtitle { margin: 0; font-size: 21px; line-height: 1.4; color: #617664; }
+.map-region { position: relative; flex: 1; min-height: 0; background: #eef0e7; overflow: hidden; }
+#map { width: 100%; height: 100%; background: #e7ebdf; }
+.leaflet-container { font-family: Arial, Helvetica, sans-serif; background: #e7ebdf; }
+.leaflet-container .leaflet-tile-pane { filter: grayscale(1) sepia(.18) saturate(.52) contrast(.81) brightness(1.07); opacity: .82; }
+.leaflet-control-container { display: none; }
+.poster-bottom { flex: 0 0 95px; padding: 15px 0 7px; border-bottom: 1px solid #c7d4c7; }
+.key { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 22px;
+  font-size: 14px; line-height: 1.4; color: #314d39; font-weight: 600; }
+.key-item { display: inline-flex; align-items: center; gap: 9px; }
+.key-swatch { display: inline-block; width: 15px; height: 15px;
+  border-radius: 2px; border: 1px solid #2f4a3540; }
+.note { font-size: 13px; color: #728273; margin: 10px 0 0; line-height: 1.4; }
+.poster-footer { flex: 0 0 79px; padding-top: 12px; color: #596e60;
+  font-size: 12px; line-height: 1.63; }
+.poster-footer strong { color: #354f3d; }
+.poster-footer span { font-family: monospace; font-size: 11px; }
+@media print {
+  @page { size: A3 portrait; margin: 0; }
+  .poster { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
