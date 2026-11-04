@@ -1,0 +1,82 @@
+name: Publish Day 04 moss map to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/moss/**'
+      - '.github/workflows/pages-moss.yml'
+  pull_request:
+    paths:
+      - 'web/moss/**'
+      - '.github/workflows/pages-moss.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: day04-github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the real moss map and NBN data
+        uses: actions/checkout@v4
+
+      - name: Verify the source-derived data and front-end
+        run: |
+          node --check web/moss/app.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          source = json.loads(Path("web/moss/moss.geojson").read_text())
+          clusters = json.loads(Path("web/moss/moss-clusters.geojson").read_text())
+          meta = json.loads(Path("web/moss/moss-clusters-manifest.json").read_text())
+          assert source["type"] == "FeatureCollection"
+          assert clusters["type"] == "FeatureCollection"
+          assert len(source["features"]) >= 100, "Missing real NBN source data"
+          assert len(clusters["features"]) >= 10, "Missing source-derived clusters"
+          assert meta["input_grids"] == len(source["features"])
+          for feature in clusters["features"]:
+              p = feature["properties"]
+              assert p["cell_count"] >= 3
+              assert len(p["grid_refs"]) == p["cell_count"]
+          print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
+          PY
+
+      - name: Prepare only the moss site's static assets
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          cp -a web/moss/. _site/
+          touch _site/.nojekyll
+          for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
+            test -s "_site/$file"
+          done
+
+      - name: Upload GitHub Pages artefact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages (once enabled in repository settings)
+        uses: actions/configure-pages@v5
+
+      - name: Deploy static moss map
+        id: deployment
+        uses: actions/deploy-pages@v4
