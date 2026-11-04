@@ -27,14 +27,36 @@ class TestGbifStarlingDownloader(unittest.TestCase):
                 self.assertIn(expected,reason)
     def test_fetch_paginated(self):
         def rec(i):
-            return {"key":i,"decimalLatitude":54+i*.001,"decimalLongitude":-2,"year":2025,"month":11,"countryCode":"GB","license":"CC0_1_0","datasetKey":"set","datasetName":"Test"}
-        taxon={"usageKey":1234,"matchType":"EXACT","rank":"SPECIES","scientificName":"Sturnus vulgaris Linnaeus, 1758"}
-        pages=[taxon,{"count":301,"results":[rec(i+1) for i in range(300)]},{"count":301,"results":[rec(301)]}]
+            return {
+                "key":i,"decimalLatitude":54+i*.001,"decimalLongitude":-2,
+                "year":2025,"month":11,"day":3,"countryCode":"GB",
+                "license":"CC0_1_0","datasetKey":"set","datasetName":"Test"
+            }
+        taxon={"usageKey":1234,"matchType":"EXACT","rank":"SPECIES",
+               "scientificName":"Sturnus vulgaris Linnaeus, 1758"}
+        pages=[
+            taxon,
+            {"count":301,"results":[]},
+            {"count":301,"results":[rec(i+1) for i in range(300)]},
+            {"count":301,"results":[rec(301)]},
+            *[{"count":0,"results":[]} for _ in range(5)],
+        ]
         with patch("maps.gbif_starlings.get_json",side_effect=pages),patch("maps.gbif_starlings.time.sleep"):
             rows,meta=fetch()
         self.assertEqual(len(rows),301)
         self.assertEqual(meta["exported_records"],301)
+        self.assertEqual(meta["partitioned_total"],301)
+        self.assertEqual(len(meta["partitioned_counts"]),6)
         self.assertEqual(meta["dataset_attribution"][0]["records"],301)
+
+    def test_refuse_missing_day_coverage(self):
+        taxon={"usageKey":1234,"matchType":"EXACT","rank":"SPECIES",
+               "scientificName":"Sturnus vulgaris Linnaeus, 1758"}
+        pages=[taxon,{"count":1,"results":[]},*[{"count":0,"results":[]} for _ in range(6)]]
+        with patch("maps.gbif_starlings.get_json",side_effect=pages):
+            with self.assertRaisesRegex(RuntimeError,"Partition coverage mismatch"):
+                fetch()
+
     def test_no_silent_truncation(self):
         taxon={"usageKey":1234,"matchType":"EXACT","rank":"SPECIES","scientificName":"Sturnus vulgaris Linnaeus, 1758"}
         with patch("maps.gbif_starlings.get_json",side_effect=[taxon,{"count":30000,"results":[]}]):

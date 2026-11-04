@@ -36,3 +36,7 @@ GBIF starling observations are **not confirmed murmurations**, actual roost loca
 Source: [GBIF](https://www.gbif.org/); individual records can be resolved at `https://www.gbif.org/occurrence/{gbifID}`.
 
 For any future publication or substantive research, request an official GBIF DOI-backed occurrence download and cite the contributing datasets.
+
+### Deep-pagination reliability
+
+The extraction splits the November search into six non-overlapping five-day ranges using GBIF's documented `day` range filter, keeping individual search offsets below 10,000. The manifest records each partition's count and compares their sum against the original unpartitioned monthly count. If GBIF contains month-only observations without an explicit day, the check **fails rather than silently omitting those records**. This is intentional: a complete dataset is preferable to a misleading partial extract.

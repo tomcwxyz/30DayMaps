@@ -130,9 +130,12 @@ def fetch() -> tuple[list[dict], dict]:
         "hasGeospatialIssue": "false",
         "occurrenceStatus": "PRESENT",
     }
-    first = get_json(query_url("occurrence/search", **params, limit=PAGE_SIZE, offset=0))
-    total = int(first.get("count", 0))
-    print(f"GBIF filtered occurrence count: {total}", flush=True)
+    # One complete monthly count is the integrity target.
+    # GBIF deep-offset searches slowed dramatically beyond 10,000 results
+    # in November 2026. Small non-overlapping day ranges avoid deep offsets.
+    monthly = get_json(query_url("occurrence/search", **params, limit=0))
+    total = int(monthly.get("count", 0))
+    print(f"GBIF monthly occurrence count: {total}", flush=True)
     if total < 1:
         raise RuntimeError("No GBIF occurrences returned: refusing to write a blank snapshot")
     if total > RECORD_LIMIT:
@@ -141,28 +144,65 @@ def fetch() -> tuple[list[dict], dict]:
             "Narrow the documented date scope or use an authenticated GBIF DOI download. "
             "Do not silently store a biased first-page sample."
         )
-    if total > 100_000:
-        raise RuntimeError("Search API 100,000-record cap exceeded")
     rows_by_id: dict[str, dict] = {}
     rejection_counts: Counter[str] = Counter()
-    offset = 0
-    payload = first
-    while offset < total:
-        if offset:
-            payload = get_json(query_url("occurrence/search", **params, limit=PAGE_SIZE, offset=offset))
-        records = payload.get("results", [])
-        if not records:
-            raise RuntimeError(f"GBIF pagination ended early at offset {offset}/{total}")
-        for occurrence in records:
-            cleaned, why = parse_record(occurrence)
-            if cleaned:
-                rows_by_id[cleaned["gbifID"]] = cleaned
-            else:
-                rejection_counts[why] += 1
-        offset += len(records)
-        print(f"Fetched {min(offset, total):,}/{total:,} occurrences", flush=True)
-        if offset < total:
-            time.sleep(.12)
+    partitions = []
+    partitioned_total = 0
+    for first_day in range(1, 31, 5):
+        last_day = min(30, first_day + 4)
+        day_range = f"{first_day},{last_day}"
+        bounded = {**params, "day": day_range}
+        first_page = get_json(query_url("occurrence/search", **bounded, limit=PAGE_SIZE, offset=0))
+        count = int(first_page.get("count", 0))
+        print(f"Days {day_range}: {count:,} matches", flush=True)
+        if count > 10_000:
+            raise RuntimeError(
+                f"Daily partition {day_range} has {count:,} records. "
+                "Split into smaller day ranges before retrieving deeper offsets."
+            )
+        partitioned_total += count
+        partitions.append({"day_range": day_range, "gbif_count": count})
+        offset = 0
+        payload = first_page
+        while offset < count:
+            if offset:
+                payload = get_json(query_url(
+                    "occurrence/search", **bounded, limit=PAGE_SIZE, offset=offset
+                ))
+            records = payload.get("results", [])
+            if not records:
+                raise RuntimeError(
+                    f"GBIF pagination ended early at {day_range}, offset {offset}/{count}"
+                )
+            if len(records) > min(PAGE_SIZE, count - offset):
+                raise RuntimeError("GBIF returned more than the declared page size")
+            for occurrence in records:
+                day = occurrence.get("day")
+                if not isinstance(day, int) or not first_day <= day <= last_day:
+                    raise RuntimeError(
+                        f"GBIF returned a record outside day partition {day_range}"
+                    )
+                cleaned, why = parse_record(occurrence)
+                if cleaned:
+                    rows_by_id[cleaned["gbifID"]] = cleaned
+                else:
+                    rejection_counts[why] += 1
+            offset += len(records)
+            print(
+                f"Fetched {offset:,}/{count:,} in days {day_range} "
+                f"({len(rows_by_id):,} eligible unique records)", flush=True
+            )
+            if offset < count:
+                time.sleep(.12)
+    # Year/month-only events or long date intervals may have no single day.
+    # Do not silently omit them: a full-month extract must account for all.
+    if partitioned_total != total:
+        raise RuntimeError(
+            f"Partition coverage mismatch: monthly GBIF count is {total:,}, "
+            f"daily partitions sum to {partitioned_total:,}. "
+            "Some records may have imprecise dates. A complete extract needs "
+            "another explicit strategy or an official GBIF download."
+        )
     rows = sorted(rows_by_id.values(), key=lambda row: int(row["gbifID"]))
     if not rows:
         raise RuntimeError("No CC0/CC BY GBIF occurrences available for redistribution")
@@ -180,6 +220,8 @@ def fetch() -> tuple[list[dict], dict]:
         "taxon_key": taxon_key,
         "gbif_match": {"scientificName": taxon.get("scientificName"), "rank": taxon.get("rank")},
         "query": params,
+        "partitioned_counts": partitions,
+        "partitioned_total": partitioned_total,
         "total_matching_gbif_occurrences": total,
         "exported_records": len(rows),
         "skipped_records": dict(rejection_counts),
