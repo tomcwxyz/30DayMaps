@@ -25,8 +25,14 @@ async function capture(name, viewport, { mobile = false, view = 'coverage' } = {
     const source = await page.evaluate(async () => {
       const data = await (await fetch('./moss.geojson')).json();
       const meta = await (await fetch('./moss-clusters-manifest.json')).json();
+      const attribution = await (await fetch('./moss-manifest.json')).json();
+      const stoneSpecies = attribution.species
+        .filter(s => s.type === 'Stone and walls').map(s => s.name);
       const totalSpecies = 8;
       return {
+        stoneSquares: data.features.filter(f =>
+          stoneSpecies.some(name => (f.properties.species[name] || 0) > 0)).length,
+        stoneClusterSquares: meta.profiles['stone-focus'].cells_in_clusters,
         total: data.features.length,
         allEight: data.features.filter(f =>
           Object.keys(f.properties.species).length === totalSpecies).length,
@@ -62,7 +68,24 @@ async function capture(name, viewport, { mobile = false, view = 'coverage' } = {
     // Confirm habitat clustering still works and retains concentration controls.
     await page.locator('[data-group="bog"]').click();
     assert.equal(await page.locator('#strength-section').isVisible(), true);
-    assert((await page.locator('#status').innerText()).includes('bog mosses clusters'));
+    assert((await page.locator('#status').innerText())
+      .includes('concentrations of bog mosses recordings'));
+
+    // A sparse cluster map must not be mistaken for an absence map:
+    // stone/wall moss has many sighting squares even if there are few
+    // strong co-recording clusters in the user's local area.
+    await page.locator('[data-group="stone"]').click();
+    const stoneStatus = await page.locator('#status').innerText();
+    assert(stoneStatus.includes(source.stoneSquares.toLocaleString('en-GB')));
+    assert(stoneStatus.includes(source.stoneClusterSquares.toLocaleString('en-GB')));
+    assert((await page.locator('#threshold').innerText())
+      .includes('at least 60 combined observation records'));
+    assert((await page.locator('#map-note').innerText()).includes('not mean no moss sightings'));
+    assert(await page.locator('#evidence-description').innerText().then(
+      text => text.includes((source.stoneSquares - source.stoneClusterSquares).toLocaleString('en-GB'))));
+    await page.locator('#show-grid').check();
+    assert(await page.locator('.leaflet-evidence-pane canvas').count() > 0);
+    await page.locator('#show-grid').uncheck();
 
     await page.locator('[data-group="' + view + '"]').click();
     if (view === 'coverage') {
