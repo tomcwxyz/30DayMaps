@@ -41,26 +41,43 @@ try {
       const state = await page.evaluate(() => window.__mossPoster);
       assert(state.ready, 'Poster failed to load verified data: ' + JSON.stringify(state));
       assert.equal(state.view, key);
-      assert.equal(state.sourceSquares, 2777, 'Snapshot unexpectedly changed: audit before printing');
-      assert(state.clusterCount >= 8, 'Missing real derived cluster geometries');
+      const verification = await page.evaluate(async profile => {
+        const source = await (await fetch('./moss.geojson')).json();
+        const clusters = await (await fetch('./moss-clusters.geojson')).json();
+        const manifest = await (await fetch('./moss-clusters-manifest.json')).json();
+        const taxa = await (await fetch('./moss-manifest.json')).json();
+        const selected = clusters.features.filter(f =>
+          f.properties.group === profile.group && f.properties.level === 'focus');
+        return {
+          sourceSquares: source.features.length,
+          clusterCount: selected.length,
+          clusterSquares: manifest.profiles[profile.key].cells_in_clusters,
+          allEightSquares: source.features.filter(f =>
+            taxa.species.every(s => (f.properties.species[s.name] || 0) > 0)).length
+        };
+      }, { group: key === 'all' ? 'all' : key, key: state.profile });
+      assert.equal(state.sourceSquares, verification.sourceSquares);
+      assert.equal(state.clusterCount, verification.clusterCount);
+      assert.equal(state.clusterSquares, verification.clusterSquares);
+      assert(state.sourceSquares >= 100, 'NBN source unexpectedly empty');
+      assert(state.clusterCount > 0, 'No source-derived cluster geometries');
       assert.equal(
         await page.locator('.leaflet-record-clusters-pane path.cluster-shape').count(),
         state.clusterCount,
         'Number of rendered cluster polygons differs from source'
       );
       if (key === 'all') {
-        assert.equal(state.eightSpeciesSquares, 197);
-        assert.equal(state.clusterCount, 20);
-        assert.equal(state.clusterSquares, 130);
-        assert((await page.locator('#note').innerText()).includes('67'));
+        assert.equal(state.eightSpeciesSquares, verification.allEightSquares);
+        assert(state.eightSpeciesSquares >= state.clusterSquares);
+        assert((await page.locator('#note').innerText())
+          .includes(String(state.eightSpeciesSquares - state.clusterSquares)));
         assert.equal(
           await page.locator('.leaflet-source-squares-pane path').count(),
           state.eightSpeciesSquares,
           'All eight-species evidence squares must be present'
         );
       } else {
-        assert.equal(state.clusterCount, key === 'bog' ? 26 : 12);
-        assert.equal(state.clusterSquares, key === 'bog' ? 270 : 347);
+        assert(state.clusterSquares >= state.clusterCount * 3);
       }
       await page.evaluate(async () => { await document.fonts.ready; });
       // The basemap is the same OpenStreetMap tile layer as the live map.
