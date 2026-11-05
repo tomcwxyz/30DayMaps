@@ -20,6 +20,7 @@
     const minimumAngle = Math.min(-20, profile.min_skyline_angle_deg - 5);
     const maximumAngle = Math.max(16, profile.max_skyline_angle_deg + 6);
     let heading = 0, dragging = null, pending = false;
+    let peakRecords = peaks;
     let width = 800, height = 500;
     const angleY = angle => height * ((maximumAngle - angle) / (maximumAngle - minimumAngle));
     const sampleAngle = (values, bearing) =>
@@ -28,7 +29,7 @@
     function renderLabels() {
       labels.replaceChildren();
       let previousX = -1000;
-      const visible = peaks.filter(p => p.visibility === "visible" &&
+      const visible = peakRecords.filter(p => p.visibility === "visible" &&
         p.gdal_visible && p.independent_ray_visible &&
         Math.abs(signedDiff(p.bearing_deg, heading)) < FIELD_DEGREES / 2 - 2);
       visible.sort((a,b) => signedDiff(a.bearing_deg,heading) - signedDiff(b.bearing_deg,heading));
@@ -126,6 +127,7 @@
       schedule();
     }
     function currentHeading() { return heading; }
+    function setPeaks(next) { peakRecords = Array.isArray(next) ? next : []; schedule(); }
 
     host.addEventListener("pointerdown", event => {
       if (event.target.closest(".panorama-peak")) return;
@@ -147,7 +149,7 @@
     });
     new ResizeObserver(schedule).observe(host);
     setHeading(0);
-    return { setHeading, currentHeading, repaint: schedule };
+    return { setHeading, currentHeading, setPeaks, repaint: schedule };
   }
   window.SightPanorama = { create };
 })();
