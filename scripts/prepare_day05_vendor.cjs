@@ -26,3 +26,18 @@ copy("leaflet", "leaflet.css", "day05-wildlife/vendor/leaflet.css");
 copy("leaflet", "images", "day05-wildlife/vendor/images");
 copy("maplibre-gl", "maplibre-gl.js", "day05-dale-head/vendor/maplibre-gl.js");
 copy("maplibre-gl", "maplibre-gl.css", "day05-dale-head/vendor/maplibre-gl.css");
+
+for (const [pkg, target] of [
+  ["leaflet", "day05-wildlife/vendor/LICENCE.txt"],
+  ["maplibre-gl", "day05-dale-head/vendor/LICENCE.txt"]
+]) {
+  const rootPackage = path.join(root, "node_modules", pkg);
+  const filename = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE"]
+    .find(name => fs.existsSync(path.join(rootPackage, name)));
+  if (!filename) {
+    console.warn("Library licence file not found in npm package: " + pkg);
+    continue;
+  }
+  const destination = path.join(output, target);
+  fs.copyFileSync(path.join(rootPackage, filename), destination);
+}
