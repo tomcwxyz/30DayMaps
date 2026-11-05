@@ -31,6 +31,7 @@ import requests
 SUMMIT_LON, SUMMIT_LAT = -3.201936, 54.527271
 DEFAULT_RADIUS_M = 20_000
 EYE_HEIGHT_M = 1.7
+SURVEYED_SUMMIT_HEIGHT_M = 753.0  # Dale Head, Wainwright summit height
 TARGET_HEIGHT_M = 0.0
 CURVATURE_COEFFICIENT = 6.0 / 7.0  # standard optical approximation
 EARTH_RADIUS_M = 6_371_008.8
@@ -182,10 +183,11 @@ def line_of_sight(
 
 
 def run_gdal_viewshed(input_file: Path, output_file: Path,
-                      observer_e: float, observer_n: float, radius_m: int) -> None:
+                      observer_e: float, observer_n: float, radius_m: int,
+                      effective_eye_height_m: float) -> None:
     args = [
         "gdal_viewshed", "-of", "GTiff", "-ox", str(observer_e), "-oy", str(observer_n),
-        "-oz", str(EYE_HEIGHT_M), "-tz", str(TARGET_HEIGHT_M),
+        "-oz", str(effective_eye_height_m), "-tz", str(TARGET_HEIGHT_M),
         "-md", str(radius_m), "-cc", str(CURVATURE_COEFFICIENT),
         "-vv", "255", "-iv", "0", "-ov", "128", "-a_nodata", "128",
         "-co", "COMPRESS=DEFLATE", str(input_file), str(output_file)
@@ -237,7 +239,7 @@ def export_overlay(
 
 def validate_rays(
     dem: np.ndarray, transform: Affine, visibility_file: Path,
-    centre: tuple[float, float]
+    centre: tuple[float, float], eye_height_m: float = EYE_HEIGHT_M
 ) -> dict:
     agreement = 0
     checked = 0
@@ -255,7 +257,7 @@ def validate_rays(
                 if result[row, col] not in (0, 255):
                     continue
                 try:
-                    verdict = line_of_sight(dem, transform, centre, (x, y))
+                    verdict = line_of_sight(dem, transform, centre, (x, y), eye_height=eye_height_m)
                 except ValueError:
                     continue
                 checked += 1
@@ -291,10 +293,26 @@ def build(output: Path, radius_km: int, resolution_m: int, tile_zoom: int) -> di
     dem, transform, tile_urls = build_projected_dem(
         *centre, radius_m, resolution_m, tile_zoom, dem_file
     )
+    # The summit height is independently documented as 753m, but the 40m
+    # resampled DEM can average the very top downwards. Calibrate the actual
+    # observer's eye altitude rather than treating the raster's local height
+    # as a surveyed summit height.
+    sampled_dem_height = height_at(dem, transform, *centre)
+    effective_eye_height_m = SURVEYED_SUMMIT_HEIGHT_M + EYE_HEIGHT_M - sampled_dem_height
+    if not 0.5 < effective_eye_height_m < 100:
+        raise RuntimeError("Summit height and DEM are inconsistent; inspect source terrain")
+    print(
+        f"Summit survey height {SURVEYED_SUMMIT_HEIGHT_M:.1f}m; "
+        f"DEM height {sampled_dem_height:.1f}m; "
+        f"GDAL observer offset {effective_eye_height_m:.1f}m",
+        flush=True
+    )
     print("Calculating GDAL terrain viewshed...", flush=True)
-    run_gdal_viewshed(dem_file, viewshed_file, *centre, radius_m)
+    run_gdal_viewshed(dem_file, viewshed_file, *centre, radius_m, effective_eye_height_m)
     corners, counts, area = export_overlay(viewshed_file, png_file)
-    validation = validate_rays(dem, transform, viewshed_file, centre)
+    validation = validate_rays(
+        dem, transform, viewshed_file, centre, eye_height_m=effective_eye_height_m
+    )
     manifest = {
         "status": "computed",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -302,7 +320,11 @@ def build(output: Path, radius_km: int, resolution_m: int, tile_zoom: int) -> di
             "name": "Dale Head summit (approximate viewpoint)",
             "longitude": SUMMIT_LON, "latitude": SUMMIT_LAT,
             "easting": round(centre[0], 2), "northing": round(centre[1], 2),
-            "eye_height_m_above_terrain": EYE_HEIGHT_M
+            "eye_height_m_above_surveyed_summit": EYE_HEIGHT_M,
+            "surveyed_summit_height_m": SURVEYED_SUMMIT_HEIGHT_M,
+            "dem_height_at_viewpoint_m": round(sampled_dem_height, 2),
+            "survey_height_minus_dem_m": round(SURVEYED_SUMMIT_HEIGHT_M - sampled_dem_height, 2),
+            "effective_eye_height_m_above_dem": round(effective_eye_height_m, 4)
         },
         "target_height_m_above_terrain": TARGET_HEIGHT_M,
         "analysis_radius_km": radius_km,
@@ -322,10 +344,11 @@ def build(output: Path, radius_km: int, resolution_m: int, tile_zoom: int) -> di
         "approx_visible_ground_area_km2": area,
         "independent_ray_diagnostic": validation,
         "interpretation": [
-            "Ground-surface visibility from a single human-height observer.",
+            "Ground-surface visibility from a single human-height observer, calibrated to the documented 753m summit height.",
             "Bare-earth terrain only: trees, buildings, walls and weather are not included.",
             "Pixel-scale terrain visibility is not a guarantee of a recognisable real-world view.",
             "The source DEM is converted from Web Mercator terrain tiles into British National Grid metres.",
+            "The raster undershoots the true summit height; observer elevation is calibrated to 753m + 1.7m rather than the uncorrected DEM cell height.",
             "Output visibility is based on a finite-resolution DEM and standard optical refraction."
         ]
     }
