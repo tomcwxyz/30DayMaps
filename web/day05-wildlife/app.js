@@ -360,13 +360,17 @@
       item.setAttribute("aria-label", name + ": " + nf.format(count) +
         " published records. Show " + name + " observations.");
       item.setAttribute("aria-pressed", String(state.month === month));
+      const value = document.createElement("span"); value.className = "chart-value";
+      value.textContent = new Intl.NumberFormat("en-GB", {
+        notation: "compact", maximumFractionDigits: 0
+      }).format(count);
       const column = document.createElement("span"); column.className = "chart-column";
       const fill = document.createElement("span"); fill.className = "chart-fill";
       fill.style.height = count > 0 ? Math.max(3, 100 * count / max) + "%" : "0";
       column.append(fill);
       const short = document.createElement("span"); short.className = "abbr";
       short.textContent = name.slice(0, 3);
-      item.append(column, short);
+      item.append(value, column, short);
       item.addEventListener("click", () => chooseMonth(month));
       bars.append(item);
     });
