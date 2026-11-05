@@ -458,3 +458,32 @@ label {
   .location-field { grid-column: 2; }
   .location-field .light-button { width: 100%; }
 }
+
+
+/* One page-scroll on mobile. Six cards appear first; the visitor chooses
+   whether to reveal the full field guide. No clipped, nested scrolling area. */
+.species-more { display: none; }
+.species-more[hidden] { display: none !important; }
+@media (max-width: 740px) {
+  .field-guide {
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 20px;
+  }
+  .field-guide:not(.expanded) .species-entry:nth-child(n+7) {
+    display: none;
+  }
+  .field-guide .species-more:not([hidden]) {
+    display: block;
+    margin: 17px 0 4px;
+    padding: 11px 15px;
+    width: 100%;
+    color: var(--forest);
+    border: 1px solid #b5c7b6;
+    border-radius: 2px;
+    background: #edf2eb;
+    font-size: .85rem;
+    font-weight: 650;
+  }
+  .field-guide .species-more:hover { background: #e1eadf; }
+}
