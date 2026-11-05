@@ -111,6 +111,22 @@ async function checkWildlife(browser) {
     const text = document.querySelector("#status")?.textContent || "";
     return /published records|No published records matched/i.test(text);
   }, null, { timeout: 45000 });
+  await mobile.locator(".species-entry").first().waitFor({ timeout: 50000 });
+  assert.equal(await mobile.locator("#field-guide").evaluate(
+    el => getComputedStyle(el).overflowY), "visible",
+    "Mobile field guide must not trap touch scrolling in a nested panel");
+  const listedCount = await mobile.locator(".species-entry").count();
+  if (listedCount > 6) {
+    await mobile.locator("#species-more").waitFor({ state: "visible", timeout: 12000 });
+    assert.equal(await mobile.locator(".species-entry:visible").count(), 6);
+    await mobile.locator("#species-more").click();
+    assert.equal(await mobile.locator("#species-more").getAttribute("aria-expanded"), "true");
+    assert.equal(await mobile.locator(".species-entry:visible").count(), listedCount);
+    await mobile.locator("#species-more").click();
+    assert.equal(await mobile.locator(".species-entry:visible").count(), 6);
+    pass("Wildlife mobile field guide expansion",
+      "Six species shown first; all " + listedCount + " accessible without a nested scroll area");
+  }
   await mobile.screenshot({ path: path.join(folder, "wildlife-mobile.png"), fullPage: true });
   pass("Wildlife mobile map rendered");
   await mobile.close();
