@@ -3,7 +3,7 @@
 (() => {
   "use strict";
   const FIELD_DEGREES = 90;
-  const COLOURS = ["#255947", "#527f68", "#83a99a", "#b9ccc4"];
+  const COLOURS = ["#b9ccc4", "#83a99a", "#527f68", "#255947"];
   const wrap = degrees => (degrees % 360 + 360) % 360;
   const signedDiff = (a, b) => ((a - b + 540) % 360) - 180;
 
