@@ -279,3 +279,33 @@ label {
   .search-line button { padding: 0 10px; }
   .totals strong { font-size: 1.9rem; }
 }
+
+
+/* Species photos are optional, licensed reference images — never local sighting evidence. */
+.species-entry { border-bottom: 1px solid #e5e8e1; }
+.species-entry .species-item { border-bottom: 0; }
+.species-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 67px;
+  width: 67px;
+  height: 57px;
+  background: #e8ece3;
+  overflow: hidden;
+}
+.species-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.species-no-photo {
+  color: #8c9b8c;
+  font-size: .52rem;
+  font-weight: 600;
+  letter-spacing: .11em;
+}
+.photo-credit { padding: 0 5px 9px 80px; color: #6a776a; font-size: .68rem; line-height: 1.35; }
+.photo-credit[hidden] { display: none; }
+.photo-credit a { color: #536b57; }
+@media(max-width: 420px) {
+  .species-photo { flex-basis: 57px; width: 57px; height: 51px; }
+  .photo-credit { padding-left: 70px; font-size: .63rem; }
+  .species-item .n { font-size: .68rem; }
+}
