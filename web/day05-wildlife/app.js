@@ -90,6 +90,31 @@
     }
   }
 
+  function invalidateVisibleResults(message) {
+    // Abort and invalidate immediately on every filter/location change;
+    // otherwise a slow previous search can repopulate the new month/place
+    // during the request debounce, or cancel a newly selected species.
+    clearTimeout(debounce);
+    if (state.controller) state.controller.abort();
+    ++state.requestId;
+    photoQueue.length = 0;
+    state.selectedKey = null;
+    state.facet = [];
+    state.observed = [];
+    state.total = 0;
+    resetGuideExpansion();
+    $("seasonality").hidden = true;
+    $("species-list").replaceChildren();
+    delete $("species-list").dataset.ready;
+    $("record-total").textContent = "…";
+    $("species-total").textContent = "…";
+    $("empty").hidden = true;
+    $("clear-filter").hidden = true;
+    occurrences.clearLayers();
+    $("map-note").textContent = "Looking for published records…";
+    setStatus(message);
+  }
+
   function chooseMonth(month, focus = false) {
     const number = Number(month);
     if (!Number.isInteger(number) || number < 1 || number > 12) return;
@@ -100,26 +125,7 @@
       $("month-strip").querySelector('[data-month="' + number + '"]')?.focus({ preventScroll: true });
     }
     if (changed) {
-      // A slow previous request can finish during our 300ms debounce. Invalidate
-      // it NOW, not at the start of loadRecords, to prevent old-month results
-      // reappearing under the newly selected month's heading.
-      if (state.controller) state.controller.abort();
-      ++state.requestId;
-      photoQueue.length = 0;
-      state.selectedKey = null;
-      state.facet = [];
-      state.observed = [];
-      state.total = 0;
-      resetGuideExpansion();
-      $("seasonality").hidden = true;
-      $("species-list").replaceChildren();
-      $("record-total").textContent = "…";
-      $("species-total").textContent = "…";
-      $("empty").hidden = true;
-      $("clear-filter").hidden = true;
-      occurrences.clearLayers();
-      $("map-note").textContent = "Looking for published " + MONTHS[state.month - 1] + " records…";
-      setStatus("Looking for " + MONTHS[state.month - 1] + " observations…");
+      invalidateVisibleResults("Looking for " + MONTHS[state.month - 1] + " observations…");
       if (state.locationResolved) updateTitles();
       scheduleLoad();
     }
@@ -344,11 +350,13 @@
   }
   async function renderFacets(facets, sample, requestId, signal) {
     const container = $("species-list"); container.replaceChildren();
+    delete container.dataset.ready;
     const counts = facets.find(f => /species.?key/i.test(f.field || ""));
     const ranking = (counts && counts.counts || []).filter(x => x.name && x.count > 0);
     $("species-total").textContent = nf.format(ranking.length) + (ranking.length >= 25 ? "+" : "");
     if (!ranking.length) {
       $("list-description").textContent = "The provider did not return species-level totals for this query. The map still shows the returned records.";
+      container.dataset.ready = "true";
       return;
     }
     $("list-title").textContent = "Most recorded species";
@@ -370,6 +378,7 @@
       const control = $("species-more");
       control.hidden = listed <= 6;
       control.textContent = "Show all " + listed + " listed species";
+      container.dataset.ready = "true";
     }
   }
   function renderSeasonalCounts(data, speciesLabel) {
@@ -516,6 +525,7 @@
     state.locationResolved = true;
     if (message) setLocationStatus(message);
     updateLocation(true);
+    invalidateVisibleResults("Looking for wildlife near " + title + "…");
     scheduleLoad();
   }
 
@@ -558,10 +568,15 @@
   }
   buildMonthNavigation();
   $("radius").addEventListener("change", (e) => {
-    state.radius = Number(e.target.value); updateLocation(true); scheduleLoad();
+    state.radius = Number(e.target.value);
+    updateLocation(true);
+    invalidateVisibleResults("Looking within " + state.radius + " km…");
+    scheduleLoad();
   });
   $("include-current").addEventListener("change", (e) => {
-    state.includeCurrent = Boolean(e.target.checked); scheduleLoad();
+    state.includeCurrent = Boolean(e.target.checked);
+    invalidateVisibleResults("Looking at the selected observation years…");
+    scheduleLoad();
   });
   document.querySelectorAll("[data-taxon]").forEach(button => {
     button.addEventListener("click", () => {
@@ -570,6 +585,7 @@
         const active = b === button; b.classList.toggle("active", active);
         b.setAttribute("aria-pressed", String(active));
       });
+      invalidateVisibleResults("Looking for " + TAXA[state.taxon].label.toLowerCase() + "…");
       scheduleLoad();
     });
   });
