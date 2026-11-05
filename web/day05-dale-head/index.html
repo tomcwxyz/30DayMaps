@@ -2,23 +2,23 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#162529">
-  <meta name="sight-release" content="20261105-renderfix-2">
-  <meta name="description" content="Explore real 3D terrain around Dale Head in the Lake District — Day 05 / Sight.">
-  <title>What the Mountain Sees · Dale Head · Day 05</title>
+  <meta name="theme-color" content="#f4f2e9">
+  <meta name="sight-release" content="20261105-fieldnotes-1">
+  <meta name="description" content="The view from Dale Head, one of my favourite spots in the Lakes. A little mapping experiment about what you can see from the summit.">
+  <title>The view from Dale Head · Day 5, Sight</title>
   <link href="./vendor/maplibre-gl.css" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css?v=20261105-renderfix-2">
+  <link rel="stylesheet" href="./style.css?v=20261105-fieldnotes-1">
   <script defer src="./vendor/maplibre-gl.js"></script>
-  <script defer src="./panorama.js?v=20261105-renderfix-2"></script>
-  <script defer src="./app.js?v=20261105-renderfix-2"></script>
+  <script defer src="./panorama.js?v=20261105-fieldnotes-1"></script>
+  <script defer src="./app.js?v=20261105-fieldnotes-1"></script>
 </head>
 <body>
   <div class="page">
     <header class="masthead">
-      <div class="topline"><span>30 DAY MAP CHALLENGE / 2026</span><span>05 / SIGHT</span></div>
-      <p class="eyebrow">Dale Head · English Lake District · 753 metres</p>
-      <h1>What the <em>mountain sees.</em></h1>
-      <p class="intro">The landscape isn't flat. Explore the real shape of the fells from Dale Head, and look beyond the summit into the valleys and mountains ahead.</p>
+      <div class="topline"><span>30 Day Map Challenge 2026</span><span>Day 5 / Sight</span></div>
+      <p class="eyebrow">Lake District / 753 m above sea level</p>
+      <h1>The view from <em>Dale Head</em></h1>
+      <p class="intro">One of my favourite spots in the Lakes. I wanted to see how much of the landscape you can actually see from up there, and what’s hidden behind the hills.</p>
     </header>
     <main class="experience">
       <section class="toolbar" aria-label="3D terrain controls">
@@ -38,7 +38,7 @@
              aria-label="Computed Lake District skyline from Dale Head. Drag horizontally or use arrow keys to look around." hidden>
           <canvas id="panorama-canvas" aria-label="Terrain-derived panoramic silhouettes across the field of view"></canvas>
           <div id="panorama-labels" class="panorama-labels"></div>
-          <div class="panorama-note">CALCULATED LANDSCAPE SILHOUETTE <span>·</span> DRAG TO LOOK AROUND <span>·</span> NOT A PHOTOGRAPH</div>
+          <div class="panorama-note">Drawn from elevation data <span>·</span> Drag to look around <span>·</span> Not a photograph</div>
         </div>
         <div class="top-note"><span class="dot"></span><span id="status" role="status" aria-live="polite">Loading terrain heights…</span></div>
         <div id="viewshed-legend" class="viewshed-legend" hidden>
@@ -48,22 +48,22 @@
     <small>Terrain only: trees, buildings and weather not included.</small>
   </div>
   <div class="compass" aria-hidden="true"><span id="compass-direction">N</span><small>LOOKING</small></div>
-        <div class="scene-bottom"><div><span class="small">VIEWPOINT</span><strong>Dale Head</strong><span>54.527271° N · 3.201936° W</span></div><div><span class="small">DATA</span><strong>Real elevation</strong><span>Tilezen / AWS Terrarium terrain</span></div></div>
+        <div class="scene-bottom"><div><span class="small">Viewpoint</span><strong>Dale Head</strong><span>54.527271° N · 3.201936° W</span></div><div><span class="small">Terrain</span><strong>Elevation data</strong><span>Tilezen / AWS Terrarium</span></div></div>
       </div>
       <section id="peak-guide" class="peak-guide" aria-labelledby="peak-heading" hidden>
         <div class="peak-guide-intro">
-          <span class="eyebrow">Reading the skyline</span>
-          <h2 id="peak-heading">Mountains on the horizon.</h2>
-          <p id="peak-summary">Named summits checked against the actual Dale Head elevation model. Only peaks where GDAL and a separate terrain ray agree are labelled as visible. Select a summit to turn towards it.</p>
+          <span class="eyebrow">Looking further</span>
+          <h2 id="peak-heading">Fells on the horizon</h2>
+          <p id="peak-summary">A few of the fells that should be visible from here, according to the terrain. Choose one to look in its direction.</p>
         </div>
         <div id="peak-list" class="peak-list" aria-label="Visible summits"></div>
         <p class="peak-credit">Peak names and coordinates © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL. A mapped summit point and 40 m elevation grid cannot resolve every small obstruction; these are modelled bare-earth sightlines, not confirmed real-world sightings.</p>
       </section>
       <section class="below">
-        <div class="story"><span class="eyebrow">The question</span><h2>How does a mountain change what we see?</h2><p>This study reconstructs the view from Dale Head using genuine elevation data. The summit mode is a calculated 360° landscape silhouette, with near and distant ridges layered by their measured heights and distances. The separate 3D overview lets you explore the terrain from above. Neither is a photograph or a claim to reproduce trees, buildings or the atmosphere.</p></div>
-        <div class="method"><span class="eyebrow">Reading the map</span><h3>Terrain first, then visibility</h3><p>The summit panorama is computed from the height grid and the documented 753 m summit elevation; the 3D map is an elevated terrain study rather than a literal eye-level camera. When the independently generated GDAL data are available, <strong>Visible ground</strong> displays a calculated terrain-only viewshed: green is visible and grey is obscured by intervening land. If computation is unavailable, that control remains disabled rather than presenting invented visibility.</p><p>On touch screens, drag to look around. Use the direction buttons to return to a known heading, or switch to 3D overview for a conventional map.</p></div>
+        <div class="story"><h2>From the top</h2><p>I’ve always loved the view from Dale Head, especially looking out over the Newlands Valley. This map is a small attempt to work out where the ridgelines fall, which fells you can pick out, and how much land is tucked out of sight.</p><p>Use <strong>From the summit</strong> to look around, or <strong>3D overview</strong> to get a sense of the shape of the surrounding hills.</p></div>
+        <div class="method"><h3>A note on the map</h3><p>It’s made from real terrain heights, with the viewpoint set at the 753 m summit. The panorama shows the contours of the landscape rather than a photograph of it. In <strong>Visible ground</strong>, green means the model thinks you could see that patch of land; grey means another hill gets in the way.</p><p>There are no trees, buildings or clouds in this calculation, and small features may be missed. Drag the panorama to turn, or use the compass buttons.</p></div>
       </section>
-      <footer><span>Elevation tiles from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS open terrain</a> · Base map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span><span>Day 05 · rendering revision 2 · A mapping experiment, not a navigation aid.</span></footer>
+      <footer><p class="footer-warning">A mapping experiment. For the love of God, don’t use it for navigation!</p><p class="source-credit">Terrain: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS</a> · Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></p></footer>
     </main>
   </div>
 </body>
