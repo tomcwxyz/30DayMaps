@@ -203,7 +203,7 @@
           // Media are species-wide reference pictures, NOT local observations.
           // Check the media licence itself: occurrence/data licences can differ.
           const params=new URLSearchParams({
-            taxonKey:String(job.taxon.key), mediaType:"StillImage",limit:"16",
+            taxonKey:String(job.taxon.key), mediaType:"StillImage",limit:"32",
             occurrenceStatus:"PRESENT"
           });
           const data=await getJson(API+"/occurrence/search?"+params,job.signal);
