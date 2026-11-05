@@ -86,6 +86,15 @@ async function checkWildlife(browser) {
   await mobile.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
   await mobile.locator("#map.leaflet-container").waitFor({ timeout: 30000 });
   assert.equal(await mobile.locator("#month-strip .month-choice").count(),12);
+  await mobile.waitForFunction(() => {
+    const strip = document.querySelector("#month-strip");
+    const selected = strip?.querySelector('[aria-pressed="true"]');
+    if (!strip || !selected) return false;
+    const outer = strip.getBoundingClientRect();
+    const inner = selected.getBoundingClientRect();
+    return inner.left >= outer.left - 4 && inner.right <= outer.right + 4;
+  }, null, { timeout: 7000 });
+  pass("Wildlife mobile current month visible", "Active month scrolled into view on first load");
   const startingMonth = Number(await mobile.locator('#month-strip [aria-pressed="true"]').getAttribute("data-month"));
   await mobile.locator("#month-next").click();
   const nextMonth = startingMonth % 12 + 1;
