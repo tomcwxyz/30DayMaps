@@ -84,7 +84,11 @@ async function checkDale(browser) {
   const errors = [];
   page.on("pageerror", err => errors.push(String(err)));
   await page.goto(link("day05-dale-head/"), { waitUntil: "domcontentloaded", timeout: 45000 });
-  assert.match(await page.title(), /mountain sees/i);
+  assert.match(await page.title(), /view from Dale Head/i);
+  await page.locator("h1").waitFor();
+  assert.match(await page.locator("h1").innerText(), /The view from Dale Head/i);
+  assert.match(await page.locator(".intro").innerText(), /One of my favourite spots in the Lakes/i);
+  assert.match(await page.locator(".footer-warning").innerText(), /don.t use it for navigation/i);
   await page.locator("#map canvas").waitFor({ timeout: 35000 });
   pass("Dale Head 3D canvas loaded");
   const directory = path.join("_site", "day05-dale-head", "data");
