@@ -98,6 +98,13 @@ def fetch_dem(slug: str, lat: float, lon: float, half_w: float, half_h: float, r
     reproject(mosaic, dem, src_transform=src_t, src_crs="EPSG:3857",
               dst_transform=from_origin(-half_w, half_h, res, res), dst_crs=crs,
               resampling=Resampling.cubic, dst_nodata=np.nan)
+    # Terrarium has occasional void pixels decoded as huge negative depths; treat them as gaps
+    # and fill each from its nearest valid neighbour.
+    bad = ~np.isfinite(dem) | (dem < -450)
+    if bad.any() and (~bad).any():
+        from scipy.ndimage import distance_transform_edt
+        idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
+        dem = dem[tuple(idx)]
     DEM_DIR.mkdir(parents=True, exist_ok=True)
     out = DEM_DIR / f"{slug}.npz"
     np.savez_compressed(out, dem=np.round(dem * 2) / 2, res=res, lat=lat, lon=lon, zoom=z,

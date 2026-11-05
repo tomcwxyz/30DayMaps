@@ -38,4 +38,4 @@ jobs:
           git add peaks
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Peaks: elevation and previews"
-          git pull --rebase -q && git push
+          git pull --rebase --autostash -q && git push
