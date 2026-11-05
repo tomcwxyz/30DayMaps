@@ -125,6 +125,57 @@ def fetch(slug: str) -> Path:
     return fetch_dem(slug, p["lat"], p["lon"], reach, reach, max(15.0, reach / 1600))
 
 
+OVERPASS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter")
+
+
+def fetch_names(slug: str) -> Path:
+    """Named summits (OpenStreetMap natural=peak/hill) inside the DEM, in local metres."""
+    import time
+    import requests
+    from pyproj import Transformer
+    d = load(slug)
+    crs = _aeqd(d["lat"], d["lon"])
+    to_ll = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
+    xs, ys = to_ll.transform([-d["half_w"], d["half_w"], -d["half_w"], d["half_w"]],
+                             [-d["half_h"], -d["half_h"], d["half_h"], d["half_h"]])
+    bbox = f"{min(ys)},{min(xs)},{max(ys)},{max(xs)}"
+    q = f'[out:json][timeout:60];(node["natural"~"^(peak|hill|volcano)$"]["name"]({bbox}););out;'
+    for attempt in range(6):
+        url = OVERPASS[attempt % 2]
+        try:
+            r = requests.post(url, data={"data": q}, timeout=90,
+                              headers={"User-Agent": "30DayMaps-peaks/0.1 (+https://github.com/tomcwxyz/30DayMaps)"})
+            r.raise_for_status()
+            els = r.json()["elements"]
+            break
+        except Exception as e:  # rate limits are common; wait and try the other server
+            print(f"{slug}: overpass {url} failed ({e}); retrying")
+            time.sleep(15 * (attempt + 1))
+    else:
+        raise RuntimeError("Overpass unavailable")
+    to_xy = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+    out = []
+    for e in els:
+        x, y = to_xy.transform(e["lon"], e["lat"])
+        ele = e["tags"].get("ele", "").replace("m", "").strip()
+        try:
+            ele = float(ele)
+        except ValueError:
+            ele = None
+        out.append({"name": e["tags"]["name"], "name_en": e["tags"].get("name:en"), "lat": e["lat"], "lon": e["lon"],
+                    "x": round(x, 1), "y": round(y, 1), "ele": ele, "osm": e["id"]})
+    path = DEM_DIR / f"{slug}.names.json"
+    path.write_text(json.dumps(out, ensure_ascii=False, indent=0))
+    print(f"{slug}: {len(out)} named summits -> {path}")
+    time.sleep(3)
+    return path
+
+
+def names(slug: str) -> list[dict]:
+    p = DEM_DIR / f"{slug}.names.json"
+    return json.loads(p.read_text()) if p.exists() else []
+
+
 def load(slug: str) -> dict:
     d = np.load(DEM_DIR / f"{slug}.npz")
     return {k: (d[k] if d[k].ndim else d[k].item()) for k in d.files}
@@ -298,13 +349,17 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch"); f.add_argument("slugs", nargs="*"); f.add_argument("--all", action="store_true")
+    f.add_argument("--force", action="store_true", help="refetch files that already exist")
     r = sub.add_parser("render"); r.add_argument("slugs", nargs="*"); r.add_argument("--all", action="store_true")
     r.add_argument("--style", choices=list(STYLES)); r.add_argument("--theme", default="paper", choices=list(THEMES))
     a = ap.parse_args()
     every = list(AREAS) + list(VIEWS)
     if a.cmd == "fetch":
         for s in (every if a.all else a.slugs):
-            fetch(s)
+            if not (DEM_DIR / f"{s}.npz").exists() or a.force:
+                fetch(s)
+            if not (DEM_DIR / f"{s}.names.json").exists() or a.force:
+                fetch_names(s)
         return
     slugs = [s for s in every if (DEM_DIR / f"{s}.npz").exists()] if a.all else a.slugs
     for s in slugs:

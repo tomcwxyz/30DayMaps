@@ -1,6 +1,6 @@
 name: Peaks
-# Downloads elevation for the places in maps/peak_places.json, draws every style and
-# commits the elevation files and previews to the branch it ran on.
+# Downloads elevation and named summits for new places in maps/peak_places.json and
+# commits them to the branch it ran on. Drawing happens locally: python -m maps.peaks render.
 on:
   push:
     paths: ["maps/peak_places.json", ".github/workflows/peaks.yml"]
@@ -28,14 +28,12 @@ jobs:
       - name: Fetch elevation
         env: {SLUGS: "${{ inputs.slugs }}"}
         run: |
-          if [ -n "$SLUGS" ]; then python -m maps.peaks fetch $SLUGS; else python -m maps.peaks fetch --all; fi
-      - name: Draw previews
-        run: python -m maps.peaks render --all
+          if [ -n "$SLUGS" ]; then python -m maps.peaks fetch --force $SLUGS; else python -m maps.peaks fetch --all; fi
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add peaks
+          git add peaks/dem
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Peaks: elevation and previews"
           git pull --rebase --autostash -q && git push
