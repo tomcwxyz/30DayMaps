@@ -174,8 +174,10 @@
     if (!photo || !row.isConnected) return;
     const container=row.querySelector(".species-photo");
     const img=document.createElement("img");
-    img.loading="lazy"; img.decoding="async"; img.referrerPolicy="no-referrer";
-    img.src=photo.url;
+    // The entire species row is already lazy-loaded with IntersectionObserver.
+    // An <img loading=lazy> kept outside the DOM until its load event can
+    // deadlock: the browser will not fetch it, so the load event never fires.
+    img.loading="eager"; img.decoding="async"; img.referrerPolicy="no-referrer";
     img.alt=title+" — species reference photograph, not a local sighting";
     img.addEventListener("load",()=>{
       if(!row.isConnected)return;
@@ -188,6 +190,9 @@
       credit.hidden=false;
     },{once:true});
     img.addEventListener("error",()=>{ img.remove(); },{once:true});
+    // Register handlers before assigning src; eager fetches can happen
+    // without a DOM attachment, while the photo row controls laziness.
+    img.src=photo.url;
   }
   const photoQueue=[];
   let photoActive=0;
