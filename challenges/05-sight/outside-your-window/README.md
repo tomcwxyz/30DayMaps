@@ -35,12 +35,33 @@ These are **not comparable unique-event totals**: NBN public precision, licence 
 
 The first photo audit used eight leading species actually returned by the local GBIF query. Six had a photo in the first thirty-two globally indexed multimedia occurrences with an explicitly suitable media licence, compared with four when only the first sixteen results were inspected. The field-guide implementation queries a small, lazy-loaded global sample, checks each media licence independently, and includes the creator, licence and parent GBIF occurrence link. A photo is never described as a local sighting. If the licence is missing, restricted or ambiguous, no photo appears.
 
+## Season navigation (5 November 2026)
+
+The page now uses a single **January–December strip**, rather than a second
+month dropdown. The current calendar month is selected on opening and kept
+visible in the horizontally scrollable strip on narrow screens. Visitors can
+tap a month, use previous/next controls, or use the left/right, Home and End
+keys within the strip. The selected month controls the **GBIF observation-month
+filter**, not a presumed probability of a sighting.
+
+After selecting a species, a twelve-month chart shows actual GBIF monthly facet
+counts for that species and location across the selected comparison years.
+Each bar is labelled with a three-letter month and a compact record count.
+Selecting a bar moves the entire explorer to that month and reloads its records,
+resetting the species selection rather than pretending the new month's records
+have already been checked. Counts remain **recording activity**, not abundance
+or a chance of seeing an animal.
+
+Playwright tests verify the real month query, the chart-to-month interaction,
+and mobile keyboard/touch-friendly navigation. This release does not add NBN
+occurrences into the GBIF list.
+
 ## Next priorities
 
 1. Audit additional UK wildlife recording coverage, especially NBN Atlas, against GBIF. Check dataset licences, masking and duplicate occurrence IDs before introducing any second source.
 2. Add properly licensed and attributed species photographs, when a source offers them. They must represent the **species**, not falsely imply that a pictured individual was observed locally.
 3. Show last-observed dates and account for coordinate uncertainty on the map. Distinguish field-guide record counts from probability, abundance or completeness.
-4. Explore a month strip and a print-ready seasonal card once the data quality is improved.
+4. Create a print-ready seasonal card from the checked data and verify mobile artwork before sharing.
 
 ## The question
 
@@ -50,8 +71,8 @@ This is a **seasonal atlas of nearby records**, not a claim to identify animals 
 
 ## Audience experience
 
-1. Start on a map of Britain with a clear example location and an explicit location picker (place search or pin). Browser location is available **only on demand**; never request it automatically.
-2. Choose a month, January–December. Default to the current month. This means *observations made in this calendar month across previous years*, not records uploaded this month.
+1. Request an approximate browser location when the page opens. If declined or unavailable, start on a **clearly labelled example** and allow manual place search or map selection. Never confuse the example with the visitor's location.
+2. Choose a month from the prominent January–December ribbon, initially set to the current month. This means *observations made in this calendar month across previous years*, not records uploaded this month.
 3. Choose a radius (1, 3, 5 or 10 km; default 5 km). Draw the real-radius circle and show the scale.
 4. Switch between **Birds** (first complete vertical), **Mammals**, **Butterflies & moths**, and **Plants** (later verticals, independently checked taxonomy).
 5. Explore two linked views:
