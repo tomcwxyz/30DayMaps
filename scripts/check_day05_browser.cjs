@@ -43,15 +43,22 @@ async function checkWildlife(browser) {
   pass("Wildlife radius selector", "10 km");
   await page.selectOption("#radius", "5");
   await page.locator(".species-item").first().waitFor({ timeout: 60000 });
-  // Optional source images must never be displayed without their own credit.
-  // Wait briefly for lazy media enrichment before moving to the species chart.
+  // Lazy photos are not requested until each species enters the scrollable
+  // field-guide viewport. Exercise that user journey, not the initial fold.
+  const speciesRows = page.locator(".species-entry");
+  for (let index=0; index<Math.min(8,await speciesRows.count()); index++) {
+    await speciesRows.nth(index).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(150);
+  }
   await page.waitForFunction(() => document.querySelectorAll(".species-photo img").length > 0, null,
-    {timeout:18000}).catch(() => {});
+    {timeout:25000}).catch(() => {});
   const livePhotos = await page.locator(".species-photo img").count();
   const creditedPhotos = await page.locator(".photo-credit:not([hidden]) a").count();
   assert.equal(livePhotos,creditedPhotos,
     "Every displayed wildlife photograph needs a visible licence/source credit");
-  pass("Wildlife explicit image attribution", livePhotos + " displayed reusable photographs have matching credits");
+  assert.ok(livePhotos > 0,
+    "No licensed species photos loaded after scrolling eight species into view");
+  pass("Wildlife licensed photographs", livePhotos + " actual photographs loaded with visible source credits");
   await page.locator(".species-item").first().click();
   await page.locator("#seasonality:not([hidden])").waitFor({ timeout: 45000 });
   assert.equal(await page.locator("#season-bars .season-month").count(), 12);
