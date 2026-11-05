@@ -11,6 +11,11 @@ Stripe is the record: each order's progress is kept in its payment's metadata
 (print_status, print_preview, print_file, prodigi_order, tracking, print_error;
 digital_png, digital_pdf, digital_sent for digital orders).
 
+Files live in a private Vercel Blob store under orders/ and digital/. Prodigi and the
+preview get time-limited signed links; digital-order emails link to the shop's
+/api/download, which checks a signature made with DOWNLOAD_SECRET before handing out
+a fresh download link, so email links can last as long as promised.
+
 This repository is public, so its Actions logs are too. Nothing here prints a
 customer's name, address, email, map title or file URL; logs name orders only by the
 last characters of the Stripe payment ID. Detail goes in the payment's metadata instead.
@@ -18,6 +23,9 @@ last characters of the Stripe payment ID. Detail goes in the payment's metadata 
 from __future__ import annotations
 
 import argparse
+import base64
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -185,7 +193,7 @@ def order_payload(order: Order, sku: str, method: str, file_url: str) -> dict:
 # --- Files -------------------------------------------------------------------
 
 def blob(*args: str) -> dict:
-    """Run the Vercel Blob helper; never echoes its output, which may contain file URLs."""
+    """Run the Vercel Blob helper (put / sign / del); never echoes its output, which may contain links."""
     done = subprocess.run(["node", str(BLOB_SCRIPT), *args], capture_output=True, text=True, timeout=600)
     if done.returncode != 0:
         raise FulfilError("Storing the print file failed (check BLOB_READ_WRITE_TOKEN)")
@@ -212,6 +220,32 @@ def render(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | No
              "web": [f for f in files if f.name.endswith("-web.png")],
              "pdf": [f for f in files if f.suffix == ".pdf"]}
     return {k: found[k][0] for k in kinds}
+
+
+PREVIEW_HOURS = 7 * 24   # signed preview link saved on the payment for checking before approval
+PRODIGI_HOURS = 72        # signed print-file link given to Prodigi when the order is sent
+
+
+def signed_url(uploader, pathname: str, hours: int) -> str:
+    """Time-limited link to a private file; falls back to a day if the store refuses longer."""
+    try:
+        return uploader("sign", pathname, str(hours))["url"]
+    except FulfilError:
+        if hours <= 24:
+            raise
+        return uploader("sign", pathname, "24")["url"]
+
+
+def download_link(pathname: str, days: int, now: float | None = None) -> str:
+    """A link to /api/download for a digital file, signed to expire after `days`."""
+    secret, site = os.environ.get("DOWNLOAD_SECRET"), os.environ.get("SITE_URL", "").rstrip("/")
+    if not secret or not site:
+        raise FulfilError("Digital downloads aren't set up (DOWNLOAD_SECRET and SITE_URL)")
+    expiry = int((now or time.time()) + days * 86400)
+    sig = base64.urlsafe_b64encode(hmac.new(secret.encode(), f"{pathname}|{expiry}".encode(),
+                                            hashlib.sha256).digest()).rstrip(b"=").decode()
+    return f"{site}/api/download?" + requests.models.RequestEncodingMixin._encode_params(
+        {"f": pathname, "x": expiry, "s": sig})
 
 
 # --- Email (digital orders) ----------------------------------------------------
@@ -270,14 +304,15 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     try:
         with tempfile.TemporaryDirectory() as tmp:
             files = renderer(order.recipe, Path(tmp), ("print", "web"))
-            file_url = uploader("put", str(files["print"]), f"orders/{order.pi_id}-print.png")["url"]
-            preview_url = uploader("put", str(files["web"]), f"orders/{order.pi_id}-preview.png")["url"]
+            print_path = uploader("put", str(files["print"]), f"orders/{order.pi_id}-print.png")["pathname"]
+            preview_path = uploader("put", str(files["web"]), f"orders/{order.pi_id}-preview.png")["pathname"]
+            preview_url = signed_url(uploader, preview_path, PREVIEW_HOURS)
     except FulfilError:
         raise
     except Exception as e:  # keep tracebacks (which can contain URLs) out of public logs
         raise FulfilError(f"Rendering the print failed ({type(e).__name__})") from None
     stripe_set_metadata(http, key, order.pi_id, {
-        "print_status": "awaiting approval", "print_file": file_url, "print_preview": preview_url, "print_error": ""})
+        "print_status": "awaiting approval", "print_file": print_path, "print_preview": preview_url, "print_error": ""})
     print(f"{ref(order.pi_id)}: print rendered and stored; preview link saved on the payment in Stripe")
     return "submit"
 
@@ -289,19 +324,20 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
         return "skip"
     days = int((shop.get("digital") or {}).get("link_days") or 30)
     try:
-        png_url, pdf_url = order.metadata.get("digital_png"), order.metadata.get("digital_pdf")
-        if not (png_url and pdf_url):  # a retry after a failed email reuses the stored files
+        png_path, pdf_path = order.metadata.get("digital_png"), order.metadata.get("digital_pdf")
+        if not (png_path and pdf_path):  # a retry after a failed email reuses the stored files
             with tempfile.TemporaryDirectory() as tmp:
                 files = renderer(order.recipe, Path(tmp), ("print", "pdf"), DIGITAL_MIN_LONG_PX)
-                png_url = uploader("put", str(files["print"]), f"digital/{order.pi_id}-print.png")["url"]
-                pdf_url = uploader("put", str(files["pdf"]), f"digital/{order.pi_id}-print.pdf")["url"]
+                png_path = uploader("put", str(files["print"]), f"digital/{order.pi_id}-print.png")["pathname"]
+                pdf_path = uploader("put", str(files["pdf"]), f"digital/{order.pi_id}-print.pdf")["pathname"]
             stripe_set_metadata(http, key, order.pi_id, {"print_status": "file made, emailing",
-                                                         "digital_png": png_url, "digital_pdf": pdf_url})
+                                                         "digital_png": png_path, "digital_pdf": pdf_path})
     except FulfilError:
         raise
     except Exception as e:
         raise FulfilError(f"Rendering the digital file failed ({type(e).__name__})") from None
     title = json.loads(order.recipe).get("title") or "your map"
+    png_url, pdf_url = download_link(png_path, days), download_link(pdf_path, days)
     send_email(http, order.email, *digital_email(title, png_url, pdf_url, days), idempotency=f"digital-{order.pi_id}")
     stripe_set_metadata(http, key, order.pi_id, {"print_status": "emailed", "print_error": "",
                                                  "digital_sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
@@ -309,7 +345,7 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
     return "skip"
 
 
-def submit(session_id: str, *, http=requests, key=None, prodigi_key=None, shop=None) -> str | None:
+def submit(session_id: str, *, http=requests, key=None, prodigi_key=None, shop=None, uploader=blob) -> str | None:
     key = key or os.environ["STRIPE_SECRET_KEY"]
     prodigi_key = prodigi_key or os.environ["PRODIGI_API_KEY"]
     order = load_order(http, key, session_id)
@@ -318,9 +354,10 @@ def submit(session_id: str, *, http=requests, key=None, prodigi_key=None, shop=N
     if order.metadata.get("prodigi_order"):
         print(f"{ref(order.pi_id)}: already sent to print; nothing to do")
         return order.metadata["prodigi_order"]
-    file_url = order.metadata.get("print_file")
-    if not file_url:
+    print_path = order.metadata.get("print_file")
+    if not print_path:
         raise FulfilError("No print file yet; run the prepare step first")
+    file_url = signed_url(uploader, print_path, PRODIGI_HOURS)
     shop = shop or load_shop()
     from maps import prints
     payload = order_payload(order, sku_for(shop, prints.spec_from_recipe(order.recipe).paper),
@@ -402,7 +439,7 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                         if sh.get("status") == "Shipped" and (sh.get("tracking") or {}).get("url")]
             if tracking:
                 stripe_set_metadata(http, key, pid, {"print_status": "shipped", "tracking": tracking[0]})
-                old = [meta[k] for k in ("print_file", "print_preview") if meta.get(k)]
+                old = [meta["print_file"], f"orders/{pid}-preview.png"] if meta.get("print_file") else []
                 if old:
                     uploader("del", *old)
                     stripe_set_metadata(http, key, pid, {"print_file": "", "print_preview": ""})

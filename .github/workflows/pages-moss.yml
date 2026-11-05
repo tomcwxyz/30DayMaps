@@ -1,14 +1,28 @@
-name: Publish Day 04 moss map to GitHub Pages
+name: Publish interactive map challenges to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - 'web/moss/**'
+      - 'web/day05-wildlife/**'
+      - 'tests/day05-media.test.cjs'
+      - 'web/day05-dale-head/**'
+      - 'maps/dale_head_viewshed.py'
+      - 'maps/dale_head_peaks.py'
+      - 'maps/dale_head_panorama.py'
+      - 'tests/test_dale_head_panorama.py'
+      - 'tests/test_dale_head_peaks.py'
+      - 'scripts/check_day05_browser.cjs'
+      - 'scripts/prepare_day05_vendor.cjs'
+      - 'tests/test_dale_head_viewshed.py'
+      - 'pyproject.toml'
       - '.github/workflows/pages-moss.yml'
   pull_request:
     paths:
       - 'web/moss/**'
+      - 'web/day05-wildlife/**'
+      - 'web/day05-dale-head/**'
       - '.github/workflows/pages-moss.yml'
   workflow_dispatch:
 
@@ -29,6 +43,12 @@ jobs:
       - name: Verify the source-derived data and front-end
         run: |
           node --check web/moss/app.js
+          node --check web/day05-wildlife/app.js
+          node --check web/day05-wildlife/geo.js
+          node --check web/day05-wildlife/media.js
+          node --test tests/day05-geo.test.cjs tests/day05-media.test.cjs
+          node --check web/day05-dale-head/app.js
+          node --check web/day05-dale-head/panorama.js
           python - <<'PY'
           import json
           from pathlib import Path
@@ -48,15 +68,154 @@ jobs:
           print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
           PY
 
-      - name: Prepare only the moss site's static assets
+      - name: Restore any already-calculated, reproducible Dale Head data
+        id: viewshed-cache
+        uses: actions/cache@v4
+        with:
+          path: web/day05-dale-head/data
+          key: dale-head-terrain-v3-${{ hashFiles('maps/dale_head_viewshed.py', 'maps/dale_head_peaks.py', 'maps/dale_head_panorama.py') }}
+
+      - name: Install real viewshed calculation tools
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdal-bin
+          python -m pip install -q numpy Pillow requests pyproj rasterio
+
+      - name: Calculate real Dale Head visibility from public terrain
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          python -m maps.dale_head_viewshed \
+            --output web/day05-dale-head/data \
+            --radius-km 20 \
+            --resolution-m 40 \
+            --tile-zoom 12
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('web/day05-dale-head/data')
+          meta = json.loads((root / 'viewshed-manifest.json').read_text())
+          assert meta['status'] == 'computed'
+          assert meta['cell_counts']['visible'] > 0
+          assert meta['cell_counts']['hidden'] > 0
+          for f in ['viewshed-overlay.png', 'dale-head-dem-bng.tif', 'dale-head-viewshed-bng.tif']:
+              assert (root / f).stat().st_size > 1000, f
+          print(f"Verified real GDAL viewshed: {meta['approx_visible_ground_area_km2']} km2 of visible ground")
+          PY
+
+      - name: Check named Lake District peaks against calculated sightlines
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          test -s web/day05-dale-head/data/viewshed-manifest.json
+          python -m maps.dale_head_peaks --data-dir web/day05-dale-head/data
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("web/day05-dale-head/data/peaks.json").read_text())
+          assert d["status"] == "computed_from_real_data"
+          assert d["raw_source_nodes"] > 0, "No actual OSM peak features returned"
+          assert d["modelled_peaks"] > 0, "No mapped peaks checked against terrain"
+          assert all(p["visibility"] == "visible" and p["gdal_visible"] and
+                     p["independent_ray_visible"] for p in d["labelled_peaks"])
+          print(f"Checked {d['modelled_peaks']} source peaks, {d['selected_label_count']} visible labels")
+          PY
+
+      - name: Derive measured 360-degree summit panorama from the same DEM
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          python -m maps.dale_head_panorama --data-dir web/day05-dale-head/data
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('web/day05-dale-head/data/panorama.json').read_text())
+          profile = data['profile']
+          assert data['status'] == 'computed_from_real_dem'
+          assert profile['samples_per_revolution'] == 720
+          assert len(profile['bands_near_to_far']) == 4
+          assert all(len(b['angles_deg']) == 720 for b in profile['bands_near_to_far'])
+          print("Verified real DEM panorama and four distance bands")
+          PY
+
+      - name: Report availability of computed viewshed
+        run: |
+          if test -s web/day05-dale-head/data/viewshed-manifest.json &&
+             test -s web/day05-dale-head/data/viewshed-overlay.png; then
+            echo "Computed Dale Head viewshed will be published"
+          else
+            echo "::warning::Dale Head viewshed computation is not available; the 3D terrain viewer will remain usable, with the visibility mode disabled"
+            rm -rf web/day05-dale-head/data
+          fi
+          if test -s web/day05-dale-head/data/peaks.json; then
+            echo "Visibility-checked named summits available"
+          else
+            echo "::warning::Named-summit source unavailable; no unverified names will be presented"
+          fi
+          if test -s web/day05-dale-head/data/panorama.json; then
+            echo "Measured Dale Head panoramic skyline available"
+          else
+            echo "::warning::Panorama is missing; only the 3D overview will be offered"
+          fi
+
+      - name: Prepare Day 04 moss and both Day 05 static experiences
         run: |
           set -euo pipefail
           mkdir -p _site
           cp -a web/moss/. _site/
+          mkdir -p _site/day05-wildlife _site/day05-dale-head
+          cp -a web/day05-wildlife/. _site/day05-wildlife/
+          cp -a web/day05-dale-head/. _site/day05-dale-head/
           touch _site/.nojekyll
           for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
             test -s "_site/$file"
           done
+          for app in day05-wildlife day05-dale-head; do
+            for file in index.html app.js style.css; do
+              test -s "_site/$app/$file"
+            done
+          done
+          test -s _site/day05-wildlife/geo.js
+          test -s _site/day05-wildlife/media.js
+          test -s _site/day05-dale-head/panorama.js
+
+      - name: Bundle pinned Leaflet and MapLibre for both static maps
+        run: |
+          npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0 playwright@1.56.0
+          node scripts/prepare_day05_vendor.cjs _site
+          for file in             _site/day05-wildlife/vendor/leaflet.js             _site/day05-wildlife/vendor/leaflet.css             _site/day05-dale-head/vendor/maplibre-gl.js             _site/day05-dale-head/vendor/maplibre-gl.css; do
+            test -s "$file"
+          done
+
+      - name: Browser smoke checks on desktop and mobile
+        continue-on-error: true
+        env:
+          DAY05_BROWSER_BASE: http://127.0.0.1:8000
+          DAY05_BROWSER_OUTPUT: browser-screenshots
+        run: |
+          python -m http.server 8000 --directory _site > /tmp/day05-static-server.log 2>&1 &
+          python - <<'PY'
+          import time, urllib.request
+          for attempt in range(30):
+              try:
+                  urllib.request.urlopen('http://127.0.0.1:8000/day05-dale-head/', timeout=3)
+                  break
+              except Exception:
+                  time.sleep(1)
+          else:
+              raise RuntimeError('Local test server did not start')
+          PY
+          node scripts/check_day05_browser.cjs
+
+      - name: Preserve real browser screenshots and test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day05-browser-screenshots
+          path: browser-screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload GitHub Pages artefact
         uses: actions/upload-pages-artifact@v4
@@ -77,6 +236,6 @@ jobs:
       - name: Configure Pages (once enabled in repository settings)
         uses: actions/configure-pages@v5
 
-      - name: Deploy static moss map
+      - name: Deploy static map experiences
         id: deployment
         uses: actions/deploy-pages@v4

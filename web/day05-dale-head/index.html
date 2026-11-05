@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2e9">
+  <meta name="sight-release" content="20261105-fieldnotes-1">
+  <meta name="description" content="The view from Dale Head, one of my favourite spots in the Lakes. A little mapping experiment about what you can see from the summit.">
+  <title>The view from Dale Head · Day 5, Sight</title>
+  <link href="./vendor/maplibre-gl.css" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css?v=20261105-fieldnotes-1">
+  <script defer src="./vendor/maplibre-gl.js"></script>
+  <script defer src="./panorama.js?v=20261105-fieldnotes-1"></script>
+  <script defer src="./app.js?v=20261105-fieldnotes-1"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="topline"><span>30 Day Map Challenge 2026</span><span>Day 5 / Sight</span></div>
+      <p class="eyebrow">Lake District / 753 m above sea level</p>
+      <h1>The view from <em>Dale Head</em></h1>
+      <p class="intro">One of my favourite spots in the Lakes. I wanted to see how much of the landscape you can actually see from up there, and what’s hidden behind the hills.</p>
+    </header>
+    <main class="experience">
+      <section class="toolbar" aria-label="3D terrain controls">
+        <div class="toolbar-block"><span class="control-label">Your viewpoint</span>
+          <div class="buttons"><button id="summit-view" type="button" aria-pressed="false" disabled title="Loading calculated panorama">From the summit</button><button class="on" id="overview-view" type="button" aria-pressed="true">3D overview</button><button id="viewshed-view" type="button" aria-pressed="false" disabled title="Waiting for computed viewshed data">Visible ground</button></div>
+        </div>
+        <div class="toolbar-block"><span class="control-label">Look towards</span>
+          <div class="buttons directions"><button class="on" data-direction="north" type="button" aria-pressed="true">North</button><button data-direction="east" type="button" aria-pressed="false">East</button><button data-direction="south" type="button" aria-pressed="false">South</button><button data-direction="west" type="button" aria-pressed="false">West</button></div>
+        </div>
+        <div class="toolbar-block"><span class="control-label">Terrain height</span>
+          <div class="buttons"><button id="true-scale" class="on" type="button" aria-pressed="true">Real scale</button><button id="exaggerate" type="button" aria-pressed="false">×1.5 relief</button></div>
+        </div>
+      </section>
+      <div class="scene">
+        <div id="map" role="region" aria-label="Interactive 3D terrain of Dale Head and surrounding fells"></div>
+        <div id="panorama" class="panorama" tabindex="0" role="region"
+             aria-label="Computed Lake District skyline from Dale Head. Drag horizontally or use arrow keys to look around." hidden>
+          <canvas id="panorama-canvas" aria-label="Terrain-derived panoramic silhouettes across the field of view"></canvas>
+          <div id="panorama-labels" class="panorama-labels"></div>
+          <div class="panorama-note">Drawn from elevation data <span>·</span> Drag to look around <span>·</span> Not a photograph</div>
+        </div>
+        <div class="top-note"><span class="dot"></span><span id="status" role="status" aria-live="polite">Loading terrain heights…</span></div>
+        <div id="viewshed-legend" class="viewshed-legend" hidden>
+    <strong>Visibility from Dale Head</strong>
+    <div><span class="visible-swatch"></span> Ground visible from the summit</div>
+    <div><span class="hidden-swatch"></span> Ground hidden behind terrain</div>
+    <small>Terrain only: trees, buildings and weather not included.</small>
+  </div>
+  <div class="compass" aria-hidden="true"><span id="compass-direction">N</span><small>LOOKING</small></div>
+        <div class="scene-bottom"><div><span class="small">Viewpoint</span><strong>Dale Head</strong><span>54.527271° N · 3.201936° W</span></div><div><span class="small">Terrain</span><strong>Elevation data</strong><span>Tilezen / AWS Terrarium</span></div></div>
+      </div>
+      <section id="peak-guide" class="peak-guide" aria-labelledby="peak-heading" hidden>
+        <div class="peak-guide-intro">
+          <span class="eyebrow">Looking further</span>
+          <h2 id="peak-heading">Fells on the horizon</h2>
+          <p id="peak-summary">A few of the fells that should be visible from here, according to the terrain. Choose one to look in its direction.</p>
+        </div>
+        <div id="peak-list" class="peak-list" aria-label="Visible summits"></div>
+        <p class="peak-credit">Peak names and coordinates © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL. A mapped summit point and 40 m elevation grid cannot resolve every small obstruction; these are modelled bare-earth sightlines, not confirmed real-world sightings.</p>
+      </section>
+      <section class="below">
+        <div class="story"><h2>From the top</h2><p>I’ve always loved the view from Dale Head, especially looking out over the Newlands Valley. This map is a small attempt to work out where the ridgelines fall, which fells you can pick out, and how much land is tucked out of sight.</p><p>Use <strong>From the summit</strong> to look around, or <strong>3D overview</strong> to get a sense of the shape of the surrounding hills.</p></div>
+        <div class="method"><h3>A note on the map</h3><p>It’s made from real terrain heights, with the viewpoint set at the 753 m summit. The panorama shows the contours of the landscape rather than a photograph of it. In <strong>Visible ground</strong>, green means the model thinks you could see that patch of land; grey means another hill gets in the way.</p><p>There are no trees, buildings or clouds in this calculation, and small features may be missed. Drag the panorama to turn, or use the compass buttons.</p></div>
+      </section>
+      <footer><p class="footer-warning">A mapping experiment. For the love of God, don’t use it for navigation!</p><p class="source-credit">Terrain: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS</a> · Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></p></footer>
+    </main>
+  </div>
+</body>
+</html>

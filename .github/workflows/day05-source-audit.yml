@@ -1,0 +1,32 @@
+name: Day 05 GBIF and NBN coverage audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/audit_day05_sources.py'
+      - 'scripts/audit_day05_images.py'
+      - '.github/workflows/day05-source-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare-coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare published source coverage without merging datasets
+        run: python -m scripts.audit_day05_sources day05-audits/coverage.json
+      - name: Check openly licensed species reference photos
+        run: python -m scripts.audit_day05_images day05-audits/photos.json
+      - name: Preserve independent data audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day05-source-comparison
+          path: day05-audits/
+          if-no-files-found: ignore
+          retention-days: 30

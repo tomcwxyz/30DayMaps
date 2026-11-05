@@ -8,7 +8,32 @@ const fs = require("fs");
 const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const PORT = +process.env.PORT || 8787;
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".gz": "application/octet-stream" };
+
+// With MOCK_TILES_DIR=<folder of x-y.pbf files> the server reads map tiles from there.
+if (process.env.MOCK_TILES_DIR) {
+  const realFetch = global.fetch;
+  global.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u === "https://tiles.openfreemap.org/planet") return new Response(JSON.stringify({ tiles: ["https://tiles.openfreemap.org/planet/mock/{z}/{x}/{y}.pbf"] }));
+    const m = u.match(/planet\/mock\/\d+\/(\d+)\/(\d+)\.pbf$/);
+    if (m) {
+      const f = path.join(process.env.MOCK_TILES_DIR, `${m[1]}-${m[2]}.pbf`);
+      return fs.existsSync(f) ? new Response(fs.readFileSync(f)) : new Response("", { status: 404 });
+    }
+    return realFetch(url, opts);
+  };
+}
+
+// With MOCK_BLOB=1 the place cache keeps packs in memory and serves them at /__mock_blob/.
+const blobs = new Map();
+if (process.env.MOCK_BLOB) {
+  require(path.join(ROOT, "api", "pack.js"))._blob = {
+    head: async p => { if (!blobs.has(p)) { const e = new Error("not found"); e.name = "BlobNotFoundError"; throw e; } return { url: `http://localhost:${PORT}/__mock_blob/${p}` }; },
+    put: async (p, body) => { blobs.set(p, body); console.log("MOCK BLOB stored", p, body.length, "bytes"); return { url: `http://localhost:${PORT}/__mock_blob/${p}` }; },
+    get: async p => blobs.has(p) ? { stream: new Blob([blobs.get(p)]).stream() } : null,
+  };
+}
 
 if (process.env.MOCK_STRIPE) {
   process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "sk_test_mock";
@@ -29,6 +54,11 @@ http.createServer((req, res) => {
   let body = "";
   req.on("data", c => body += c);
   req.on("end", async () => {
+    if (url.pathname.startsWith("/__mock_blob/")) {
+      const b = blobs.get(url.pathname.slice("/__mock_blob/".length));
+      if (!b) { res.statusCode = 404; return res.end(); }
+      res.setHeader("Content-Type", "application/octet-stream"); return res.end(b);
+    }
     if (url.pathname.startsWith("/__mock_github/")) {
       console.log("MOCK GITHUB", url.pathname, body);
       res.statusCode = 204; return res.end();
@@ -48,7 +78,6 @@ http.createServer((req, res) => {
       const file = path.join(ROOT, "api", name + ".js");
       if (!fs.existsSync(file)) return res.status(404).json({ error: "not found" });
       req.body = body && (req.headers["content-type"] || "").includes("json") ? JSON.parse(body) : body;
-      delete require.cache[require.resolve(file)];
       try { return await require(file)(req, res); } catch (e) { console.error(e); return res.status(500).json({ error: "server error" }); }
     }
     const rel = url.pathname === "/" ? "index.html" : url.pathname.slice(1);

@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/pack.js": { "maxDuration": 120 }
+  },
+  "headers": [
+    {
+      "source": "/cities/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+    }
+  ]
+}

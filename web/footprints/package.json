@@ -1,0 +1,8 @@
+{
+  "name": "footprints",
+  "private": true,
+  "description": "Footprints print maker: static page plus Vercel functions in api/",
+  "dependencies": {
+    "@vercel/blob": "2.8.1"
+  }
+}

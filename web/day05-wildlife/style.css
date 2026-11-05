@@ -1,0 +1,489 @@
+/* Day 5 / Sight — an everyday field guide, not a data dashboard. */
+:root {
+  --page: #f5f3ec;
+  --paper: #fffefa;
+  --ink: #2d342f;
+  --muted: #667269;
+  --line: #d4d9cf;
+  --forest: #365b49;
+  --leaf: #e6eee5;
+  --accent: #b27348;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+a { color: #315c4b; text-underline-offset: 3px; }
+p { line-height: 1.55; }
+.page { max-width: 1640px; margin: auto; }
+.masthead {
+  background: var(--page);
+  padding: 22px clamp(18px,4vw,62px) 28px;
+  border-bottom: 1px solid var(--line);
+}
+.topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  font-size: .76rem;
+  color: var(--muted);
+}
+.masthead-content { display: block; }
+.eyebrow {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: .79rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.masthead .eyebrow { margin: 28px 0 8px; }
+.masthead h1 {
+  margin: 0;
+  max-width: 1050px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(2.5rem,5.8vw,5.3rem);
+  font-weight: 630;
+  letter-spacing: -.05em;
+  line-height: 1.07;
+}
+.masthead h1 em {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -.05em;
+}
+.intro {
+  max-width: 690px;
+  margin: 16px 0 0;
+  color: #545c54;
+  font-size: clamp(.96rem,1.45vw,1.17rem);
+}
+main { padding: 0 clamp(13px,3.2vw,51px) 25px; }
+.filters {
+  display: grid;
+  grid-template-columns: minmax(230px, 2.2fr) minmax(145px, 1fr) minmax(115px, .7fr) minmax(140px, .8fr);
+  gap: 16px;
+  padding: 23px 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+label {
+  display: block;
+  margin-bottom: 7px;
+  color: #425249;
+  font-size: .81rem;
+  font-weight: 650;
+}
+.filters select, .filters input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--paper);
+  border: 1px solid #bdc7bb;
+  border-radius: 3px;
+  color: var(--ink);
+}
+.search-line { display: flex; gap: 6px; }
+.search-line button, .light-button {
+  min-height: 44px;
+  padding: 0 13px;
+  background: var(--forest);
+  color: white;
+  border: 1px solid var(--forest);
+  border-radius: 3px;
+  white-space: nowrap;
+  font-size: .83rem;
+  font-weight: 600;
+}
+.search-line button:hover { background: #274b39; }
+.light-button { background: transparent; color: var(--forest); width: 100%; }
+.light-button:hover { background: var(--leaf); }
+.hint { margin: 7px 0 0; color: #758077; font-size: .73rem; line-height: 1.45; }
+.location-status { max-width: 620px; color: #4a6556; }
+.period-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 13px 0 15px;
+  font-size: .78rem;
+  color: var(--muted);
+}
+.period-row .check { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .8rem; font-weight: 500; }
+.period-row input { margin: 0; accent-color: var(--forest); }
+.taxa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 17px;
+}
+.taxa button {
+  padding: 8px 13px;
+  border: 1px solid #c4d0c2;
+  border-radius: 3px;
+  background: transparent;
+  color: #506b56;
+  font-size: .84rem;
+}
+.taxa button:hover { background: #e7ede6; }
+.taxa button.active { background: var(--forest); border-color: var(--forest); color: white; }
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(310px,.87fr) minmax(0,1.13fr);
+  align-items: stretch;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.field-guide {
+  min-width: 0;
+  max-height: 710px;
+  overflow-y: auto;
+  padding: 25px 25px 18px;
+}
+.guide-head .eyebrow { margin: 0 0 7px; }
+.field-guide h2 {
+  font: 500 clamp(1.8rem,2.5vw,2.45rem)/1.15 Georgia, serif;
+  letter-spacing: -.034em;
+  margin: 0;
+}
+.guide-head #guide-subtitle { margin: 8px 0 0; color: var(--muted); font-size: .85rem; }
+.map-jump { display: inline-block; margin: 9px 0 11px; font-size: .77rem; }
+.field-guide #status { color: #546e5b; min-height: 20px; margin-bottom: 8px; font-size: .76rem; }
+.totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.totals>div { display: flex; flex-direction: column; gap: 5px; }
+.totals strong { font: 500 2.03rem/1.05 Georgia,serif; }
+.totals span { color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.guide-intro { padding: 21px 0 8px; }
+.guide-intro h3, .seasonality h3 {
+  font: 500 1.22rem Georgia,serif;
+  letter-spacing: -.018em;
+  margin: 0 0 6px;
+}
+.guide-intro p, .seasonality p { font-size: .76rem; color: var(--muted); margin: 0 0 8px; }
+.species-list { display: flex; flex-direction: column; }
+.species-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+  border: 0;
+  border-bottom: 1px solid #e5e8e1;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+}
+.species-item:hover, .species-item.selected { background: #eff3ec; }
+.species-item.selected { box-shadow: inset 3px 0 0 var(--forest); }
+.species-item .names { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.species-item .common { font-weight: 640; font-size: .92rem; }
+.species-item .latin { color: #778077; font-size: .74rem; font-style: italic; }
+.species-item .n {
+  color: #556958;
+  font-size: .74rem;
+  white-space: nowrap;
+  flex: none;
+}
+.empty { margin-top: 9px; padding: 17px; background: #f1f2e9; font-size: .84rem; }
+.empty p { color: var(--muted); margin-bottom: 0; }
+.seasonality { padding: 19px 0; border-bottom: 1px solid var(--line); }
+.season-bars { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 4px; min-height: 105px; align-items: end; }
+.season-month { display: flex; flex-direction: column; align-items: center; min-width: 0; gap: 5px; }
+.season-month .chart-column { height: 80px; width: 100%; background: #eff1ea; display: flex; align-items: end; }
+.season-month .chart-fill { display: block; width: 100%; background: #8da993; }
+.season-month.current .chart-fill { background: var(--forest); }
+.season-month .abbr { color: #768176; font-size: .63rem; }
+.season-month.current .abbr { font-weight: 700; color: var(--forest); }
+.map-panel { position: relative; min-width: 0; min-height: 580px; background: #dfe7dd; border-left: 1px solid var(--line); }
+#map { height: 100%; min-height: 580px; width: 100%; z-index: 1; }
+.map-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 400;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid #d7dbd1;
+  background: rgba(255,254,250,.94);
+  color: #485a4f;
+  font-size: .72rem;
+}
+.map-key { flex: none; width: 9px; height: 9px; background: #b96e44; border-radius: 50%; }
+.map-clear {
+  position: absolute;
+  right: 12px; top: 12px; z-index: 400;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: white;
+  font-size: .76rem;
+}
+.footnotes { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; padding-top: 22px; margin-top: 27px; border-top: 1px solid var(--line); }
+.footnotes p { margin: 0 0 13px; color: #66746a; font-size: .76rem; }
+.footnotes .credit { grid-column: 1 / -1; font-size: .72rem; }
+.leaflet-popup-content { font: 13px/1.45 "Trebuchet MS",sans-serif; max-width: 270px; }
+.leaflet-popup-content strong { display: block; font-size: 1rem; }
+.leaflet-popup-content .date { display: block; margin: 4px 0 8px; color: #617569; }
+.leaflet-popup-content a { display: block; margin-top: 8px; }
+@media(max-width: 1020px) {
+  .filters { grid-template-columns: minmax(260px,2fr) minmax(140px,1fr); gap: 12px 17px; }
+  .location-field { grid-column: 2; }
+  .radius-field { grid-column: 1; }
+  .content { grid-template-columns: minmax(290px,.95fr) minmax(0,1.05fr); }
+  .field-guide { padding: 20px; }
+}
+@media(max-width: 740px) {
+  .masthead { padding: 18px 18px 27px; }
+  .masthead .eyebrow { margin: 23px 0 8px; }
+  .masthead h1 { font-size: clamp(2.3rem,8.4vw,3.4rem); }
+  .intro { font-size: .98rem; }
+  .filters { grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 17px; }
+  .place-field { grid-column: 1 / -1; }
+  .month-field { grid-column: 1; }
+  .radius-field { grid-column: 2; }
+  .location-field { grid-column: 1 / -1; }
+  .location-field .light-button { width: auto; }
+  .period-row { flex-direction: column; align-items: start; gap: 7px; }
+  .content { display: flex; flex-direction: column; }
+  .field-guide { max-height: 490px; overflow-y: auto; padding: 20px 17px; }
+  .map-panel { border-left: 0; border-top: 1px solid var(--line); min-height: 370px; }
+  #map { height: 370px; min-height: 370px; }
+  .map-overlay { left: 8px; bottom: 8px; right: 8px; padding: 8px; font-size: .68rem; }
+  .footnotes { grid-template-columns: 1fr; }
+  .footnotes .credit { grid-column: 1; }
+  .search-line button { padding: 0 10px; }
+  .totals strong { font-size: 1.9rem; }
+}
+
+
+/* Species photos are optional, licensed reference images — never local sighting evidence. */
+.species-entry { border-bottom: 1px solid #e5e8e1; }
+.species-entry .species-item { border-bottom: 0; }
+.species-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 67px;
+  width: 67px;
+  height: 57px;
+  background: #e8ece3;
+  overflow: hidden;
+}
+.species-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.species-no-photo {
+  color: #8c9b8c;
+  font-size: .52rem;
+  font-weight: 600;
+  letter-spacing: .11em;
+}
+.photo-credit { padding: 0 5px 9px 80px; color: #6a776a; font-size: .68rem; line-height: 1.35; }
+.photo-credit[hidden] { display: none; }
+.photo-credit a { color: #536b57; }
+@media(max-width: 420px) {
+  .species-photo { flex-basis: 57px; width: 57px; height: 51px; }
+  .photo-credit { padding-left: 70px; font-size: .63rem; }
+  .species-item .n { font-size: .68rem; }
+}
+
+
+/* Season-first browsing: a calm, scrollable month strip, not a dashboard. */
+.month-explorer {
+  padding: 17px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.month-explorer-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+.month-explorer h2 {
+  margin: 0;
+  font: 500 1.25rem/1.2 Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+}
+.month-explorer p {
+  margin: 4px 0 0;
+  font-size: .77rem;
+  color: var(--muted);
+}
+.month-arrows { display: flex; gap: 5px; }
+.month-arrows button {
+  appearance: none;
+  border: 1px solid #c5cec2;
+  background: transparent;
+  color: #394a3e;
+  border-radius: 2px;
+  font: 400 1.25rem/1 Georgia, serif;
+  width: 33px;
+  height: 31px;
+  padding: 0;
+}
+.month-arrows button:hover { background: var(--leaf); }
+.month-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(49px, 1fr);
+  gap: 5px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #b5c4b6 transparent;
+  padding: 2px 1px 8px;
+}
+.month-choice {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: 2px solid #cbd5ca;
+  border-radius: 2px 2px 0 0;
+  padding: 10px 3px 9px;
+  background: transparent;
+  color: #667669;
+  font-size: .77rem;
+  font-weight: 500;
+  scroll-snap-align: center;
+}
+.month-choice:hover { background: #e8ede5; color: #274b39; }
+.month-choice.active {
+  border-bottom-color: var(--forest);
+  color: var(--ink);
+  background: #e7eee5;
+  font-weight: 750;
+}
+.month-choice:focus-visible { outline-offset: -2px; }
+.seasonality .season-bars { min-height: 110px; gap: 3px; }
+.seasonality .season-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 5px;
+  margin: 0;
+  gap: 5px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.seasonality .season-month:hover .chart-column { background: #e2e9df; }
+.seasonality .season-month:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.seasonality .season-month.current { border-bottom-color: var(--forest); }
+.seasonality .season-month .chart-column { height: 82px; }
+.seasonality .season-month .chart-value {
+  display: block;
+  min-height: 13px;
+  line-height: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: .62rem;
+  font-weight: 550;
+  color: #5e7061;
+  white-space: nowrap;
+}
+.seasonality .season-month.current .chart-value { color: var(--forest); font-weight: 750; }
+.seasonality .season-month .abbr {
+  font-size: clamp(.52rem, .7vw, .65rem);
+  white-space: nowrap;
+  color: #607163;
+}
+.seasonality .season-month.current .abbr { color: var(--forest); }
+@media (max-width: 740px) {
+  .month-explorer { padding-top: 13px; padding-bottom: 6px; }
+  .month-explorer-heading { align-items: flex-start; }
+  .month-explorer h2 { font-size: 1.21rem; }
+  .month-explorer p { max-width: 250px; font-size: .72rem; }
+  .month-strip {
+    grid-auto-columns: 55px;
+    margin-right: -13px;
+    padding-right: 13px;
+  }
+  .month-choice { min-height: 44px; }
+  .seasonality .season-month .abbr { font-size: .56rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .month-strip { scroll-behavior: auto; scroll-snap-type: none; }
+}
+
+
+/* The month ribbon is the sole season picker: leave room for the place search. */
+@media (min-width: 1021px) {
+  .filters {
+    grid-template-columns: minmax(280px, 2.4fr) minmax(135px, .8fr) minmax(160px, 1fr);
+    align-items: start;
+  }
+}
+@media (min-width: 741px) and (max-width: 1020px) {
+  .filters {
+    grid-template-columns: minmax(250px, 2fr) minmax(150px, 1fr);
+  }
+  .place-field { grid-column: 1 / -1; }
+  .radius-field { grid-column: 1; }
+  .location-field { grid-column: 2; }
+}
+@media (max-width: 740px) {
+  .place-field { grid-column: 1 / -1; }
+  .radius-field { grid-column: 1; }
+  .location-field { grid-column: 2; }
+  .location-field .light-button { width: 100%; }
+}
+
+
+/* One page-scroll on mobile. Six cards appear first; the visitor chooses
+   whether to reveal the full field guide. No clipped, nested scrolling area. */
+.species-more { display: none; }
+.species-more[hidden] { display: none !important; }
+@media (max-width: 740px) {
+  .field-guide {
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 20px;
+  }
+  .field-guide:not(.expanded) .species-entry:nth-child(n+7) {
+    display: none;
+  }
+  .field-guide .species-more:not([hidden]) {
+    display: block;
+    margin: 17px 0 4px;
+    padding: 11px 15px;
+    width: 100%;
+    color: var(--forest);
+    border: 1px solid #b5c7b6;
+    border-radius: 2px;
+    background: #edf2eb;
+    font-size: .85rem;
+    font-weight: 650;
+  }
+  .field-guide .species-more:hover { background: #e1eadf; }
+}

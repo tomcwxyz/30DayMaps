@@ -1,0 +1,21 @@
+name: Day 05 wildlife live data check
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/check_day05_gbif.py'
+      - '.github/workflows/day05-gbif-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gbif-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify real November bird records, GBIF filter and facet
+        run: python scripts/check_day05_gbif.py

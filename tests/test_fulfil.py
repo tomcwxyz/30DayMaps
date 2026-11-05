@@ -68,7 +68,11 @@ def uploads():
     log = []
     def up(cmd, *args):
         log.append((cmd, args))
-        return {"url": f"https://blob.example/{args[1] if cmd == 'put' else ''}-rnd"} if cmd == "put" else {}
+        if cmd == "put":
+            return {"pathname": args[1]}
+        if cmd == "sign":
+            return {"url": f"https://blob.example/{args[0]}?sig={args[1]}h"}
+        return {}
     return up, log
 
 
@@ -77,10 +81,13 @@ def test_prepare_renders_stores_and_records_on_the_payment(capsys):
     up, log = uploads()
     assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up,
                           renderer=fake_render, shop=SHOP) == "submit"
-    assert [a[1] for _, a in log] == ["orders/pi_3Abcdefgh12345678-print.png", "orders/pi_3Abcdefgh12345678-preview.png"]
+    assert [(c, a[1] if c == "put" else a[0]) for c, a in log] == [
+        ("put", "orders/pi_3Abcdefgh12345678-print.png"), ("put", "orders/pi_3Abcdefgh12345678-preview.png"),
+        ("sign", "orders/pi_3Abcdefgh12345678-preview.png")]
     meta = http.calls[-1][2]["data"]
     assert meta["metadata[print_status]"] == "awaiting approval"
-    assert meta["metadata[print_file]"].startswith("https://blob.example/")
+    assert meta["metadata[print_file]"] == "orders/pi_3Abcdefgh12345678-print.png"   # private path, not a link
+    assert meta["metadata[print_preview"+"]"].startswith("https://blob.example/orders/") and "168h" in meta["metadata[print_preview]"]
     out = capsys.readouterr().out
     assert not any(p in out for p in PERSONAL)
 
@@ -112,10 +119,11 @@ def test_submit_sends_one_idempotent_order_to_prodigi_sandbox(new_api, monkeypat
     def created(kw):
         sent.update(kw)
         return {"outcome": "Created", "order": {"id": "ord_829"}}
-    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "https://blob.example/f.png"}, new_api=new_api)),
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "orders/f.png"}, new_api=new_api)),
                      ("POST", "api.sandbox.prodigi.com/v4.0/orders", 200, created),
                      ("POST", "/payment_intents/", 200, {})])
-    assert fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP) == "ord_829"
+    up, _ = uploads()
+    assert fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP, uploader=up) == "ord_829"
     body = sent["json"]
     assert sent["headers"] == {"X-API-Key": "pk"}
     assert body["idempotencyKey"] == body["merchantReference"] == "pi_3Abcdefgh12345678"
@@ -124,7 +132,7 @@ def test_submit_sends_one_idempotent_order_to_prodigi_sandbox(new_api, monkeypat
         "line1": "12 Secret Street", "postalOrZipCode": "NE6 5XX", "countryCode": "GB", "townOrCity": "Newcastle upon Tyne"}}
     item = body["items"][0]
     assert (item["sku"], item["copies"], item["sizing"]) == ("TEST-SKU-A3", 1, "fillPrintArea")
-    assert item["assets"] == [{"printArea": "default", "url": "https://blob.example/f.png"}]
+    assert item["assets"] == [{"printArea": "default", "url": "https://blob.example/orders/f.png?sig=72h"}]   # signed for 3 days
     assert http.calls[-1][2]["data"]["metadata[prodigi_order]"] == "ord_829"
     assert not any(p in capsys.readouterr().out for p in PERSONAL)
 
@@ -138,11 +146,11 @@ def test_submit_goes_live_only_when_told(monkeypatch):
 
 
 def test_refused_order_is_recorded_privately_and_stops(capsys):
-    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "https://blob.example/f.png"})),
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"print_file": "orders/f.png"})),
                      ("POST", "/orders", 400, {"outcome": "ValidationFailed", "failures": {"recipient.address": ["Jo Bloggs NE6 5XX invalid"]}}),
                      ("POST", "/payment_intents/", 200, {})])
     with pytest.raises(fulfil.FulfilError, match="ValidationFailed") as err:
-        fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP)
+        fulfil.submit("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", prodigi_key="pk", shop=SHOP, uploader=uploads()[0])
     assert not any(p in str(err.value) for p in PERSONAL)
     assert "NE6 5XX" in http.calls[-1][2]["data"]["metadata[print_error]"]  # detail kept in Stripe only
 
@@ -159,8 +167,9 @@ def test_incomplete_address_is_refused():
 
 
 def test_status_records_tracking_and_deletes_shipped_files():
-    shipped = session({"prodigi_order": "ord_1", "print_file": "https://blob.example/f", "print_preview": "https://blob.example/p"})
-    waiting = session({"print_file": "https://blob.example/g", "print_status": "awaiting approval"}, created=1_000_000 - 3 * 86400)
+    shipped = session({"prodigi_order": "ord_1", "print_file": "orders/pi_3Abcdefgh12345678-print.png",
+                       "print_preview": "https://blob.example/p"})
+    waiting = session({"print_file": "orders/g.png", "print_status": "awaiting approval"}, created=1_000_000 - 3 * 86400)
     waiting["payment_intent"]["id"] = "pi_waiting000001"
     http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [shipped, waiting], "has_more": False}),
                      ("GET", "/orders/ord_1", 200, {"order": {"status": {"stage": "Complete", "issues": []},
@@ -169,7 +178,7 @@ def test_status_records_tracking_and_deletes_shipped_files():
     up, log = uploads()
     result = fulfil.status(http=http, key="sk", prodigi_key="pk", uploader=up, shop=SHOP, now=1_000_000 + 3600)
     assert result["counts"]["shipped"] == 1 and result["counts"]["awaiting approval"] == 1
-    assert log == [("del", ("https://blob.example/f", "https://blob.example/p"))]
+    assert log == [("del", ("orders/pi_3Abcdefgh12345678-print.png", "orders/pi_3Abcdefgh12345678-preview.png"))]
     posted = [c[2]["data"] for c in http.calls if c[0] == "POST"]
     assert posted[0] == {"metadata[print_status]": "shipped", "metadata[tracking]": "https://track.example/1"}
     assert any("over 48 hours" in n for n in result["notes"])  # the waiting order is 3 days old
@@ -208,6 +217,8 @@ def digital_session(meta=None, **kw):
 
 def test_digital_order_is_rendered_stored_and_emailed(monkeypatch, capsys):
     monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    monkeypatch.setenv("DOWNLOAD_SECRET", "k")
+    monkeypatch.setenv("SITE_URL", "https://shop.example/")
     monkeypatch.setenv("SHOP_EMAIL_FROM", "Footprints <prints@example.org>")
     emailed = {}
     def mail(kw):
@@ -224,7 +235,11 @@ def test_digital_order_is_rendered_stored_and_emailed(monkeypatch, capsys):
     body = emailed["json"]
     assert body["to"] == ["jo@example.com"] and body["from"] == "Footprints <prints@example.org>"
     assert "Home" in body["subject"]
-    assert "digital/pi_3Abcdefgh12345678-print.png" in body["html"] and "print.pdf" in body["text"]
+    assert "https://shop.example/api/download?f=digital%2Fpi_3Abcdefgh12345678-print.png&amp;x=" in body["html"] \
+        or "https://shop.example/api/download?f=digital%2Fpi_3Abcdefgh12345678-print.png&x=" in body["html"]
+    assert "print.pdf" in body["text"] and "&s=" in body["text"]
+    stored = [c[2]["data"] for c in http.calls if c[0] == "POST" and "payment_intents" in c[1]]
+    assert any(m.get("metadata[digital_png]") == "digital/pi_3Abcdefgh12345678-print.png" for m in stored)   # paths, not links
     assert "30 days" in body["text"]
     assert emailed["headers"]["Idempotency-Key"] == "digital-pi_3Abcdefgh12345678"
     final = http.calls[-1][2]["data"]
@@ -241,8 +256,10 @@ def test_digital_order_already_emailed_is_left_alone():
 
 def test_digital_retry_after_failed_email_reuses_files(monkeypatch):
     monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    monkeypatch.setenv("DOWNLOAD_SECRET", "k")
+    monkeypatch.setenv("SITE_URL", "https://shop.example")
     monkeypatch.setenv("SHOP_EMAIL_FROM", "prints@example.org")
-    meta = {"digital_png": "https://blob.example/a.png", "digital_pdf": "https://blob.example/a.pdf"}
+    meta = {"digital_png": "digital/a.png", "digital_pdf": "digital/a.pdf"}
     http = FakeHTTP([("GET", "/checkout/sessions/", 200, digital_session(meta)),
                      ("POST", "api.resend.com/emails", 200, {"id": "e"}), ("POST", "/payment_intents/", 200, {})])
     def no_render(*a):
@@ -252,6 +269,8 @@ def test_digital_retry_after_failed_email_reuses_files(monkeypatch):
 
 def test_digital_without_email_setup_stops_clearly(monkeypatch):
     monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.setenv("DOWNLOAD_SECRET", "k")
+    monkeypatch.setenv("SITE_URL", "https://shop.example")
     http = FakeHTTP([("GET", "/checkout/sessions/", 200, digital_session()), ("POST", "/payment_intents/", 200, {})])
     up, _ = uploads()
     with pytest.raises(fulfil.FulfilError, match="Email isn't set up"):
@@ -265,9 +284,9 @@ def test_digital_orders_never_go_to_prodigi():
 
 
 def test_status_expires_digital_links_after_the_promised_days():
-    old = digital_session({"digital_sent": "x", "digital_png": "https://blob.example/a", "digital_pdf": "https://blob.example/b"},
+    old = digital_session({"digital_sent": "x", "digital_png": "digital/a.png", "digital_pdf": "digital/a.pdf"},
                           created=1_000_000 - 31 * 86400)
-    fresh = digital_session({"digital_sent": "x", "digital_png": "https://blob.example/c", "digital_pdf": "https://blob.example/d"})
+    fresh = digital_session({"digital_sent": "x", "digital_png": "digital/c.png", "digital_pdf": "digital/c.pdf"})
     fresh["payment_intent"]["id"] = "pi_fresh0000000001"
     stuck = digital_session(created=1_000_000 - 5 * 3600)
     stuck["payment_intent"]["id"] = "pi_stuck0000000001"
@@ -276,7 +295,7 @@ def test_status_expires_digital_links_after_the_promised_days():
     up, log = uploads()
     shop = dict(SHOP, digital={"price": 500, "link_days": 30})
     result = fulfil.status(http=http, key="sk", uploader=up, shop=shop, now=1_000_000)
-    assert log == [("del", ("https://blob.example/a", "https://blob.example/b"))]
+    assert log == [("del", ("digital/a.png", "digital/a.pdf"))]
     assert result["counts"]["digital emailed"] == 2 and result["counts"]["needs attention"] == 1
 
 
@@ -296,3 +315,18 @@ def test_digital_png_is_at_least_a2_resolution(monkeypatch, tmp_path):
     a1 = json.dumps({**json.loads(RECIPE), "paper": "A1"})
     fulfil.render(a1, tmp_path, ("print", "pdf"), fulfil.DIGITAL_MIN_LONG_PX)
     assert seen["dpi"] == 300                                         # big sizes keep 300 dpi
+
+
+def test_download_links_match_the_shop_server():
+    """Same signature the Node /api/download checks (see web/footprints/test/download.test.js)."""
+    import os
+    os.environ.update(DOWNLOAD_SECRET="k", SITE_URL="https://shop.example/")
+    link = fulfil.download_link("digital/pi_1-print.png", 30, now=1700000000 - 30 * 86400)
+    assert link == ("https://shop.example/api/download?f=digital%2Fpi_1-print.png&x=1700000000"
+                    "&s=oHmjMTwLso0H9eIenufXhz0F-pXfGGhDgUG-pxljm2s")
+
+
+def test_digital_without_download_setup_stops_clearly(monkeypatch):
+    monkeypatch.delenv("DOWNLOAD_SECRET", raising=False)
+    with pytest.raises(fulfil.FulfilError, match="DOWNLOAD_SECRET"):
+        fulfil.download_link("digital/x.png", 30)
