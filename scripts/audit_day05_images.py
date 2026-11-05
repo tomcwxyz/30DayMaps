@@ -66,7 +66,7 @@ def main():
         "note":"Photographs are global taxon examples, not local observations. Only explicit per-media reuse licences are accepted.",
         "reference_area":"Newton Aycliffe example location (5 km)",
         "species_tested":len(samples),
-        "licensable_species_in_sample":sum(item["licensed_image_present_in_first_16"] for item in samples),
+        "licensable_species_in_sample":sum(item["licensed_image_present_in_first_32"] for item in samples),
         "samples":samples,
     }
     print(json.dumps(report,indent=2))
