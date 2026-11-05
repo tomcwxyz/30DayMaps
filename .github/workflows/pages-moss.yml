@@ -1,14 +1,18 @@
-name: Publish Day 04 moss map to GitHub Pages
+name: Publish interactive map challenges to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - 'web/moss/**'
+      - 'web/day05-wildlife/**'
+      - 'web/day05-dale-head/**'
       - '.github/workflows/pages-moss.yml'
   pull_request:
     paths:
       - 'web/moss/**'
+      - 'web/day05-wildlife/**'
+      - 'web/day05-dale-head/**'
       - '.github/workflows/pages-moss.yml'
   workflow_dispatch:
 
@@ -29,6 +33,8 @@ jobs:
       - name: Verify the source-derived data and front-end
         run: |
           node --check web/moss/app.js
+          node --check web/day05-wildlife/app.js
+          node --check web/day05-dale-head/app.js
           python - <<'PY'
           import json
           from pathlib import Path
@@ -48,14 +54,22 @@ jobs:
           print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
           PY
 
-      - name: Prepare only the moss site's static assets
+      - name: Prepare Day 04 moss and both Day 05 static experiences
         run: |
           set -euo pipefail
           mkdir -p _site
           cp -a web/moss/. _site/
+          mkdir -p _site/day05-wildlife _site/day05-dale-head
+          cp -a web/day05-wildlife/. _site/day05-wildlife/
+          cp -a web/day05-dale-head/. _site/day05-dale-head/
           touch _site/.nojekyll
           for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
             test -s "_site/$file"
+          done
+          for app in day05-wildlife day05-dale-head; do
+            for file in index.html app.js style.css; do
+              test -s "_site/$app/$file"
+            done
           done
 
       - name: Upload GitHub Pages artefact
@@ -77,6 +91,6 @@ jobs:
       - name: Configure Pages (once enabled in repository settings)
         uses: actions/configure-pages@v5
 
-      - name: Deploy static moss map
+      - name: Deploy static map experiences
         id: deployment
         uses: actions/deploy-pages@v4
