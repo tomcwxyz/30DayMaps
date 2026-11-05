@@ -11,6 +11,7 @@ on:
       - 'maps/dale_head_peaks.py'
       - 'tests/test_dale_head_peaks.py'
       - 'scripts/check_day05_browser.cjs'
+      - 'scripts/prepare_day05_vendor.cjs'
       - 'tests/test_dale_head_viewshed.py'
       - 'pyproject.toml'
       - '.github/workflows/pages-moss.yml'
@@ -150,6 +151,14 @@ jobs:
           done
           test -s _site/day05-wildlife/geo.js
 
+      - name: Bundle pinned Leaflet and MapLibre for both static maps
+        run: |
+          npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0 playwright@1.56.0
+          node scripts/prepare_day05_vendor.cjs _site
+          for file in             _site/day05-wildlife/vendor/leaflet.js             _site/day05-wildlife/vendor/leaflet.css             _site/day05-dale-head/vendor/maplibre-gl.js             _site/day05-dale-head/vendor/maplibre-gl.css; do
+            test -s "$file"
+          done
+
       - name: Browser smoke checks on desktop and mobile
         continue-on-error: true
         env:
@@ -168,7 +177,6 @@ jobs:
           else:
               raise RuntimeError('Local test server did not start')
           PY
-          npm install --no-save playwright@1.56.0
           node scripts/check_day05_browser.cjs
 
       - name: Preserve real browser screenshots and test diagnostics
