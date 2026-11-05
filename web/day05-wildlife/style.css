@@ -309,3 +309,117 @@ label {
   .photo-credit { padding-left: 70px; font-size: .63rem; }
   .species-item .n { font-size: .68rem; }
 }
+
+
+/* Season-first browsing: a calm, scrollable month strip, not a dashboard. */
+.month-explorer {
+  padding: 17px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.month-explorer-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+.month-explorer h2 {
+  margin: 0;
+  font: 500 1.25rem/1.2 Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+}
+.month-explorer p {
+  margin: 4px 0 0;
+  font-size: .77rem;
+  color: var(--muted);
+}
+.month-arrows { display: flex; gap: 5px; }
+.month-arrows button {
+  appearance: none;
+  border: 1px solid #c5cec2;
+  background: transparent;
+  color: #394a3e;
+  border-radius: 2px;
+  font: 400 1.25rem/1 Georgia, serif;
+  width: 33px;
+  height: 31px;
+  padding: 0;
+}
+.month-arrows button:hover { background: var(--leaf); }
+.month-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(49px, 1fr);
+  gap: 5px;
+  overflow-x: auto;
+  overscroll-behaviour-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #b5c4b6 transparent;
+  padding: 2px 1px 8px;
+}
+.month-choice {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: 2px solid #cbd5ca;
+  border-radius: 2px 2px 0 0;
+  padding: 10px 3px 9px;
+  background: transparent;
+  color: #667669;
+  font-size: .77rem;
+  font-weight: 500;
+  scroll-snap-align: center;
+}
+.month-choice:hover { background: #e8ede5; color: #274b39; }
+.month-choice.active {
+  border-bottom-color: var(--forest);
+  color: var(--ink);
+  background: #e7eee5;
+  font-weight: 750;
+}
+.month-choice:focus-visible { outline-offset: -2px; }
+.seasonality .season-bars { min-height: 110px; gap: 3px; }
+.seasonality .season-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 5px;
+  margin: 0;
+  gap: 5px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.seasonality .season-month:hover .chart-column { background: #e2e9df; }
+.seasonality .season-month:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.seasonality .season-month.current { border-bottom-color: var(--forest); }
+.seasonality .season-month .chart-column { height: 82px; }
+.seasonality .season-month .abbr {
+  font-size: clamp(.52rem, .7vw, .65rem);
+  white-space: nowrap;
+  color: #607163;
+}
+.seasonality .season-month.current .abbr { color: var(--forest); }
+@media (max-width: 740px) {
+  .month-explorer { padding-top: 13px; padding-bottom: 6px; }
+  .month-explorer-heading { align-items: flex-start; }
+  .month-explorer h2 { font-size: 1.21rem; }
+  .month-explorer p { max-width: 250px; font-size: .72rem; }
+  .month-strip {
+    grid-auto-columns: 55px;
+    margin-right: -13px;
+    padding-right: 13px;
+  }
+  .month-choice { min-height: 44px; }
+  .seasonality .season-month .abbr { font-size: .56rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .month-strip { scroll-behaviour: auto; scroll-snap-type: none; }
+}
