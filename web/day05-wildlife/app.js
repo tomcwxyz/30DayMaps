@@ -84,7 +84,8 @@
       if (selected) ribbon.scrollTo({
         left: Math.max(0, selected.offsetLeft - ribbon.offsetLeft -
           (ribbon.clientWidth - selected.offsetWidth) / 2),
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+        behavior: shouldScroll === "initial" ||
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
       });
     }
   }
@@ -136,6 +137,9 @@
     $("month-prev").addEventListener("click", () => chooseMonth((state.month + 10) % 12 + 1));
     $("month-next").addEventListener("click", () => chooseMonth(state.month % 12 + 1));
     renderMonthNavigation();
+    // If the default is November, don't open a mobile ribbon at January
+    // with the active month entirely off-screen.
+    requestAnimationFrame(() => renderMonthNavigation("initial"));
   }
 
   function updateLocation(fit = true) {
