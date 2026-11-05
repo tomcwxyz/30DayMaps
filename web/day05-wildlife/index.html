@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17352d">
+  <meta name="description" content="Find wildlife observations recorded near a place, month by month. A Day 05 / Sight experiment using GBIF data.">
+  <title>What's outside your window? · Day 05 / Sight</title>
+  <link rel="preconnect" href="https://api.gbif.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="topline"><span>30 DAY MAP CHALLENGE <span class="separator">/</span> 2026</span><span>05 / SIGHT</span></div>
+      <div class="masthead-content">
+        <div><p class="eyebrow">A seasonal atlas of the everyday</p>
+          <h1>What's outside <em>your window?</em></h1>
+          <p class="intro">Look closer. Pick a place and a month to discover the wildlife people have recorded nearby, from ordinary garden birds to the less familiar neighbours.</p>
+        </div>
+        <div class="header-mark" aria-hidden="true"><span class="orb"></span><span class="rings"></span></div>
+      </div>
+    </header>
+    <main>
+      <section class="filters" aria-label="Explore wildlife observations">
+        <form id="place-form" class="place-field">
+          <label for="place">Where are you looking?</label>
+          <div class="search-line"><input id="place" name="place" value="Newton Aycliffe" autocomplete="off" placeholder="Town, village or postcode"><button type="submit">Find place</button></div>
+          <p class="hint">Search once, or simply click the map to pick somewhere.</p>
+        </form>
+        <div class="month-field"><label for="month">Which month?</label><select id="month"></select><p class="hint">When the wildlife was observed, not uploaded.</p></div>
+        <div class="radius-field"><label for="radius">How far?</label><select id="radius"><option value="1">1 km</option><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option></select><p class="hint">Around the selected location.</p></div>
+        <div class="location-field"><label>Use your location</label><button id="locate" class="light-button" type="button">Locate me</button><p class="hint">Only when you ask.</p></div>
+      </section>
+      <div class="period-row"><label class="check"><input id="include-current" type="checkbox"> Include observations from 2026</label><span id="period-note">Comparison years: 2021–2025</span></div>
+      <nav class="taxa" aria-label="Wildlife group"><button class="active" type="button" data-taxon="birds" aria-pressed="true">Birds</button><button type="button" data-taxon="mammals" aria-pressed="false">Mammals</button><button type="button" data-taxon="butterflies" aria-pressed="false">Butterflies &amp; moths</button><button type="button" data-taxon="plants" aria-pressed="false">Plants</button></nav>
+      <div class="content">
+        <section class="map-panel" aria-label="Map of nearby observations">
+          <div id="map" role="region" aria-label="Choose a point on the map and explore the observations"></div>
+          <div class="map-overlay"><span class="map-key"></span><span id="map-note">Select a place to explore records.</span></div>
+          <button type="button" id="clear-filter" class="map-clear" hidden>Show all sampled records</button>
+        </section>
+        <aside class="field-guide" aria-label="Seasonal field guide">
+          <div class="guide-head"><p class="eyebrow">Your neighbourhood, recorded</p><h2 id="guide-title">Wildlife in November</h2><p id="guide-subtitle">Near Newton Aycliffe · within 5 km</p></div>
+          <div id="status" role="status" aria-live="polite">Preparing the map…</div>
+          <div class="totals"><div><strong id="record-total">—</strong><span>Published records matching your search</span></div><div><strong id="species-total">—</strong><span>Species in the published results</span></div></div>
+          <div class="guide-intro"><h3 id="list-title">Species recorded nearby</h3><p id="list-description">A seasonal field guide based on actual observation records.</p></div>
+          <div id="species-list" class="species-list"></div>
+          <div id="empty" class="empty" hidden><strong>No matching records found</strong><p>Try a wider radius, another month or a different location. A gap in records doesn't mean wildlife is absent.</p></div>
+        </aside>
+      </div>
+      <footer class="footnotes">
+        <p><strong>What this shows.</strong> Records reported to <a href="https://www.gbif.org/" target="_blank" rel="noopener">GBIF</a> by participating publishers. Counts are occurrence records, <em>not</em> animals, species abundance or your chance of a sighting. Recording effort, seasonality and the source datasets vary. Some records have deliberately generalised locations or large coordinate uncertainty. Map markers represent published coordinates, not guaranteed exact sightings.</p>
+        <p id="data-notes">Default observation years: 2021–2025. The map displays a sample of the matching records, labelled with its size, while the field-guide counts come from the GBIF species facet over the full filtered search. Exact source records and licences are linked from map pop-ups.</p>
+        <p class="credit">Data © contributing GBIF publishers, subject to each record's licence · Base map © OpenStreetMap contributors · Place search © OpenStreetMap / Nominatim. Your chosen location is used to request observations; this page does not store it.</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
