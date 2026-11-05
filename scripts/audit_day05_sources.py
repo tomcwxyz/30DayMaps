@@ -130,6 +130,12 @@ def probe_nbn_filters():
         ("observation_month_filter",dict(base,fq=["year:[2021 TO 2025]","month:11"])),
         ("bird_taxon_filter_candidate",dict(base,fq=[
             "year:[2021 TO 2025]","month:11","taxon_class:Aves"
+        ])),
+        ("bird_classs_candidate",dict(base,fq=[
+            "year:[2021 TO 2025]","month:11","classs:Aves"
+        ])),
+        ("bird_class_candidate",dict(base,fq=[
+            "year:[2021 TO 2025]","month:11","class:Aves"
         ]))
     ]
     result={}
