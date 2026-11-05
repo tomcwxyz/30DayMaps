@@ -100,10 +100,26 @@
       $("month-strip").querySelector('[data-month="' + number + '"]')?.focus({ preventScroll: true });
     }
     if (changed) {
-      if (state.locationResolved) updateTitles();
-      // The species panel represents this month's data, so refresh its
-      // records rather than displaying a chart from a previous month.
+      // A slow previous request can finish during our 300ms debounce. Invalidate
+      // it NOW, not at the start of loadRecords, to prevent old-month results
+      // reappearing under the newly selected month's heading.
+      if (state.controller) state.controller.abort();
+      ++state.requestId;
+      photoQueue.length = 0;
+      state.selectedKey = null;
+      state.facet = [];
+      state.observed = [];
+      state.total = 0;
       $("seasonality").hidden = true;
+      $("species-list").replaceChildren();
+      $("record-total").textContent = "…";
+      $("species-total").textContent = "…";
+      $("empty").hidden = true;
+      $("clear-filter").hidden = true;
+      occurrences.clearLayers();
+      $("map-note").textContent = "Looking for published " + MONTHS[state.month - 1] + " records…";
+      setStatus("Looking for " + MONTHS[state.month - 1] + " observations…");
+      if (state.locationResolved) updateTitles();
       scheduleLoad();
     }
   }
