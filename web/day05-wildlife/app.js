@@ -110,6 +110,7 @@
       state.facet = [];
       state.observed = [];
       state.total = 0;
+      resetGuideExpansion();
       $("seasonality").hidden = true;
       $("species-list").replaceChildren();
       $("record-total").textContent = "…";
@@ -336,6 +337,11 @@
       photoQueue.push(job);runPhotoQueue();
     }
   }
+  function resetGuideExpansion() {
+    $("field-guide").classList.remove("expanded");
+    $("species-more").hidden = true;
+    $("species-more").setAttribute("aria-expanded", "false");
+  }
   async function renderFacets(facets, sample, requestId, signal) {
     const container = $("species-list"); container.replaceChildren();
     const counts = facets.find(f => /species.?key/i.test(f.field || ""));
@@ -358,6 +364,12 @@
         container.append(row);
         if(i+j<8)queueSpeciesPhoto(row,labels[j],sample,signal);
       }
+    }
+    if (requestId === state.requestId) {
+      const listed = container.querySelectorAll(".species-entry").length;
+      const control = $("species-more");
+      control.hidden = listed <= 6;
+      control.textContent = "Show all " + listed + " listed species";
     }
   }
   function renderSeasonalCounts(data, speciesLabel) {
@@ -456,6 +468,7 @@
     const signal = state.controller.signal;
     const requestId = ++state.requestId;
     state.selectedKey = null; state.facet = [];
+    resetGuideExpansion();
     $("seasonality").hidden = true;
     updateTitles(); updateLocation(false);
     const p = getQuery();
@@ -559,6 +572,15 @@
       });
       scheduleLoad();
     });
+  });
+  $("species-more").addEventListener("click", () => {
+    const guide = $("field-guide");
+    const expanded = guide.classList.toggle("expanded");
+    const button = $("species-more");
+    button.setAttribute("aria-expanded", String(expanded));
+    button.textContent = expanded
+      ? "Show fewer species"
+      : "Show all " + $("species-list").querySelectorAll(".species-entry").length + " listed species";
   });
   $("clear-filter").addEventListener("click", () => {
     if (state.controller) state.controller.abort();
