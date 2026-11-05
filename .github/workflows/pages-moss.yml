@@ -8,6 +8,8 @@ on:
       - 'web/day05-wildlife/**'
       - 'web/day05-dale-head/**'
       - 'maps/dale_head_viewshed.py'
+      - 'maps/dale_head_peaks.py'
+      - 'tests/test_dale_head_peaks.py'
       - 'tests/test_dale_head_viewshed.py'
       - 'pyproject.toml'
       - '.github/workflows/pages-moss.yml'
@@ -64,7 +66,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: web/day05-dale-head/data
-          key: dale-head-terrain-v1-${{ hashFiles('maps/dale_head_viewshed.py') }}
+          key: dale-head-terrain-v2-${{ hashFiles('maps/dale_head_viewshed.py', 'maps/dale_head_peaks.py') }}
 
       - name: Install real viewshed calculation tools
         if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
@@ -95,6 +97,24 @@ jobs:
           print(f"Verified real GDAL viewshed: {meta['approx_visible_ground_area_km2']} km2 of visible ground")
           PY
 
+      - name: Check named Lake District peaks against calculated sightlines
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          test -s web/day05-dale-head/data/viewshed-manifest.json
+          python -m maps.dale_head_peaks --data-dir web/day05-dale-head/data
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("web/day05-dale-head/data/peaks.json").read_text())
+          assert d["status"] == "computed_from_real_data"
+          assert d["raw_source_nodes"] > 0, "No actual OSM peak features returned"
+          assert d["modelled_peaks"] > 0, "No mapped peaks checked against terrain"
+          assert all(p["visibility"] == "visible" and p["gdal_visible"] and
+                     p["independent_ray_visible"] for p in d["labelled_peaks"])
+          print(f"Checked {d['modelled_peaks']} source peaks, {d['selected_label_count']} visible labels")
+          PY
+
       - name: Report availability of computed viewshed
         run: |
           if test -s web/day05-dale-head/data/viewshed-manifest.json &&
@@ -103,6 +123,11 @@ jobs:
           else
             echo "::warning::Dale Head viewshed computation is not available; the 3D terrain viewer will remain usable, with the visibility mode disabled"
             rm -rf web/day05-dale-head/data
+          fi
+          if test -s web/day05-dale-head/data/peaks.json; then
+            echo "Visibility-checked named summits available"
+          else
+            echo "::warning::Named-summit source unavailable; no unverified names will be presented"
           fi
 
       - name: Prepare Day 04 moss and both Day 05 static experiences
