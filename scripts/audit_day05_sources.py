@@ -110,16 +110,54 @@ def audit_site(site):
     return result
 
 
+
+def probe_nbn_filters():
+    """Find the smallest documented public query that the NBN endpoint accepts.
+
+    Never mistake this broad-taxa diagnostic for bird/November data.
+    """
+    site=SITES[0]
+    base={
+        "q":"*:*",
+        "lat":str(site["latitude"]),
+        "lon":str(site["longitude"]),
+        "radius":"5",
+        "pageSize":"0",
+    }
+    variants=[
+        ("all_public_records_in_radius",base),
+        ("years_filter",dict(base,fq=["year:[2021 TO 2025]"])),
+        ("observation_month_filter",dict(base,fq=["year:[2021 TO 2025]","month:11"])),
+        ("bird_taxon_filter_candidate",dict(base,fq=[
+            "year:[2021 TO 2025]","month:11","taxon_class:Aves"
+        ]))
+    ]
+    result={}
+    for label,query in variants:
+        try:
+            response=get_json(NBN,query)
+            result[label]={
+                "status":"ok",
+                "totalRecords":response.get("totalRecords"),
+                "keys":list(response.keys())[:12],
+            }
+        except (HTTPError,URLError,ValueError,TimeoutError) as exc:
+            result[label]={"status":"error","kind":type(exc).__name__,
+                           "note":str(exc)[:130]}
+    return result
+
+
 def main():
     report={
         "generated_utc":datetime.now(timezone.utc).isoformat(),
         "purpose":"Compare independent source coverage; DO NOT ADD COUNTS OR MERGE",
         "definitions":{
             "gbif":"Georeferenced GBIF bird (taxonKey 212) occurrences, November 2021–2025",
-            "nbn":"NBN Atlas public search, November 2021–2025; facet/taxon filters exploratory",
+            "nbn":"NBN Atlas public search, November 2021–2025; parameters exploratory and not comparable until validated",
         },
         "copyright_licence_warning":"NBN Atlas includes CC-BY-NC and generalised sensitive records. Do not ingest or present without per-record licence checks, citation and deduplication.",
         "results":[audit_site(site) for site in SITES],
+        "nbn_parameter_diagnostic":probe_nbn_filters(),
     }
     filename=Path(sys.argv[1]) if len(sys.argv)>1 else Path("day05-source-audit.json")
     filename.parent.mkdir(parents=True,exist_ok=True)
