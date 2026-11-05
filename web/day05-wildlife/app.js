@@ -66,6 +66,79 @@
     $("data-notes").textContent = "Observation years: 2021–" + (state.includeCurrent ? "2026, including an incomplete current year." : "2025.") +
       " The map displays at most the first 300 returned records for the selected search. The field-guide species counts use the GBIF full-search species facets, not the map sample. All results are subject to recording and location biases.";
   }
+  function renderMonthNavigation(shouldScroll = false) {
+    $("month").value = String(state.month);
+    $("month-summary").textContent = MONTHS[state.month - 1] +
+      " observations from previous years. Explore another month to see how the records change.";
+    const buttons = $("month-strip").querySelectorAll("[data-month]");
+    buttons.forEach(button => {
+      const selectedMonth = Number(button.dataset.month) === state.month;
+      button.classList.toggle("active", selectedMonth);
+      button.setAttribute("aria-pressed", String(selectedMonth));
+      button.setAttribute("aria-current", selectedMonth ? "date" : "false");
+      button.tabIndex = selectedMonth ? 0 : -1;
+    });
+    if (shouldScroll) {
+      const selected = $("month-strip").querySelector('[data-month="' + state.month + '"]');
+      // Only scroll the horizontal ribbon, never jump the entire document.
+      const ribbon = $("month-strip");
+      if (selected) ribbon.scrollTo({
+        left: Math.max(0, selected.offsetLeft - ribbon.offsetLeft -
+          (ribbon.clientWidth - selected.offsetWidth) / 2),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+      });
+    }
+  }
+
+  function chooseMonth(month, focus = false) {
+    const number = Number(month);
+    if (!Number.isInteger(number) || number < 1 || number > 12) return;
+    const changed = state.month !== number;
+    state.month = number;
+    renderMonthNavigation(true);
+    if (focus) {
+      $("month-strip").querySelector('[data-month="' + number + '"]')?.focus({ preventScroll: true });
+    }
+    if (changed) {
+      if (state.locationResolved) updateTitles();
+      // The species panel represents this month's data, so refresh its
+      // records rather than displaying a chart from a previous month.
+      $("seasonality").hidden = true;
+      scheduleLoad();
+    }
+  }
+  function buildMonthNavigation() {
+    const ribbon = $("month-strip");
+    const fragment = document.createDocumentFragment();
+    MONTHS.forEach((name, i) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "month-choice";
+      button.dataset.month = String(i + 1);
+      button.textContent = name.slice(0, 3);
+      button.title = "Show records observed in " + name + " across the comparison years";
+      button.setAttribute("aria-label", "Show " + name + " observations");
+      button.addEventListener("click", () => chooseMonth(i + 1));
+      fragment.append(button);
+    });
+    ribbon.append(fragment);
+    ribbon.addEventListener("keydown", event => {
+      const current = event.target.closest("[data-month]");
+      if (!current) return;
+      let target = Number(current.dataset.month);
+      if (event.key === "ArrowRight") target = target % 12 + 1;
+      else if (event.key === "ArrowLeft") target = (target + 10) % 12 + 1;
+      else if (event.key === "Home") target = 1;
+      else if (event.key === "End") target = 12;
+      else return;
+      event.preventDefault();
+      chooseMonth(target, true);
+    });
+    $("month-prev").addEventListener("click", () => chooseMonth((state.month + 10) % 12 + 1));
+    $("month-next").addEventListener("click", () => chooseMonth(state.month % 12 + 1));
+    renderMonthNavigation();
+  }
+
   function updateLocation(fit = true) {
     if (!state.locationResolved) return;
     selected.setLatLng([state.lat, state.lng]);
@@ -280,24 +353,29 @@
       const month = i + 1;
       const count = byMonth.get(month) || 0;
       accessible.push(name + ": " + nf.format(count) + " records");
-      const item = document.createElement("div");
+      const item = document.createElement("button");
+      item.type = "button";
       item.className = "season-month" + (state.month === month ? " current" : "");
-      item.title = name + ": " + nf.format(count) + " published observations";
-      const column = document.createElement("div"); column.className = "chart-column";
+      item.title = name + ": " + nf.format(count) + " published observation records. Choose " + name + ".";
+      item.setAttribute("aria-label", name + ": " + nf.format(count) +
+        " published records. Show " + name + " observations.");
+      item.setAttribute("aria-pressed", String(state.month === month));
+      const column = document.createElement("span"); column.className = "chart-column";
       const fill = document.createElement("span"); fill.className = "chart-fill";
       fill.style.height = count > 0 ? Math.max(3, 100 * count / max) + "%" : "0";
       column.append(fill);
       const short = document.createElement("span"); short.className = "abbr";
-      short.textContent = name.slice(0, 1);
+      short.textContent = name.slice(0, 3);
       item.append(column, short);
+      item.addEventListener("click", () => chooseMonth(month));
       bars.append(item);
     });
     bars.setAttribute("aria-label", "Monthly published observation counts for " +
-      speciesLabel + ". " + accessible.join("; "));
+      speciesLabel + ". Choose a month to explore it. " + accessible.join("; "));
     $("season-title").textContent = speciesLabel + " through the year";
     $("season-note").textContent =
       "Records by observation month across 2021–" + (state.includeCurrent ? "2026" : "2025") +
-      ". Taller bars mean more published records, not a higher probability of seeing this species.";
+      ". Taller bars mean more published records, not a higher chance of seeing the species. Select a month to explore it.";
     $("seasonality").hidden = false;
   }
   async function selectSpecies(key) {
@@ -447,8 +525,8 @@
     option.value = String(i + 1); option.textContent = MONTHS[i];
     $("month").append(option);
   }
-  $("month").value = String(state.month);
-  $("month").addEventListener("change", (e) => { state.month = Number(e.target.value); scheduleLoad(); });
+  buildMonthNavigation();
+  $("month").addEventListener("change", (e) => chooseMonth(e.target.value));
   $("radius").addEventListener("change", (e) => {
     state.radius = Number(e.target.value); updateLocation(true); scheduleLoad();
   });
