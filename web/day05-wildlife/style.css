@@ -352,7 +352,7 @@ label {
   grid-auto-columns: minmax(49px, 1fr);
   gap: 5px;
   overflow-x: auto;
-  overscroll-behaviour-x: contain;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: #b5c4b6 transparent;
@@ -401,6 +401,18 @@ label {
 }
 .seasonality .season-month.current { border-bottom-color: var(--forest); }
 .seasonality .season-month .chart-column { height: 82px; }
+.seasonality .season-month .chart-value {
+  display: block;
+  min-height: 13px;
+  line-height: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: .62rem;
+  font-weight: 550;
+  color: #5e7061;
+  white-space: nowrap;
+}
+.seasonality .season-month.current .chart-value { color: var(--forest); font-weight: 750; }
 .seasonality .season-month .abbr {
   font-size: clamp(.52rem, .7vw, .65rem);
   white-space: nowrap;
@@ -421,5 +433,5 @@ label {
   .seasonality .season-month .abbr { font-size: .56rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .month-strip { scroll-behaviour: auto; scroll-snap-type: none; }
+  .month-strip { scroll-behavior: auto; scroll-snap-type: none; }
 }
