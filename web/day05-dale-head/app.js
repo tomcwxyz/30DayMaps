@@ -3,9 +3,10 @@
   "use strict";
   const SUMMIT = { lng: -3.201936, lat: 54.527271 };
   const DIRECTIONS = { north: 0, east: 90, south: 180, west: 270 };
-  const state = { mode: "summit", direction: "north", exaggeration: 1, ready: false,
+  const state = { mode: "overview", direction: "north", exaggeration: 1, ready: false,
     viewshedReady: false, viewshedManifest: null, targetPeak: null,
-    visiblePeaks: [], peakMarkers: [] };
+    visiblePeaks: [], peakMarkers: [], panoramaController: null,
+    panoramaReady: false, userChangedMode: false };
   const $ = id => document.getElementById(id);
   const map = new maplibregl.Map({
     container: "map",
@@ -24,7 +25,7 @@
     center: [SUMMIT.lng, SUMMIT.lat],
     zoom: 12.6,
     bearing: 0,
-    pitch: 76,
+    pitch: 64,
     maxPitch: 85,
     maxZoom: 17,
     attributionControl: { compact: true }
@@ -45,7 +46,10 @@
       const el = $(id), on = state.exaggeration === value;
       el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(on));
     }
-    $("compass-direction").textContent = state.targetPeak ? Math.round(state.targetPeak.bearing_deg) + "°" : state.direction.slice(0, 1).toUpperCase();
+    $("compass-direction").textContent = state.mode === "summit" && state.panoramaController
+      ? Math.round(state.panoramaController.currentHeading()) + "°"
+      : state.targetPeak ? Math.round(state.targetPeak.bearing_deg) + "°"
+      : state.direction.slice(0, 1).toUpperCase();
   }
   function showComputedLayer(on) {
     if (map.getLayer("viewshed-layer")) {
@@ -57,6 +61,7 @@
     $("viewshed-legend").hidden = !on;
   }
   function showViewshed() {
+    $("panorama").hidden = true;
     if (!state.viewshedReady || !state.viewshedManifest) return;
     showComputedLayer(true);
     map.easeTo({
@@ -70,42 +75,31 @@
       meta.dem_resolution_m + " m terrain grid.");
   }
   function showOverview() {
+    $("panorama").hidden = true;
     showComputedLayer(false);
     map.easeTo({
-      center: [SUMMIT.lng, SUMMIT.lat], zoom: 12.6, pitch: 74,
+      center: [SUMMIT.lng, SUMMIT.lat], zoom: 12.3, pitch: 64,
       bearing: state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction], duration: 1300
     });
     status("3D overview · real terrain, at " + state.exaggeration + "× vertical scale.");
   }
   function showSummit() {
+    if (!state.panoramaReady || !state.panoramaController) {
+      state.mode = "overview";
+      showOverview();
+      status("The calculated summit panorama is unavailable; showing the real 3D overview.");
+      return;
+    }
     showComputedLayer(false);
-    const heading = state.targetPeak
-      ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction];
+    $("panorama").hidden = false;
+    const bearing = state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction];
+    state.panoramaController.setHeading(bearing);
+    state.panoramaController.repaint();
     const sight = state.targetPeak
       ? "towards " + state.targetPeak.name + " (" + state.targetPeak.distance_km + " km)"
       : state.direction;
-    // MapLibre (unlike Mapbox) does not expose getFreeCameraOptions.
-    // Its documented camera-position conversion keeps the origin at Dale Head.
-    // The 40m analysis DEM smooths the narrow summit: the surveyed 753m
-    // height is more faithful than this particular DEM cell's sampled height.
-    const altitude = 753 * state.exaggeration + 1.7;
-    try {
-      const options = map.calculateCameraOptionsFromCameraLngLatAltRotation(
-        [SUMMIT.lng, SUMMIT.lat], altitude, heading, 80, 0
-      );
-      map.jumpTo(options);
-      status("Looking " + sight +
-        " from Dale Head · camera at the documented 753 m summit, 1.7 m eye height" +
-        " · relief " + state.exaggeration + "×.");
-    } catch (error) {
-      console.warn("Low-level MapLibre terrain camera unavailable:", error);
-      map.easeTo({
-        center: [SUMMIT.lng, SUMMIT.lat], zoom: 13,
-        pitch: 74, bearing: heading, duration: 1100
-      });
-      status("Looking " + sight +
-        " in an elevated 3D approximation · low-level summit camera unavailable.");
-    }
+    status("Looking " + sight +
+      " from Dale Head · calculated landscape silhouettes at 753 m summit and 1.7 m eye height.");
   }
   function updateView() {
     markControls();
@@ -142,7 +136,7 @@
       state.viewshedReady = true;
       $("viewshed-view").disabled = false;
       $("viewshed-view").title = "Switch to the computed terrain viewshed";
-      if (state.mode !== "viewshed") {
+      if (state.mode === "overview") {
         status("Real elevation loaded. Calculated viewshed also available.");
       }
     } catch (error) {
@@ -154,6 +148,37 @@
     }
   }
 
+
+  async function loadCalculatedPanorama() {
+    try {
+      const response = await fetch("./data/panorama.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("calculated summit profile not present");
+      const data = await response.json();
+      if (data.status !== "computed_from_real_dem" ||
+          !Number.isFinite(data.observer_eye_altitude_m) ||
+          !data.profile || !Array.isArray(data.profile.bands_near_to_far)) {
+        throw new Error("incomplete real terrain panorama profile");
+      }
+      state.panoramaController = window.SightPanorama.create({
+        canvas: $("panorama-canvas"), labels: $("panorama-labels"), data,
+        peaks: state.visiblePeaks,
+        onHeadingChange: heading => {
+          if (state.mode === "summit") $("compass-direction").textContent = Math.round(heading) + "°";
+        }
+      });
+      state.panoramaReady = true;
+      $("summit-view").disabled = false;
+      $("summit-view").title = "Look around from the documented summit viewpoint";
+      if (!state.userChangedMode) {
+        state.mode = "summit";
+        updateView();
+      }
+    } catch (error) {
+      $("summit-view").disabled = true;
+      $("summit-view").title = "Calculated summit panorama unavailable";
+      console.warn("Calculated panorama unavailable:", error);
+    }
+  }
 
   function turnTowardsPeak(peak) {
     state.targetPeak = peak;
@@ -209,6 +234,7 @@
         list.append(button);
       }
       state.visiblePeaks = entries;
+      if (state.panoramaController) state.panoramaController.setPeaks(entries);
       $("peak-guide").hidden = false;
       $("peak-summary").textContent = entries.length +
         " named summits are labelled here, from " + data.visible_count +
@@ -246,15 +272,17 @@
     // Wait for visible DEM tiles to settle before positioning a near-surface camera.
     map.once("idle", () => updateView());
     loadCalculatedViewshed();
+    loadCalculatedPanorama();
     loadNamedPeaks();
   });
   map.on("error", (event) => {
     if (!state.ready) status("The basemap or elevation tiles could not load. Check your connection.");
   });
-  $("summit-view").addEventListener("click", () => { state.mode = "summit"; updateView(); });
-  $("overview-view").addEventListener("click", () => { state.mode = "overview"; updateView(); });
+  $("summit-view").addEventListener("click", () => { state.userChangedMode = true; state.mode = "summit"; updateView(); });
+  $("overview-view").addEventListener("click", () => { state.userChangedMode = true; state.mode = "overview"; updateView(); });
   $("viewshed-view").addEventListener("click", () => {
     if (!state.viewshedReady) return;
+    state.userChangedMode = true;
     state.mode = "viewshed";
     updateView();
   });
