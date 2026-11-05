@@ -120,12 +120,15 @@ async function checkDale(browser) {
     assert.equal(await page.locator("#peak-guide").getAttribute("hidden") !== null, true);
     pass("Dale Head did not invent absent summit names");
   }
+  await testCompassStability(page, "Desktop");
   await page.screenshot({ path: path.join(folder, "dale-head-desktop.png"), fullPage: true });
   if (errors.length) throw new Error("Dale Head page errors: " + errors.join("; "));
   await page.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await mobile.goto(link("day05-dale-head/"), { waitUntil: "domcontentloaded", timeout: 45000 });
   await mobile.locator("#map canvas").waitFor({ timeout: 35000 });
+  await mobile.waitForFunction(() => !document.querySelector("#summit-view")?.disabled, null, { timeout: 30000 });
+  await testCompassStability(mobile, "Mobile");
   await mobile.screenshot({ path: path.join(folder, "dale-head-mobile.png"), fullPage: true });
   pass("Dale Head mobile canvas rendered");
   await mobile.close();
