@@ -81,11 +81,10 @@ def audit_site(site):
         "endpoint":NBN,
         "query":{
             "q":"*:*",
-            "fq":["-occurrence_status:absent",
-                  "year:[2021 TO 2025]",
-                  # NBN indexed search-field names should be checked in practice.
-                  "month:11",
-                  "taxon_rank:species"],
+            # In the live NBN Atlas search service the indexed bird class
+            # field is 'classs'. Both class and classs returned 328 records
+            # for the November test; the guessed taxon_class field was invalid.
+            "fq":["year:[2021 TO 2025]","month:11","classs:Aves"],
             "lat":str(lat),
             "lon":str(lon),
             "radius":str(RADIUS_KM),
@@ -156,10 +155,10 @@ def probe_nbn_filters():
 def main():
     report={
         "generated_utc":datetime.now(timezone.utc).isoformat(),
-        "purpose":"Compare independent source coverage; DO NOT ADD COUNTS OR MERGE",
+        "purpose":"Compare independent bird recording coverage; DO NOT ADD COUNTS OR MERGE",
         "definitions":{
             "gbif":"Georeferenced GBIF bird (taxonKey 212) occurrences, November 2021–2025",
-            "nbn":"NBN Atlas public search, November 2021–2025; parameters exploratory and not comparable until validated",
+            "nbn":"NBN Atlas public Aves occurrences, 5km radius, November 2021–2025, year/month/classs filters (licences and public co-ordinate resolution can differ from GBIF)",
         },
         "copyright_licence_warning":"NBN Atlas includes CC-BY-NC and generalised sensitive records. Do not ingest or present without per-record licence checks, citation and deduplication.",
         "results":[audit_site(site) for site in SITES],
