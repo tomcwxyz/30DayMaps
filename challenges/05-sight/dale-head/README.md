@@ -1,10 +1,16 @@
 # Day 05 · Sight — What the Mountain Sees
 
-**Status: first interactive 3D terrain implementation committed at [`web/day05-dale-head/`](../../../web/day05-dale-head/); calculated viewshed and live-browser verification still outstanding.**
+**Status: published interactive panorama, real GDAL terrain viewshed, separate 3D terrain overview and visibility-checked named summits. Browser tests and data-source limitations are documented below.**
 
 Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0`, `node scripts/prepare_day05_vendor.cjs web` once, then `python -m http.server 8000` from the repository root. Open `http://localhost:8000/web/day05-dale-head/`. The local MapLibre bundle avoids relying on a third-party CDN at runtime.
 
-**Implemented:** MapLibre 3D raster-DEM terrain from public AWS/Tilezen Terrarium tiles, low-level summit camera, four directions, relief-exaggeration controls and 3D overview. This *is not* yet a scientifically computed line-of-sight viewshed, nor should the experimental summit camera be represented as a surveyed panorama. The detailed computation plan remains below.
+**Implemented:** a 360° calculated summit silhouette made from four distance bands along 720 terrain rays (half-degree bearings); GDAL ground viewshed (20 km analysis radius, 40 m raster); MapLibre 3D overview; four compass directions; optional relief exaggeration; and OSM mapped summit labels verified by two sightline checks. The problematic near-ground MapLibre camera was removed after screenshot inspection revealed visual tearing. The panorama is an analytical skyline, **not** photorealistic 3D or a surveyed optical panorama.
+
+Build pipeline: `python -m maps.dale_head_viewshed`, then `python -m maps.dale_head_peaks`, then `python -m maps.dale_head_panorama`. The first creates real BNG DEM and visibility GeoTIFFs; the second checks OSM named summit nodes; the third derives terrain angular profiles in `panorama.json`. All generated source outputs are validated and cached in the GitHub Pages workflow. Panorama and names are independent enrichments: missing source data leaves truthful disabled/empty states rather than made-up maps.
+
+**Observer calibration:** at the sampled 40 m DEM cell the terrain is lower than the independently documented 753 m summit, because of elevation smoothing. GDAL's observer height above the DEM is corrected so that eye altitude is 754.7 m. The manifest records both source DEM and surveyed heights. Without that correction, the first viewshed understated visible terrain. With the correction, the November 2026 build classified about 131.65 km² within 20 km as bare-ground visible; it remains model-dependent.
+
+**Validation:** all peaks labelled 'visible' must be present in OSM and pass both GDAL and a separate ray check. Three of 60 sampled diagnostic rays disagreed after calibration and are recorded with their bearings and distances. The independent check samples terrain differently and is a diagnostic, not a proof of survey-level accuracy.
 
 ## The question
 
