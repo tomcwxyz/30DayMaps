@@ -52,12 +52,12 @@ def main():
     for entry in facet.get("counts",[])[:8]:
         key=entry["name"]
         images=query({"taxonKey":str(key),"mediaType":"StillImage",
-                      "occurrenceStatus":"PRESENT","limit":"16"})
+                      "occurrenceStatus":"PRESENT","limit":"32"})
         samples.append({
             "speciesKey":key,
             "nearby_November_record_count":entry["count"],
             "global_image_sample_size":len(images.get("results",[])),
-            "licensed_image_present_in_first_16":any(
+            "licensed_image_present_in_first_32":any(
                 usable(record,key) for record in images.get("results",[])
             )
         })
