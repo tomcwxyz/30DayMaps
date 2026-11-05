@@ -11,25 +11,30 @@
   };
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
+  // Only use the example town if the browser location is unavailable or refused.
+  // It must never be described as the visitor's location.
+  const EXAMPLE = { lat: 54.617, lng: -1.578, place: "Newton Aycliffe (example)" };
   const state = {
-    lat: 54.617, lng: -1.578, place: "Newton Aycliffe",
+    lat: null, lng: null, place: "",
+    locationResolved: false, locationToken: 0,
     month: new Date().getMonth() + 1, radius: 5, taxon: "birds",
     includeCurrent: false, requestId: 0, controller: null,
     selectedKey: null, facet: [], observed: [], total: 0, searchUrl: ""
   };
   const $ = (id) => document.getElementById(id);
-  const map = L.map("map", { scrollWheelZoom: false, zoomControl: false }).setView([state.lat, state.lng], 12);
+  // Start with a UK overview while location permission is being resolved.
+  const map = L.map("map", { scrollWheelZoom: false, zoomControl: false }).setView([54.5, -2.5], 6);
   L.control.zoom({ position: "bottomright" }).addTo(map);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-  const selected = L.circleMarker([state.lat, state.lng], {
+  const selected = L.circleMarker([54.5, -2.5], {
     radius: 8, weight: 3, color: "#fffef9", fillColor: "#173e30", fillOpacity: 1
-  }).addTo(map);
-  const circle = L.circle([state.lat, state.lng], {
+  });
+  const circle = L.circle([54.5, -2.5], {
     radius: state.radius * 1000, color: "#356c54", weight: 2,
     fillColor: "#93b19b", fillOpacity: .10
-  }).addTo(map);
+  });
   const occurrences = L.layerGroup().addTo(map);
   const nf = new Intl.NumberFormat("en-GB");
   let debounce = null;
@@ -48,6 +53,11 @@
   }
 
   function setStatus(message) { $("status").textContent = message; }
+  function setLocationStatus(message) { $("location-status").textContent = message; }
+  function withinBritain(lat, lng) {
+    return Number.isFinite(lat) && Number.isFinite(lng) &&
+      lat >= 49.5 && lat <= 61.2 && lng >= -9 && lng <= 2.5;
+  }
   function updateTitles() {
     $("guide-title").textContent = TAXA[state.taxon].label + " in " + MONTHS[state.month - 1];
     $("guide-subtitle").textContent = "Near " + state.place + " · within " + state.radius + " km";
@@ -56,13 +66,17 @@
       " The map displays at most the first 300 returned records for the selected search. The field-guide species counts use the GBIF full-search species facets, not the map sample. All results are subject to recording and location biases.";
   }
   function updateLocation(fit = true) {
+    if (!state.locationResolved) return;
     selected.setLatLng([state.lat, state.lng]);
     circle.setLatLng([state.lat, state.lng]).setRadius(state.radius * 1000);
+    if (!map.hasLayer(circle)) circle.addTo(map);
+    if (!map.hasLayer(selected)) selected.addTo(map);
     if (fit) map.fitBounds(circle.getBounds(), { padding: [25, 25], maxZoom: 13 });
     updateTitles();
   }
   function scheduleLoad() {
     clearTimeout(debounce);
+    if (!state.locationResolved) return;
     debounce = setTimeout(loadRecords, 300);
   }
   function safeDate(item) {
@@ -244,6 +258,10 @@
     }
   }
   async function loadRecords() {
+    if (!state.locationResolved) {
+      setStatus("Waiting for a location before looking up wildlife…");
+      return;
+    }
     if (state.controller) state.controller.abort();
     state.controller = new AbortController();
     const signal = state.controller.signal;
@@ -284,9 +302,57 @@
       setStatus("Couldn't load GBIF records: " + error.message + " Try changing the month or retrying.");
     }
   }
-  function moveTo(lat, lng, title) {
+  function moveTo(lat, lng, title, message, fromLocationCallback = false) {
+    if (!withinBritain(lat, lng)) {
+      setLocationStatus("Choose a point in Britain to explore nearby records.");
+      return;
+    }
+    // A manual place search or map click must win if the original permission
+    // prompt resolves later. Never override a deliberate visitor choice.
+    if (!fromLocationCallback) state.locationToken++;
     state.lat = lat; state.lng = lng; state.place = title;
-    updateLocation(true); scheduleLoad();
+    state.locationResolved = true;
+    if (message) setLocationStatus(message);
+    updateLocation(true);
+    scheduleLoad();
+  }
+
+  function useExample(reason) {
+    moveTo(EXAMPLE.lat, EXAMPLE.lng, EXAMPLE.place,
+      reason + " Showing Newton Aycliffe as an example; search or click the map to change it.",
+      true);
+  }
+
+  function requestVisitorLocation() {
+    const attempt = ++state.locationToken;
+    if (!navigator.geolocation || !window.isSecureContext) {
+      useExample("Your browser cannot share a location here.");
+      return;
+    }
+    setLocationStatus("Finding your area… Your browser may ask for location permission.");
+    setStatus("Waiting for your location before looking up nearby wildlife…");
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        if (attempt !== state.locationToken) return;
+        const lat = Math.round(Number(position.coords.latitude) * 1000) / 1000;
+        const lng = Math.round(Number(position.coords.longitude) * 1000) / 1000;
+        if (!withinBritain(lat, lng)) {
+          useExample("Your location appears to be outside the current Britain-only map.");
+          return;
+        }
+        $("place").value = "";
+        moveTo(lat, lng, "your approximate location",
+          "Using your approximate location (rounded to around 100 metres). You can choose somewhere else.", true);
+      },
+      error => {
+        if (attempt !== state.locationToken) return;
+        const reason = error && error.code === 1
+          ? "Location permission wasn't granted."
+          : "We couldn't find your location.";
+        useExample(reason);
+      },
+      { enableHighAccuracy: false, timeout: 9000, maximumAge: 60000 }
+    );
   }
   for (let i = 0; i < MONTHS.length; i++) {
     const option = document.createElement("option");
@@ -325,21 +391,15 @@
   });
   map.on("click", (e) => {
     $("place").value = "";
-    moveTo(e.latlng.lat, e.latlng.lng, "selected map point");
+    moveTo(e.latlng.lat, e.latlng.lng, "selected map point",
+      "Using the point you chose on the map. The location isn't saved.");
   });
-  $("locate").addEventListener("click", () => {
-    if (!navigator.geolocation) { setStatus("Your browser does not support location."); return; }
-    setStatus("Asking your browser for location permission…");
-    navigator.geolocation.getCurrentPosition(
-      pos => { $("place").value = ""; moveTo(pos.coords.latitude, pos.coords.longitude, "your approximate location"); },
-      () => setStatus("Location permission was unavailable. Search for a place or click the map."),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-    );
-  });
+  $("locate").addEventListener("click", requestVisitorLocation);
   let lastSearchAt = 0;
   $("place-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const q = $("place").value.trim(); if (!q) return;
+    ++state.locationToken; // A manual search takes priority over an automatic location callback.
     // Nominatim public instance: user-initiated searches only, at most once per second.
     const now = Date.now();
     if (now - lastSearchAt < 1100) { setStatus("Please leave a moment between place searches."); return; }
@@ -352,10 +412,19 @@
       search.searchParams.set("limit", "1");
       search.searchParams.set("q", q);
       const data = await getJson(search.toString());
-      if (!data.length) { setStatus("Place not found. Try a nearby town or choose a point on the map."); return; }
-      moveTo(Number(data[0].lat), Number(data[0].lon), data[0].name || q);
-    } catch (error) { setStatus("Place search unavailable: " + error.message + ". You can click the map instead."); }
+      if (!data.length) {
+        setLocationStatus("Place not found. Try a nearby town or choose a point on the map.");
+        if (!state.locationResolved) useExample("Search didn't return a place.");
+        return;
+      }
+      moveTo(Number(data[0].lat), Number(data[0].lon), data[0].name || q,
+        "Showing records near " + (data[0].name || q) + ". Change the month to explore the seasons.");
+    } catch (error) {
+      setLocationStatus("Place search unavailable. You can click the map instead.");
+      if (!state.locationResolved) useExample("Place search couldn't be completed.");
+    }
   });
-  updateLocation(true);
-  loadRecords();
+  // Location is the first choice, not a fixed hometown. This deliberately
+  // defers the first GBIF query until the browser answers or the example is shown.
+  requestVisitorLocation();
 })();
