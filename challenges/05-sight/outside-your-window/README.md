@@ -23,6 +23,16 @@ The live source comparison is available from GitHub Actions as **Day 05 GBIF and
 
 The initial GBIF audit returned 51 November bird records in the Newton Aycliffe example area, 391 near Keswick and 9,294 near Edinburgh. NBN's documented location, year and month filters were verified; its working bird-class filter is `classs:Aves`. NBN Atlas may expose records under CC-BY-NC terms and may hide or generalise sensitive species locations. We **do not** merge or republish NBN individual records.
 
+The separate NBN bird-class query is now working with `classs:Aves` and month/year/radius filters. The live 5 November audit returned:
+
+| Area, 5 km, November 2021–2025 | GBIF georeferenced birds | NBN Atlas public bird records |
+| --- | ---: | ---: |
+| Newton Aycliffe | 51 | 328 |
+| Edinburgh | 9,294 | 9,078 |
+| Keswick | 391 | 809 |
+
+These are **not comparable unique-event totals**: NBN public precision, licence coverage and source datasets differ, so neither number can simply be added to the other. Some of the same sightings may appear in both platforms. The implementation continues to show **GBIF-only** counts and location markers until licensing, source citation, spatial uncertainty and record-level deduplication can be implemented without leaking sensitive locations.
+
 The first photo audit used eight leading species actually returned by the local GBIF query. Four had a photo in the first sixteen globally indexed multimedia occurrences with an explicitly suitable media licence. The field-guide implementation queries a small, lazy-loaded global sample, checks each media licence independently, and includes the creator, licence and parent GBIF occurrence link. A photo is never described as a local sighting. If the licence is missing, restricted or ambiguous, no photo appears.
 
 ## Next priorities
