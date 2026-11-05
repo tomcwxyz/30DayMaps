@@ -7,6 +7,9 @@ on:
       - 'web/moss/**'
       - 'web/day05-wildlife/**'
       - 'web/day05-dale-head/**'
+      - 'maps/dale_head_viewshed.py'
+      - 'tests/test_dale_head_viewshed.py'
+      - 'pyproject.toml'
       - '.github/workflows/pages-moss.yml'
   pull_request:
     paths:
@@ -55,6 +58,52 @@ jobs:
               assert len(p["grid_refs"]) == p["cell_count"]
           print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
           PY
+
+      - name: Restore any already-calculated, reproducible Dale Head data
+        id: viewshed-cache
+        uses: actions/cache@v4
+        with:
+          path: web/day05-dale-head/data
+          key: dale-head-terrain-v1-${{ hashFiles('maps/dale_head_viewshed.py') }}
+
+      - name: Install real viewshed calculation tools
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gdal-bin
+          python -m pip install -q numpy Pillow requests pyproj rasterio
+
+      - name: Calculate real Dale Head visibility from public terrain
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          python -m maps.dale_head_viewshed \
+            --output web/day05-dale-head/data \
+            --radius-km 20 \
+            --resolution-m 40 \
+            --tile-zoom 12
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('web/day05-dale-head/data')
+          meta = json.loads((root / 'viewshed-manifest.json').read_text())
+          assert meta['status'] == 'computed'
+          assert meta['cell_counts']['visible'] > 0
+          assert meta['cell_counts']['hidden'] > 0
+          for f in ['viewshed-overlay.png', 'dale-head-dem-bng.tif', 'dale-head-viewshed-bng.tif']:
+              assert (root / f).stat().st_size > 1000, f
+          print(f"Verified real GDAL viewshed: {meta['approx_visible_ground_area_km2']} km2 of visible ground")
+          PY
+
+      - name: Report availability of computed viewshed
+        run: |
+          if test -s web/day05-dale-head/data/viewshed-manifest.json &&
+             test -s web/day05-dale-head/data/viewshed-overlay.png; then
+            echo "Computed Dale Head viewshed will be published"
+          else
+            echo "::warning::Dale Head viewshed computation is not available; the 3D terrain viewer will remain usable, with the visibility mode disabled"
+            rm -rf web/day05-dale-head/data
+          fi
 
       - name: Prepare Day 04 moss and both Day 05 static experiences
         run: |
