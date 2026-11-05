@@ -167,6 +167,38 @@
       }
     }
   }
+  function renderSeasonalCounts(data, speciesLabel) {
+    const facet = (data.facets || []).find(f => String(f.field || "").toLowerCase() === "month");
+    if (!facet || !Array.isArray(facet.counts)) throw new Error("Month counts not returned by GBIF");
+    const byMonth = new Map(facet.counts.map(x => [Number(x.name), Number(x.count)]));
+    const max = Math.max(1, ...Array.from(byMonth.values()));
+    const bars = $("season-bars");
+    bars.replaceChildren();
+    const accessible = [];
+    MONTHS.forEach((name, i) => {
+      const month = i + 1;
+      const count = byMonth.get(month) || 0;
+      accessible.push(name + ": " + nf.format(count) + " records");
+      const item = document.createElement("div");
+      item.className = "season-month" + (state.month === month ? " current" : "");
+      item.title = name + ": " + nf.format(count) + " published observations";
+      const column = document.createElement("div"); column.className = "chart-column";
+      const fill = document.createElement("span"); fill.className = "chart-fill";
+      fill.style.height = count > 0 ? Math.max(3, 100 * count / max) + "%" : "0";
+      column.append(fill);
+      const short = document.createElement("span"); short.className = "abbr";
+      short.textContent = name.slice(0, 1);
+      item.append(column, short);
+      bars.append(item);
+    });
+    bars.setAttribute("aria-label", "Monthly published observation counts for " +
+      speciesLabel + ". " + accessible.join("; "));
+    $("season-title").textContent = speciesLabel + " through the year";
+    $("season-note").textContent =
+      "Records by observation month across 2021–" + (state.includeCurrent ? "2026" : "2025") +
+      ". Taller bars mean more published records, not a higher probability of seeing this species.";
+    $("seasonality").hidden = false;
+  }
   async function selectSpecies(key) {
     if (!state.facet.some(f => String(f.name) === String(key))) return;
     if (state.controller) state.controller.abort();
@@ -174,6 +206,7 @@
     const signal = state.controller.signal;
     const requestId = ++state.requestId;
     state.selectedKey = key;
+    $("seasonality").hidden = true;
     const p = getQuery(key);
     setStatus("Finding published locations for this species…");
     try {
@@ -183,8 +216,29 @@
       $("species-list").querySelectorAll(".species-item").forEach(row => {
         const selectedRow = row.dataset.speciesKey === String(key);
         row.classList.toggle("selected", selectedRow);
+        row.setAttribute("aria-pressed", String(selectedRow));
       });
       setStatus(nf.format(data.count || 0) + " records match this species. The map shows at most the first 300.");
+      const chosen = Array.from($("species-list").querySelectorAll(".species-item"))
+        .find(row => row.dataset.speciesKey === String(key));
+      const speciesLabel = chosen?.querySelector(".common")?.textContent || "Selected species";
+      const seasonalQuery = getQuery(key);
+      seasonalQuery.delete("month");
+      seasonalQuery.set("limit", "0");
+      seasonalQuery.set("facet", "month");
+      seasonalQuery.set("facetLimit", "12");
+      try {
+        const annual = await getJson(API + "/occurrence/search?" + seasonalQuery.toString(), signal);
+        if (requestId === state.requestId) renderSeasonalCounts(annual, speciesLabel);
+      } catch (error) {
+        if (error.name === "AbortError") throw error;
+        if (requestId === state.requestId) {
+          $("season-title").textContent = speciesLabel + " through the year";
+          $("season-note").textContent = "A monthly comparison is not available from the data provider at present.";
+          $("season-bars").replaceChildren();
+          $("seasonality").hidden = false;
+        }
+      }
     } catch (error) {
       if (error.name !== "AbortError") setStatus("Could not load this species: " + error.message);
     }
@@ -195,6 +249,7 @@
     const signal = state.controller.signal;
     const requestId = ++state.requestId;
     state.selectedKey = null; state.facet = [];
+    $("seasonality").hidden = true;
     updateTitles(); updateLocation(false);
     const p = getQuery();
     p.set("facet", "speciesKey"); p.set("facetLimit", "25");
@@ -260,6 +315,11 @@
     if (state.controller) state.controller.abort();
     ++state.requestId;
     state.selectedKey = null;
+    $("seasonality").hidden = true;
+    $("species-list").querySelectorAll(".species-item").forEach(row => {
+      row.classList.remove("selected");
+      row.setAttribute("aria-pressed", "false");
+    });
     plotRecords(state.observed, state.total, false);
     setStatus("Showing the first " + state.observed.length + " returned records across all selected wildlife.");
   });
