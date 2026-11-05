@@ -285,9 +285,9 @@
       state.visiblePeaks = entries;
       if (state.panoramaController) state.panoramaController.setPeaks(entries);
       $("peak-guide").hidden = false;
-      $("peak-summary").textContent = entries.length +
-        " named summits are labelled here, from " + data.visible_count +
-        " candidate peaks modelled visible in the 20 km terrain study. Only places where the GDAL viewshed and an independent ray agree are included. Select one to look towards it.";
+      $("peak-summary").textContent = "I've picked out " + entries.length +
+        " named fells that the terrain model says should be visible from here. " +
+        "Choose one to turn towards it. These have each been checked with two line-of-sight methods.";
     } catch (error) {
       // This is enrichment, not a prerequisite for displaying terrain/viewshed.
       console.warn("Named summit data unavailable:", error);
