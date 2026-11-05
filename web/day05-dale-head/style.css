@@ -71,6 +71,7 @@ button:focus-visible, a:focus-visible, .panorama:focus-visible {
   font-size: .96em;
   font-weight: 400;
   letter-spacing: -.055em;
+  white-space: nowrap;
 }
 .intro {
   margin: 19px 0 0;
