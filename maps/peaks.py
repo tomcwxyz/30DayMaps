@@ -162,9 +162,19 @@ def fetch_names(slug: str) -> Path:
     return path
 
 
+def _latin(t: str | None) -> bool:
+    return bool(t) and all(ord(c) < 0x250 or c in "’‘·" for c in t)
+
+
 def names(slug: str) -> list[dict]:
+    """Named summits, keeping a Latin-script name (English if the local one isn't) so labels print."""
     p = DEM_DIR / f"{slug}.names.json"
-    return json.loads(p.read_text()) if p.exists() else []
+    out = []
+    for n in (json.loads(p.read_text()) if p.exists() else []):
+        name = n["name"] if _latin(n["name"]) else n.get("name_en")
+        if _latin(name):
+            out.append(dict(n, name=name, name_en=None))
+    return out
 
 
 def clean(dem: np.ndarray) -> np.ndarray:
@@ -343,7 +353,7 @@ def draw_contours(ax, slug, th, crop, target=None, labels=True, summits=6, fille
     d = load(slug)
     res = d["res"]
     rs, cs = _grid_slice(d, crop)
-    sm = gaussian_filter(d["dem"], sigma=max(1.2, 14 / res))[rs, cs]
+    sm = gaussian_filter(d["dem"], sigma=max(1.2, AREAS[slug].get("smooth_m", 14) / res))[rs, cs]
     width_km = (crop[1] - crop[0]) / 1000
     lo, hi = float(sm.min()), float(sm.max())
     step = _nice((hi - lo) / (target or (90 if width_km < 16 else 60)))
@@ -416,7 +426,7 @@ def skyline_data(slug, cols_n=2600, near_km=None, bands=7):
     offs = np.linspace(-p["fov"] / 2, p["fov"] / 2, cols_n)
     az = np.radians(p["azimuth"] + offs)
     reach = p["reach_km"] * 1000
-    near = (near_km if near_km is not None else p.get("near_km", 0.4)) * 1000
+    near = (near_km if near_km is not None else p.get("near_km", 1.2 if p.get("panorama") else 0.4)) * 1000
     dist = np.concatenate([np.arange(near, 3000, res / 2), np.arange(max(near, 3000), reach, res * 0.8)])
     X, Y = np.sin(az)[None] * dist[:, None], np.cos(az)[None] * dist[:, None]
     rr, cc = d["half_h"] / res - Y / res - .5, X / res + d["half_w"] / res - .5
@@ -449,14 +459,19 @@ def skyline_data(slug, cols_n=2600, near_km=None, bands=7):
     return dict(view=p, x=offs, layers=layers, eye=eye, summits=seen, sea=sea_h if (z <= 0.5).any() else None)
 
 
-def draw_skyline(ax, sd, colours, labels=10, label_room=0.42, line=None, text=None, halo=None):
+def draw_skyline(ax, sd, colours, labels=10, label_room=0.3, line=None, text=None, halo=None, floor=3):
     """Layered silhouettes, farthest palest. colours = (far, near) hex."""
     from matplotlib.colors import to_rgb
     far, near = np.array(to_rgb(colours[0])), np.array(to_rgb(colours[1]))
     x, layers = sd["x"], sd["layers"]
     top = max(a.max() for _, a in layers)
     land = [a[a > -89] for _, a in layers if (a > -89).any()]
-    bottom = np.percentile(land[0], 3) if len(land) else top - 1
+    if floor == "skyline":  # crop to the outline itself: base of the far horizon, a little below
+        far_line = layers[-1][1]
+        b = np.percentile(far_line, 5)
+        bottom = b - (top - b) * 0.35
+    else:
+        bottom = np.percentile(land[0], floor) if len(land) else top - 1
     if sd.get("sea") is not None:
         bottom = min(bottom, sd["sea"] - (top - sd["sea"]) * 0.08)
     span = top - bottom
@@ -478,9 +493,9 @@ def draw_skyline(ax, sd, colours, labels=10, label_room=0.42, line=None, text=No
             if len(keep) == labels:
                 break
         keep.sort(key=lambda p: p["off"])
-        ytxt = top + span * label_room * 0.42
+        ytxt = top + span * label_room * 0.22
         for k, p in enumerate(keep):
-            yy = ytxt + (span * label_room * 0.26 if k % 2 else 0)
+            yy = ytxt + (span * label_room * 0.38 if k % 2 else 0)
             ax.plot([p["off"], p["off"]], [p["ang"] + span * 0.012, yy - span * 0.012], color=line, lw=0.5, zorder=60)
             ax.text(p["off"], yy, f"{p['name']}\n{p['h']:.0f} m", ha="center", va="bottom", fontsize=6.8,
                     family=SANS, color=text, linespacing=1.05, zorder=61)
@@ -542,9 +557,9 @@ def skyline(slug, theme="green", out=None):
 
 
 POSTERS = {  # contour place -> (skyline that shows it, half-width of the strip in degrees or None for all)
-    "cuillin": ("cuillin-from-elgol", None), "matterhorn": ("matterhorn-from-riffelsee", 17),
+    "cuillin": ("cuillin-from-elgol", None), "matterhorn": ("matterhorn-from-riffelsee", 10),
     "ben-nevis": ("ben-nevis-from-corpach", 24), "helvellyn": ("helvellyn-from-place-fell", 26),
-    "cheviot": ("cheviot-from-hedgehope", None), "lake-district": ("lakes-from-orrest-head", None),
+    "cheviot": ("cheviot-from-simonside", None), "lake-district": ("lakes-from-orrest-head", None),
 }
 
 
@@ -565,7 +580,7 @@ def poster(slug, theme="paper", out=None):
         sd = dict(sd, x=sd["x"][keep], layers=[(k, a[keep]) for k, a in sd["layers"]])
     page = np.array(to_rgb(th["page"]))
     ink = np.array(to_rgb(th["panel"] if th["panel"] != th["page"] else th["line"]))
-    draw_skyline(ax2, sd, (page + (ink - page) * 0.2, ink), labels=0, label_room=0.08)
+    draw_skyline(ax2, sd, (page + (ink - page) * 0.2, ink), labels=0, label_room=0.08, floor=VIEWS[view].get("poster_floor", 3))
     _caption(fig, th, p["title"], _ll(p["lat"], p["lon"]),
              f"{p['summit_m']} m   ·   contours every {step:g} m   ·   skyline {VIEWS[view]['subtitle']}", y=0.185)
     _credit(fig, th, SOURCE + "  ·  summits © OpenStreetMap contributors")

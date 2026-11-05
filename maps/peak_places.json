@@ -39,7 +39,8 @@
    "lat": 55.4785,
    "lon": -2.1456,
    "width_km": 12,
-   "summit_m": 815
+   "summit_m": 815,
+   "smooth_m": 32
   },
   {
    "slug": "ben-nevis",
@@ -152,7 +153,8 @@
    "azimuth": 262,
    "fov": 60,
    "reach_km": 18,
-   "lift_m": 2
+   "lift_m": 2,
+   "poster_floor": "skyline"
   },
   {
    "slug": "everest-from-kala-patthar",
