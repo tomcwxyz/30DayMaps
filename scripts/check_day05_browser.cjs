@@ -78,7 +78,12 @@ async function checkWildlife(browser) {
   await mar.click();
   await page.waitForFunction(() => (document.querySelector("#guide-title")?.textContent || "").includes("March"));
   assert.equal(await page.locator('#month-strip [aria-pressed="true"]').getAttribute("data-month"),"3");
-  pass("Wildlife interactive seasonal chart", "Twelve labelled months; selecting a chart bar changes the observation month");
+  await page.waitForFunction(() => {
+    const text = document.querySelector("#status")?.textContent || "";
+    return /published records|No published records matched/i.test(text);
+  }, null, { timeout: 45000 });
+  assert.doesNotMatch((await page.locator("#status").textContent()) || "", /this species/i);
+  pass("Wildlife interactive seasonal chart", "Twelve labelled months; selecting a bar reloads that month's records");
   await page.screenshot({ path: path.join(folder, "wildlife-desktop.png"), fullPage: true });
   if (errors.length) throw new Error("Wildlife page errors: " + errors.join("; "));
   await page.close();
@@ -102,6 +107,10 @@ async function checkWildlife(browser) {
     nextMonth);
   assert.equal(await mobile.locator('#month-strip [data-month="' + nextMonth + '"]').getAttribute("aria-pressed"),"true");
   pass("Wildlife mobile month navigation", "Next month button updates the visible selection");
+  await mobile.waitForFunction(() => {
+    const text = document.querySelector("#status")?.textContent || "";
+    return /published records|No published records matched/i.test(text);
+  }, null, { timeout: 45000 });
   await mobile.screenshot({ path: path.join(folder, "wildlife-mobile.png"), fullPage: true });
   pass("Wildlife mobile map rendered");
   await mobile.close();
