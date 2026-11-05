@@ -43,6 +43,15 @@ async function checkWildlife(browser) {
   pass("Wildlife radius selector", "10 km");
   await page.selectOption("#radius", "5");
   await page.locator(".species-item").first().waitFor({ timeout: 60000 });
+  // Optional source images must never be displayed without their own credit.
+  // Wait briefly for lazy media enrichment before moving to the species chart.
+  await page.waitForFunction(() => document.querySelectorAll(".species-photo img").length > 0, null,
+    {timeout:18000}).catch(() => {});
+  const livePhotos = await page.locator(".species-photo img").count();
+  const creditedPhotos = await page.locator(".photo-credit:not([hidden]) a").count();
+  assert.equal(livePhotos,creditedPhotos,
+    "Every displayed wildlife photograph needs a visible licence/source credit");
+  pass("Wildlife explicit image attribution", livePhotos + " displayed reusable photographs have matching credits");
   await page.locator(".species-item").first().click();
   await page.locator("#seasonality:not([hidden])").waitFor({ timeout: 45000 });
   assert.equal(await page.locator("#season-bars .season-month").count(), 12);
