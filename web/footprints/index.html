@@ -37,6 +37,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--fg);
@@ -70,7 +71,7 @@ button.primary { background: var(--accent); color: var(--accent-fg); border-colo
 button:disabled { opacity: .5; cursor: progress; }
 .results { display: grid; gap: 4px; }
 .results button { text-align: left; font-weight: 500; line-height: 1.3; padding: 8px 10px; }
-.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-height: 330px; overflow-y: auto; padding: 2px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); grid-auto-rows: max-content; gap: 8px; max-height: 330px; overflow-y: auto; padding: 2px; }
 .city { display: grid; gap: 4px; padding: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); color: var(--fg); font: 500 12px/1.2 var(--display); text-align: left; cursor: pointer; }
 .city img { display: block; width: 100%; aspect-ratio: 10 / 13; object-fit: cover; background: #F7F6F0; }
 .city span { padding: 0 6px 6px; }
@@ -217,14 +218,25 @@ function groundWindow(map) {
 }
 
 // ---- Drawing ----------------------------------------------------------------
+// Buildings as a list of Path2D batches. One huge Path2D gets quadratically slower to
+// build (a big city would freeze the page), so start a new batch every ~1,000 rings,
+// but only before an outer ring, so a courtyard always shares a batch with its building.
+const BATCH = 1000;
 function buildingPath(rings) {
-  const p = new Path2D();
+  const batches = [];
+  let p = new Path2D(), n = 0;
   for (const r of rings) {
+    if (n >= BATCH) {
+      let a = 0;
+      for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] - r[i][0]) * (r[j][1] + r[i][1]);
+      if (a < 0) { batches.push(p); p = new Path2D(); n = 0; }   // outer ring (holes wind the other way)
+    }
     p.moveTo(r[0][0], -r[0][1]);
     for (let i = 1; i < r.length; i++) p.lineTo(r[i][0], -r[i][1]);
-    p.closePath();
+    p.closePath(); n++;
   }
-  return p;
+  batches.push(p);
+  return batches;
 }
 
 function wrapLines(ctx, text, maxW) {
@@ -257,7 +269,7 @@ function drawSheet(canvas, pxPerMM, path) {
   ctx.beginPath(); ctx.rect(m.x, m.y, m.w, m.h); ctx.clip();
   ctx.translate(m.x + m.w / 2, m.y + m.h / 2); ctx.scale(s, s);
   ctx.fillStyle = t.ink;
-  if (path) ctx.fill(path, "nonzero");   // tile rings are wound so holes stay holes
+  if (path) for (const batch of path) ctx.fill(batch, "nonzero");   // rings are wound so holes stay holes
   else drawPlaceholder(ctx, g, t);
   ctx.restore();
 
@@ -325,7 +337,7 @@ let cacheOn = canUseApi;   // switched off for the session if the server has no 
 function packFit(p, g) {
   const [dx, dy] = FD.offsetMetres(p.lat, p.lon, state.lat, state.lon);
   const w = 2 * (p.w / 2 - Math.abs(dx)), h = 2 * (p.h / 2 - Math.abs(dy));
-  return { dx, dy, w, h, fits: w >= g.w * 1.02 && h >= g.h * 1.02 };
+  return { dx, dy, w, h, fits: w >= g.w - 1 && h >= g.h - 1 };   // packs are trimmed to their box, so an exact fit is fine
 }
 async function fetchPack(url) {
   if (typeof DecompressionStream === "undefined") throw new Error("this browser can't open saved maps");
@@ -341,14 +353,18 @@ async function fetchPack(url) {
 // Use a pack for the current window: re-centre its rings on the chosen point.
 function usePack(pack, fit, g) {
   state.rings = pack.rings.map(r => r.map(([x, y]) => [x - fit.dx, y - fit.dy]));
+  state.loaded = { lat: state.lat, lon: state.lon, w: fit.w, h: fit.h };
+}
+// Buildings in the window: outer rings that start inside it, whatever the source.
+function countBuildings(rings, g) {
   let n = 0;
-  for (const r of state.rings) {           // count outer rings that start inside the window
+  for (const r of rings) {
+    if (Math.abs(r[0][0]) > g.w / 2 || Math.abs(r[0][1]) > g.h / 2) continue;
     let a = 0;
     for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] - r[i][0]) * (r[j][1] + r[i][1]);
-    if (a < 0 && Math.abs(r[0][0]) <= g.w / 2 && Math.abs(r[0][1]) <= g.h / 2) n++;
+    if (a < 0) n++;
   }
-  state.buildings = n;
-  state.loaded = { lat: state.lat, lon: state.lon, w: fit.w, h: fit.h };
+  return n;
 }
 
 async function load() {
@@ -381,7 +397,7 @@ async function load() {
       setStatus("Loading OpenStreetMap buildings…");
       const result = await FD.buildFromTiles(state.lat, state.lon, g.w, g.h,
         { onProgress: (done, total) => setStatus(`Loading map tiles: ${done} of ${total}…`) });
-      state.rings = result.rings; state.buildings = result.buildings;
+      state.rings = result.rings;
       state.loaded = { lat: state.lat, lon: state.lon, w: g.w * 1.02, h: g.h * 1.02 };
       from = "tiles";
       if (cacheMiss && g.w <= 20000) {
@@ -390,6 +406,7 @@ async function load() {
       }
     }
     path = buildingPath(state.rings);
+    state.buildings = countBuildings(state.rings, g);
     if (!state.rings.length) setStatus("No buildings mapped here. Try a wider area or another place.", true);
     else setStatus(`Loaded ${state.buildings.toLocaleString("en-GB")} buildings` +
       (from === "tiles" ? ` in ${secs()} s.` : ` from a ${from} map.`));
@@ -531,7 +548,10 @@ $("controls").addEventListener("submit", search);
 $("load").addEventListener("click", load);
 $("png").addEventListener("click", exportPNG);
 $("svg").addEventListener("click", exportSVG);
-["title", "subtitle", "kicker", "paper", "orient", "width"].forEach(id => $(id).addEventListener("input", render));
+// Redraw at most once per frame while someone types or drags: big cities take ~0.1 s to draw.
+let renderQueued = 0;
+const scheduleRender = () => { if (!renderQueued) renderQueued = requestAnimationFrame(() => { renderQueued = 0; render(); }); };
+["title", "subtitle", "kicker", "paper", "orient", "width"].forEach(id => $(id).addEventListener("input", scheduleRender));
 window.addEventListener("resize", render);
 (document.fonts ? document.fonts.load('800 20px "Archivo"').then(() => document.fonts.ready) : Promise.resolve()).then(render);
 render();

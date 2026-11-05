@@ -10,6 +10,21 @@ const ROOT = path.join(__dirname, "..");
 const PORT = +process.env.PORT || 8787;
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".gz": "application/octet-stream" };
 
+// With MOCK_TILES_DIR=<folder of x-y.pbf files> the server reads map tiles from there.
+if (process.env.MOCK_TILES_DIR) {
+  const realFetch = global.fetch;
+  global.fetch = async (url, opts) => {
+    const u = String(url);
+    if (u === "https://tiles.openfreemap.org/planet") return new Response(JSON.stringify({ tiles: ["https://tiles.openfreemap.org/planet/mock/{z}/{x}/{y}.pbf"] }));
+    const m = u.match(/planet\/mock\/\d+\/(\d+)\/(\d+)\.pbf$/);
+    if (m) {
+      const f = path.join(process.env.MOCK_TILES_DIR, `${m[1]}-${m[2]}.pbf`);
+      return fs.existsSync(f) ? new Response(fs.readFileSync(f)) : new Response("", { status: 404 });
+    }
+    return realFetch(url, opts);
+  };
+}
+
 // With MOCK_BLOB=1 the place cache keeps packs in memory and serves them at /__mock_blob/.
 const blobs = new Map();
 if (process.env.MOCK_BLOB) {
