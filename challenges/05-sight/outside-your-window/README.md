@@ -33,7 +33,7 @@ The separate NBN bird-class query is now working with `classs:Aves` and month/ye
 
 These are **not comparable unique-event totals**: NBN public precision, licence coverage and source datasets differ, so neither number can simply be added to the other. Some of the same sightings may appear in both platforms. The implementation continues to show **GBIF-only** counts and location markers until licensing, source citation, spatial uncertainty and record-level deduplication can be implemented without leaking sensitive locations.
 
-The first photo audit used eight leading species actually returned by the local GBIF query. Four had a photo in the first sixteen globally indexed multimedia occurrences with an explicitly suitable media licence. The field-guide implementation queries a small, lazy-loaded global sample, checks each media licence independently, and includes the creator, licence and parent GBIF occurrence link. A photo is never described as a local sighting. If the licence is missing, restricted or ambiguous, no photo appears.
+The first photo audit used eight leading species actually returned by the local GBIF query. Six had a photo in the first thirty-two globally indexed multimedia occurrences with an explicitly suitable media licence, compared with four when only the first sixteen results were inspected. The field-guide implementation queries a small, lazy-loaded global sample, checks each media licence independently, and includes the creator, licence and parent GBIF occurrence link. A photo is never described as a local sighting. If the licence is missing, restricted or ambiguous, no photo appears.
 
 ## Next priorities
 
