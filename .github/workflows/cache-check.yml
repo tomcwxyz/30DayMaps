@@ -1,0 +1,19 @@
+name: Place cache check
+on:
+  push:
+    branches: ["fix/blob-not-found"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - shell: bash
+        run: |
+          set +e
+          B=https://30daymaps-footprints.vercel.app/api/pack
+          echo "== save"; curl -s -m 120 -X POST $B -H 'content-type: application/json' -d '{"lat":54.9815,"lon":-1.5975,"w":2}' -w ' HTTP %{http_code}\n' | tee save.txt
+          echo "== look up"; curl -s "$B?lat=54.9816&lon=-1.5976&w=1.5" -w ' HTTP %{http_code}\n' | tee get.txt
+          url=$(python3 -c "import json; print(json.loads(open('get.txt').read().rsplit(' HTTP',1)[0])['url'])" 2>/dev/null)
+          host=$(echo "$url" | cut -d/ -f3); echo "file host: ${host%%.*}… (store kind: $(echo $host | cut -d. -f2))"
+          echo "== file headers"; curl -s -D - -o pack.gz -H 'Origin: https://30daymaps-footprints.vercel.app' "$url" | grep -iE '^HTTP|access-control|content-type|cache-control|content-length'
+          ls -l pack.gz; head -c 2 pack.gz | xxd | head -1
