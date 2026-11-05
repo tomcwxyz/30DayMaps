@@ -6,7 +6,9 @@
   const state = { mode: "overview", direction: "north", exaggeration: 1, ready: false,
     viewshedReady: false, viewshedManifest: null, targetPeak: null,
     visiblePeaks: [], peakMarkers: [], panoramaController: null,
-    panoramaReady: false, userChangedMode: false };
+    panoramaReady: false, userChangedMode: false,
+    terrainEnabled: false, terrainScale: null, terrainChanges: 0,
+    viewshedLayerVisible: false, activeView: null };
   const $ = id => document.getElementById(id);
   const map = new maplibregl.Map({
     container: "map",
@@ -46,28 +48,55 @@
       const el = $(id), on = state.exaggeration === value;
       el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(on));
     }
+    // Exaggeration applies to the 3D landscape, not the measured panorama or viewshed.
+    $("true-scale").disabled = state.mode !== "overview";
+    $("exaggerate").disabled = state.mode !== "overview";
     $("compass-direction").textContent = state.mode === "summit" && state.panoramaController
       ? Math.round(state.panoramaController.currentHeading()) + "°"
       : state.targetPeak ? Math.round(state.targetPeak.bearing_deg) + "°"
       : state.direction.slice(0, 1).toUpperCase();
   }
   function showComputedLayer(on) {
-    if (map.getLayer("viewshed-layer")) {
+    // IMPORTANT: don't call setTerrain again on every compass click. MapLibre
+    // may rebuild its elevation mesh and show stale/draped tiles on mobile.
+    if (map.getLayer("viewshed-layer") && state.viewshedLayerVisible !== on) {
       map.setLayoutProperty("viewshed-layer", "visibility", on ? "visible" : "none");
+      state.viewshedLayerVisible = on;
     }
-    // A flat, accurate 2D projected overlay must not be draped over a
-    // vertically exaggerated 3D surface.
-    map.setTerrain(on ? null : { source: "dem", exaggeration: state.exaggeration });
+    const enableTerrain = !on;
+    const needsUpdate = state.terrainEnabled !== enableTerrain ||
+      (enableTerrain && state.terrainScale !== state.exaggeration);
+    if (needsUpdate) {
+      map.setTerrain(enableTerrain ? { source: "dem", exaggeration: state.exaggeration } : null);
+      state.terrainEnabled = enableTerrain;
+      state.terrainScale = enableTerrain ? state.exaggeration : null;
+      state.terrainChanges += 1;
+      $("map").dataset.terrainChanges = String(state.terrainChanges);
+    }
     $("viewshed-legend").hidden = !on;
+  }
+
+  function refreshMap() {
+    // Ensure a fresh WebGL frame after a compass change or showing the map.
+    requestAnimationFrame(() => {
+      map.resize();
+      map.triggerRepaint();
+    });
   }
   function showViewshed() {
     $("panorama").hidden = true;
     if (!state.viewshedReady || !state.viewshedManifest) return;
+    const arriving = state.activeView !== "viewshed";
     showComputedLayer(true);
-    map.easeTo({
-      center: [SUMMIT.lng, SUMMIT.lat], zoom: 10.7,
-      pitch: 0, bearing: 0, duration: 1200
-    });
+    if (arriving) {
+      map.stop();
+      map.jumpTo({
+        center: [SUMMIT.lng, SUMMIT.lat], zoom: 10.7,
+        pitch: 0, bearing: 0
+      });
+    }
+    state.activeView = "viewshed";
+    refreshMap();
     const meta = state.viewshedManifest;
     const visibleArea = meta.approx_visible_ground_area_km2;
     status("Calculated ground visibility within " + meta.analysis_radius_km +
@@ -76,12 +105,29 @@
   }
   function showOverview() {
     $("panorama").hidden = true;
+    const arriving = state.activeView !== "overview";
     showComputedLayer(false);
-    map.easeTo({
-      center: [SUMMIT.lng, SUMMIT.lat], zoom: 12.3, pitch: 64,
-      bearing: state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction], duration: 1300
-    });
-    status("3D overview · real terrain, at " + state.exaggeration + "× vertical scale.");
+    const bearing = state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction];
+    map.stop();
+    if (arriving) {
+      // A modest pitch avoids extreme near-ground ray angles on phone GPUs.
+      const mobile = window.matchMedia("(max-width: 740px)").matches;
+      map.jumpTo({
+        center: [SUMMIT.lng, SUMMIT.lat],
+        zoom: mobile ? 11.7 : 12.3,
+        pitch: mobile ? 48 : 58,
+        bearing
+      });
+    } else {
+      // A compass change must rotate the existing mesh, not create another.
+      map.setBearing(bearing);
+    }
+    state.activeView = "overview";
+    $("map").dataset.direction = String(Math.round(bearing));
+    refreshMap();
+    status("3D overview looking " +
+      (state.targetPeak ? "towards " + state.targetPeak.name : state.direction) +
+      " · real terrain, " + state.exaggeration + "× vertical scale.");
   }
   function showSummit() {
     if (!state.panoramaReady || !state.panoramaController) {
@@ -90,8 +136,11 @@
       status("The calculated summit panorama is unavailable; showing the real 3D overview.");
       return;
     }
-    showComputedLayer(false);
+    // The panorama already contains real DEM measurements, so do not reset
+    // MapLibre terrain underneath it on each change of direction.
+    $("viewshed-legend").hidden = true;
     $("panorama").hidden = false;
+    state.activeView = "summit";
     const bearing = state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction];
     state.panoramaController.setHeading(bearing);
     state.panoramaController.repaint();
@@ -253,6 +302,10 @@
       attribution: '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Tilezen / AWS open elevation tiles</a>'
     });
     map.setTerrain({ source: "dem", exaggeration: 1 });
+    state.terrainEnabled = true;
+    state.terrainScale = 1;
+    state.terrainChanges = 1;
+    $("map").dataset.terrainChanges = "1";
     map.addLayer({
       id: "hillshade", type: "hillshade", source: "dem",
       paint: {
@@ -294,10 +347,9 @@
   $("true-scale").addEventListener("click", () => setVerticalScale(1));
   $("exaggerate").addEventListener("click", () => setVerticalScale(1.5));
   function setVerticalScale(value) {
+    if (state.mode !== "overview" || state.exaggeration === value) return;
     state.exaggeration = value;
-    if (state.ready && state.mode !== "viewshed") {
-      map.setTerrain({ source: "dem", exaggeration: value });
-    }
+    // A single terrain update is performed by showComputedLayer(false).
     updateView();
   }
   markControls();
