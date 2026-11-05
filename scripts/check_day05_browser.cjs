@@ -34,10 +34,20 @@ async function checkWildlife(browser) {
   let status = (await page.locator("#status").textContent()).trim();
   assert.doesNotMatch(status, /Couldn't load GBIF/i);
   pass("Wildlife live GBIF browser request", status);
-  await page.selectOption("#month", "5");
+  assert.equal(await page.locator("#month-strip .month-choice").count(), 12);
+  const mayRequest = page.waitForRequest(request => {
+    if (!request.url().includes("api.gbif.org/v1/occurrence/search?")) return false;
+    const query = new URL(request.url()).searchParams;
+    return query.get("month") === "5" && query.get("facet") === "speciesKey";
+  }, { timeout: 30000 });
+  await page.locator('#month-strip [data-month="5"]').click();
+  await mayRequest;
   await page.waitForFunction(() => (document.querySelector("#guide-title")?.textContent || "").includes("May"));
-  pass("Wildlife month selector", "May");
+  assert.equal(await page.locator("#month").inputValue(), "5");
+  assert.equal(await page.locator('#month-strip [data-month="5"]').getAttribute("aria-pressed"), "true");
+  pass("Wildlife month ribbon", "Twelve months and a genuine May observation query");
   await page.selectOption("#month", "11");
+  await page.waitForFunction(() => (document.querySelector("#guide-title")?.textContent || "").includes("November"));
   await page.selectOption("#radius", "10");
   await page.waitForFunction(() => (document.querySelector("#guide-subtitle")?.textContent || "").includes("10 km"));
   pass("Wildlife radius selector", "10 km");
@@ -62,13 +72,27 @@ async function checkWildlife(browser) {
   await page.locator(".species-item").first().click();
   await page.locator("#seasonality:not([hidden])").waitFor({ timeout: 45000 });
   assert.equal(await page.locator("#season-bars .season-month").count(), 12);
-  pass("Wildlife full twelve-month source chart");
+  assert.equal((await page.locator("#season-bars .abbr").allTextContents()).join(" "), 
+    "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec");
+  const mar = page.locator("#season-bars .season-month").nth(2);
+  await mar.click();
+  await page.waitForFunction(() => (document.querySelector("#guide-title")?.textContent || "").includes("March"));
+  assert.equal(await page.locator("#month").inputValue(), "3");
+  pass("Wildlife interactive seasonal chart", "Twelve labelled months; selecting a chart bar changes the observation month");
   await page.screenshot({ path: path.join(folder, "wildlife-desktop.png"), fullPage: true });
   if (errors.length) throw new Error("Wildlife page errors: " + errors.join("; "));
   await page.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await mobile.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
   await mobile.locator("#map.leaflet-container").waitFor({ timeout: 30000 });
+  assert.equal(await mobile.locator("#month-strip .month-choice").count(),12);
+  const startingMonth = Number(await mobile.locator("#month").inputValue());
+  await mobile.locator("#month-next").click();
+  const nextMonth = startingMonth % 12 + 1;
+  await mobile.waitForFunction(number => document.querySelector("#month")?.value === String(number),
+    nextMonth);
+  assert.equal(await mobile.locator('#month-strip [data-month="' + nextMonth + '"]').getAttribute("aria-pressed"),"true");
+  pass("Wildlife mobile month navigation", "Next month button updates the visible selection");
   await mobile.screenshot({ path: path.join(folder, "wildlife-mobile.png"), fullPage: true });
   pass("Wildlife mobile map rendered");
   await mobile.close();
