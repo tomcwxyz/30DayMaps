@@ -62,7 +62,7 @@ Each map should answer a question, credit the data, document its technique, and 
 
 **What's outside your window?** is a location- and month-based atlas of published wildlife observation records. Select a location, month (observation month across years), radius and wildlife group; see the most recorded species (GBIF faceted record totals) alongside a map of the first 300 published points returned. Record counts are not abundance or probability. Geographical uncertainty and publication bias are important. The source is directly inspectable from map pop-ups.
 
-**What the mountain sees** is a 3D terrain viewer anchored at Dale Head summit in the Lake District. It uses real public Terrarium elevation tiles with a low-angle camera, direction and vertical-exaggeration controls. It does **not** yet show a calculated viewshed or a survey-accurate optical panorama.
+**What the mountain sees** combines a calculated 360° summit panorama, a real GDAL terrain viewshed, a separate 3D landscape overview, and visibility-checked OpenStreetMap summit labels. The panorama is made from distance-layered elevation profiles rather than fabricated scenery or a photograph. Its eye level is calibrated to the documented 753 m summit height; the 40 m analysis DEM otherwise smooths the top downwards. These are models of bare-earth terrain, not a guarantee of an unobstructed real-world view.
 
 Run both independent web pages with pinned, locally hosted map libraries (one-time preparation requires Node 22+):
 
