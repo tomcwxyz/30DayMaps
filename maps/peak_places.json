@@ -59,7 +59,12 @@
    "lat": 57.212,
    "lon": -6.22,
    "width_km": 9,
-   "summit_m": 992
+   "summit_m": 992,
+   "frame": {
+    "zoom": 1.35,
+    "dy_km": 2.0,
+    "dx_km": -0.5
+   }
   },
   {
    "slug": "yr-wyddfa",
@@ -94,8 +99,8 @@
   {
    "slug": "everest",
    "name": "Everest",
-   "title": "Sagarmāthā · Chomolungma",
-   "region": "Khumbu",
+   "title": "Everest",
+   "region": "Sagarmāthā · Chomolungma",
    "lat": 27.9881,
    "lon": 86.925,
    "width_km": 18,
@@ -109,10 +114,11 @@
    "subtitle": "from Orrest Head, looking north-west",
    "lat": 54.379,
    "lon": -2.904,
-   "azimuth": 318,
-   "fov": 80,
+   "azimuth": 300,
+   "fov": 64,
    "reach_km": 30,
-   "lift_m": 2
+   "lift_m": 2,
+   "near_km": 1.0
   },
   {
    "slug": "cheviot-from-simonside",
@@ -123,7 +129,8 @@
    "azimuth": 318,
    "fov": 70,
    "reach_km": 35,
-   "lift_m": 2
+   "lift_m": 2,
+   "near_km": 2.5
   },
   {
    "slug": "cuillin-from-elgol",
@@ -149,7 +156,7 @@
   },
   {
    "slug": "everest-from-kala-patthar",
-   "title": "Sagarmāthā · Chomolungma",
+   "title": "Everest",
    "subtitle": "from Kala Patthar, looking east",
    "lat": 27.996,
    "lon": 86.8285,

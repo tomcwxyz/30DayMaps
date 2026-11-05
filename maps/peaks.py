@@ -33,15 +33,6 @@ TILE = 256
 WEB_MERC_HALF = 20_037_508.342789244
 EARTH_R = 6_371_008.8
 
-THEMES = {  # ink, paper, muted, accent
-    "paper": ("#1E2B2F", "#F4F1E8", "#8C968F", "#B4543A"),
-    "night": ("#E9E3D3", "#141E24", "#6E7F86", "#D99A5B"),
-    "blue": ("#EEF3F5", "#1F4560", "#93AFC1", "#F2C14E"),
-    "ink": ("#111111", "#FFFFFF", "#8A8A8A", "#C0392B"),
-    "moss": ("#E8E6D1", "#2F3B2A", "#8E9878", "#D9C27A"),
-}
-
-
 # ---------------------------------------------------------------- elevation data
 
 def _aeqd(lat: float, lon: float) -> str:
@@ -176,161 +167,409 @@ def names(slug: str) -> list[dict]:
     return json.loads(p.read_text()) if p.exists() else []
 
 
+def clean(dem: np.ndarray) -> np.ndarray:
+    """Repair Terrarium faults: garbage strips along tile seams, isolated spikes and voids.
+    Sea floor (bathymetry) is flattened to 0 m so coasts draw as one clean line."""
+    from scipy.ndimage import distance_transform_edt, median_filter
+    z = dem.astype(np.float32).copy()
+    bad = ~np.isfinite(z) | (z < -440)
+    zf = np.where(bad, np.nanmedian(z), z)
+    for axis in (0, 1):  # whole rows/columns whose step to the next is wildly out of character
+        step = np.median(np.abs(np.diff(zf, axis=axis)), axis=1 - axis)
+        line = np.where(step > max(8.0, 8 * np.median(step)))[0]
+        for i in line:
+            sl = slice(max(0, i - 2), i + 4)
+            if axis == 0:
+                bad[sl, :] = True
+            else:
+                bad[:, sl] = True
+    m = median_filter(zf, 7)
+    bad |= np.abs(zf - m) > 220  # spikes far beyond any real cliff at these resolutions
+    if bad.any():
+        idx = distance_transform_edt(bad, return_distances=False, return_indices=True)
+        z = zf[tuple(idx)]
+        z = np.where(bad, median_filter(z, 9), z)
+    return np.maximum(z, 0)
+
+
 def load(slug: str) -> dict:
     d = np.load(DEM_DIR / f"{slug}.npz")
-    return {k: (d[k] if d[k].ndim else d[k].item()) for k in d.files}
+    out = {k: (d[k] if d[k].ndim else d[k].item()) for k in d.files}
+    out["dem"] = clean(out["dem"])
+    return out
 
 
-# ---------------------------------------------------------------- layout
+# ---------------------------------------------------------------- look
 
-def _page(theme: str, size=(11.69, 16.54)):
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    ink, paper, muted, accent = THEMES[theme]
-    fig = plt.figure(figsize=size, facecolor=paper)
-    return fig, (ink, paper, muted, accent)
+FONT_DIR = Path(__file__).with_name("fonts")
+SANS = ["Jost", "DejaVu Sans"]
+MONO = ["IBM Plex Mono", "DejaVu Sans Mono"]
+
+# page, panel (the map's ground), line, text, muted, accent
+THEMES = {
+    "paper":   dict(page="#F6F3EC", panel="#F6F3EC", line="#1F2321", text="#1F2321", muted="#7D817C", accent="#B5482F"),
+    "white":   dict(page="#FFFFFF", panel="#FFFFFF", line="#141414", text="#141414", muted="#8A8A8A", accent="#C0392B"),
+    "navy":    dict(page="#F6F3EC", panel="#17263A", line="#E6EDF1", text="#17263A", muted="#7D8790", accent="#F0B45A"),
+    "oxblood": dict(page="#7C2A30", panel="#7C2A30", line="#F3D9D4", text="#FBEDE8", muted="#D9A9A6", accent="#FFFFFF", frame="#F3D9D4"),
+    "night":   dict(page="#121A1E", panel="#121A1E", line="#DCD5C4", text="#E9E3D3", muted="#76858B", accent="#E0A55E"),
+    "moss":    dict(page="#EEEBDD", panel="#2E3A2C", line="#E7E2C6", text="#2E3A2C", muted="#7F8A72", accent="#E2C46B"),
+    "bands":   dict(page="#F4EEDC", panel="#F4EEDC", line="#2B2A28", text="#2B2A28", muted="#837D70", accent="#2B2A28",
+                    fills=["#D8D2BE", "#9FB7B1", "#E7B24C", "#C76E6B", "#E9E2CC", "#8FA3C2", "#B9C3A1", "#F0C9A6"]),
+}
+# skyline palettes: sky top, sky bottom, far layer, near layer
+SKIES = {
+    "green": ("#DCE8E3", "#EFEBDF", "#C3D4CB", "#1E4C3D"),
+    "mist":  ("#F1EEE6", "#F6F3EC", "#D9D6CD", "#1F2321"),
+    "dusk":  ("#B9C2DA", "#F2D3BF", "#B5B0CB", "#1D2440"),
+    "night": ("#0E151A", "#24333A", "#3E5058", "#0A0F12"),
+}
 
 
-def _caption(fig, cols, title, lines, credit, top=0.135):
-    ink, paper, muted, accent = cols
-    fig.text(0.08, top, title, color=ink, fontsize=40, weight="bold", va="top")
-    fig.text(0.08, top - 0.042, "   ·   ".join(lines), color=muted, fontsize=13, va="top")
-    fig.text(0.08, 0.03, credit, color=muted, fontsize=7.5, va="bottom")
+def _fonts():
+    from matplotlib import font_manager as fm
+    for f in FONT_DIR.glob("*.ttf"):
+        fm.fontManager.addfont(str(f))
 
 
-def _dms(lat: float, lon: float) -> str:
-    def f(v, pos, neg):
-        a = abs(v); d = int(a); m = (a - d) * 60
-        return f"{d}°{m:04.1f}′{pos if v >= 0 else neg}"
-    return f"{f(lat, 'N', 'S')}  {f(lon, 'E', 'W')}"
+def _spaced(text: str) -> str:
+    return "   ".join(" ".join(w) for w in text.upper().split())
 
 
 def _nice(step: float) -> float:
-    for s in (5, 10, 20, 25, 50, 100, 200, 250, 500):
+    for s in (5, 10, 15, 20, 25, 50, 100, 200, 250, 500):
         if step <= s:
             return s
     return 1000
 
 
-# ---------------------------------------------------------------- styles
+def _ll(lat: float, lon: float) -> str:
+    return f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}   ·   {abs(lon):.4f}° {'E' if lon >= 0 else 'W'}"
 
-def contours(slug: str, theme="paper", out: Path | None = None, lines=70):
-    """Pure contour lines, index contour every fifth, summit marked."""
+
+def _figure(th, w_mm=297, h_mm=420):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    _fonts()
+    return plt.figure(figsize=(w_mm / 25.4, h_mm / 25.4), facecolor=th["page"])
+
+
+def _caption(fig, th, title, line1, line2, y, x=0.5, ha="center", size=34):
+    fig.text(x, y, _spaced(title), color=th["text"], fontsize=size, family=SANS, weight="bold", ha=ha, va="top")
+    H = fig.get_size_inches()[1] * 72
+    y1 = y - size * 1.45 / H
+    fig.text(x, y1, line1, color=th["text"], fontsize=9.5, family=MONO, ha=ha, va="top")
+    fig.text(x, y1 - 17 / H, line2.upper(), color=th["muted"], fontsize=8, family=MONO, ha=ha, va="top")
+
+
+def _credit(fig, th, text, y=0.022):
+    fig.text(0.5, y, text, color=th["muted"], fontsize=5.6, family=MONO, ha="center", va="bottom")
+
+
+def _map_axes(fig, box, aspect):
+    """Largest axes of the given width/height ratio centred in box (figure fractions)."""
+    W, H = fig.get_size_inches()
+    x0, y0, w, h = box
+    if (w * W) / (h * H) > aspect:
+        nw = h * H * aspect / W
+        x0, w = x0 + (w - nw) / 2, nw
+    else:
+        nh = w * W / aspect / H
+        y0, h = y0 + (h - nh) / 2, nh
+    return fig.add_axes([x0, y0, w, h]), (x0, y0, w, h)
+
+
+def _crop(d, aspect=None, zoom=1.0, dx=0.0, dy=0.0):
+    """Frame inside the DEM: zoom in, shift the centre by dx/dy metres, keep inside the data."""
+    hw, hh = d["half_w"] / zoom, d["half_h"] / zoom
+    if aspect:
+        if hw / hh > aspect:
+            hw = hh * aspect
+        else:
+            hh = hw / aspect
+    dx = float(np.clip(dx, -d["half_w"] + hw, d["half_w"] - hw))
+    dy = float(np.clip(dy, -d["half_h"] + hh, d["half_h"] - hh))
+    return dx - hw, dx + hw, dy - hh, dy + hh
+
+
+def _frame(slug):
+    f = AREAS[slug].get("frame", {})
+    return dict(zoom=f.get("zoom", 1.0), dx=f.get("dx_km", 0) * 1000, dy=f.get("dy_km", 0) * 1000)
+
+
+def _grid_slice(d, crop):
+    res, x0, x1, y0, y1 = d["res"], *crop
+    c0, c1 = int((x0 + d["half_w"]) / res), int(math.ceil((x1 + d["half_w"]) / res))
+    r0, r1 = int((d["half_h"] - y1) / res), int(math.ceil((d["half_h"] - y0) / res))
+    return slice(r0, r1), slice(c0, c1)
+
+
+def _pick_summits(slug, d, crop, n=6, min_sep=0.14):
+    from scipy.ndimage import maximum_filter
+    x0, x1, y0, y1 = crop
+    res, dem = d["res"], d["dem"]
+    peak = maximum_filter(dem, size=max(3, int(80 / res)))
+    out = []
+    for p in names(slug):
+        mx, my = (x1 - x0) * .04, (y1 - y0) * .04
+        if not (x0 + mx < p["x"] < x1 - mx and y0 + my < p["y"] < y1 - my):
+            continue
+        r, c = int((d["half_h"] - p["y"]) / res), int((p["x"] + d["half_w"]) / res)
+        h = p["ele"] or float(peak[r, c])
+        out.append(dict(p, h=h))
+    out.sort(key=lambda p: -p["h"])
+    keep, sep = [], min_sep * (x1 - x0)
+    for p in out:
+        if all(math.hypot(p["x"] - q["x"], p["y"] - q["y"]) > sep for q in keep):
+            keep.append(p)
+        if len(keep) == n:
+            break
+    return keep
+
+
+def _label(ax, x, y, name, h, th, size=7.2, dy=7, ha="left"):
+    import matplotlib.patheffects as pe
+    halo = [pe.withStroke(linewidth=2.6, foreground=th["panel"])]
+    ax.plot(x, y, marker="^", ms=4.2, color=th["accent"], mec=th["panel"], mew=0.6, zorder=50)
+    t = ax.annotate(f"{name}\n{h:.0f} m", (x, y), xytext=(5 if ha == "left" else -5, dy), textcoords="offset points",
+                    fontsize=size, family=SANS, color=th["line"], ha=ha, va="bottom", zorder=51, linespacing=1.05)
+    t.set_path_effects(halo)
+
+
+# ---------------------------------------------------------------- drawing pieces
+
+def draw_contours(ax, slug, th, crop, target=None, labels=True, summits=6, filled=False, weight=1.0):
     from scipy.ndimage import gaussian_filter
-    p, d = AREAS[slug], load(slug)
-    dem, res = d["dem"], d["res"]
-    dem = np.where(np.isnan(dem), np.nanmin(dem), dem)
-    sm = gaussian_filter(dem, sigma=max(1.0, 18 / res))
+    d = load(slug)
+    res = d["res"]
+    rs, cs = _grid_slice(d, crop)
+    sm = gaussian_filter(d["dem"], sigma=max(1.2, 14 / res))[rs, cs]
+    width_km = (crop[1] - crop[0]) / 1000
     lo, hi = float(sm.min()), float(sm.max())
-    step = _nice((hi - lo) / lines)
-    levels = np.arange(math.ceil(lo / step) * step, hi, step)
-    major = levels[(np.round(levels / step) % 5) == 0]
+    step = _nice((hi - lo) / (target or (90 if width_km < 16 else 60)))
+    levels = np.arange(max(step, math.ceil(lo / step) * step), hi, step)
+    major = levels[np.isclose(np.mod(levels, step * 5), 0)]
     minor = np.setdiff1d(levels, major)
+    ext = [crop[0], crop[1], crop[2], crop[3]]
+    raw = d["dem"][rs, cs]
+    sea = raw <= 0.5
+    coast = None
+    if sea.mean() > 0.002:  # coasts: no contours at sea, one softened coastline instead
+        from scipy.ndimage import binary_dilation
+        soft = gaussian_filter(sea.astype(float), sigma=max(3, 30 / res))
+        coast = soft[::-1]
+        sm = np.ma.masked_where(binary_dilation(sea, iterations=3) | (soft > 0.35), sm)
+    z = sm[::-1]
+    ax.set_facecolor(th["panel"])
+    if filled and "fills" in th:
+        f = th["fills"]
+        lv = np.concatenate([[lo - 1], levels, [hi + 1]])
+        ax.contourf(z, levels=lv, colors=[f[i % len(f)] for i in range(len(lv) - 1)], extent=ext, origin="lower")
+    lw = (0.42 if width_km < 16 else 0.32) * weight
+    ax.contour(z, levels=minor, colors=th["line"], linewidths=lw, alpha=0.78, extent=ext, origin="lower")
+    if coast is not None:
+        ax.contour(coast, levels=[0.5], colors=th["line"], linewidths=lw * 1.6, extent=ext, origin="lower")
+    cmaj = ax.contour(z, levels=major, colors=th["line"], linewidths=lw * 2.3, extent=ext, origin="lower")
+    if labels and len(major):
+        txt = ax.clabel(cmaj, fmt=lambda v: f"{v:.0f}", fontsize=5.6, inline=True, inline_spacing=3)
+        for t in txt:
+            t.set_family(MONO)
+    if summits:
+        for p in _pick_summits(slug, d, crop, n=summits):
+            _label(ax, p["x"], p["y"], p.get("name_en") or p["name"], p["h"], th,
+                   ha="right" if p["x"] > crop[0] + (crop[1] - crop[0]) * 0.72 else "left")
+    ax.set_xlim(crop[0], crop[1]); ax.set_ylim(crop[2], crop[3]); ax.set_aspect("equal")
+    ax.set_xticks([]); ax.set_yticks([])
+    for sp in ax.spines.values():
+        sp.set_visible("frame" in th); sp.set_color(th.get("frame", th["line"])); sp.set_linewidth(0.8)
+    return step
 
-    fig, cols = _page(theme)
-    ink, paper, muted, accent = cols
-    ax = fig.add_axes([0.08, 0.17, 0.84, 0.77])
-    ax.set_facecolor(paper)
+
+def draw_ridgelines(ax, slug, th, crop, rows=64, lift=15.0):
+    from scipy.ndimage import gaussian_filter
+    d = load(slug)
+    rs, cs = _grid_slice(d, crop)
+    z = gaussian_filter(d["dem"], 1.6)[rs, cs]
+    h, w = z.shape
+    lo, hi = float(z.min()), float(z.max())
+    gap = 1.0 / (rows + lift)
+    x = np.linspace(0, 1, w)
+    ax.set_facecolor(th["panel"])
+    for i, r in enumerate(np.linspace(0, h - 1, rows).astype(int)):
+        base = 1 - lift * gap - i * gap
+        y = base + (z[r] - lo) / (hi - lo) * lift * gap
+        ax.fill_between(x, -1, y, color=th["panel"], zorder=2 * i, lw=0)
+        ax.plot(x, y, color=th["line"], lw=0.85, zorder=2 * i + 1, solid_capstyle="round", solid_joinstyle="round")
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1.0)
+    ax.set_xticks([]); ax.set_yticks([])
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+
+
+def skyline_data(slug, cols_n=2600, near_km=None, bands=7):
+    """Per-column elevation angles of the horizon, cumulative by distance band, plus visible named summits."""
+    from scipy.ndimage import map_coordinates, maximum_filter
+    p, d = VIEWS[slug], load(slug)
+    dem, res = d["dem"], d["res"]
     h, w = dem.shape
-    ext = [-d["half_w"], d["half_w"], -d["half_h"], d["half_h"]]
-    ax.contour(sm[::-1], levels=minor, colors=ink, linewidths=0.35, alpha=0.55, extent=ext)
-    ax.contour(sm[::-1], levels=major, colors=ink, linewidths=0.9, extent=ext)
-    # summit: highest cell near centre
-    cy, cx = np.unravel_index(np.argmax(dem), dem.shape)
-    sx, sy = ext[0] + (cx + .5) * res, ext[3] - (cy + .5) * res
-    ax.plot(sx, sy, marker="^", ms=7, color=accent, mec=paper, mew=0.8)
-    ax.set_xlim(ext[0], ext[1]); ax.set_ylim(ext[2], ext[3]); ax.set_aspect("equal")
+    eye = float(dem[h // 2, w // 2]) + p["lift_m"]
+    offs = np.linspace(-p["fov"] / 2, p["fov"] / 2, cols_n)
+    az = np.radians(p["azimuth"] + offs)
+    reach = p["reach_km"] * 1000
+    near = (near_km if near_km is not None else p.get("near_km", 0.4)) * 1000
+    dist = np.concatenate([np.arange(near, 3000, res / 2), np.arange(max(near, 3000), reach, res * 0.8)])
+    X, Y = np.sin(az)[None] * dist[:, None], np.cos(az)[None] * dist[:, None]
+    rr, cc = d["half_h"] / res - Y / res - .5, X / res + d["half_w"] / res - .5
+    z = map_coordinates(dem, [rr, cc], order=1, mode="nearest")
+    drop = dist[:, None] ** 2 * 0.87 / (2 * EARTH_R)
+    ang = np.degrees(np.arctan2(z - drop - eye, dist[:, None]))
+    sea_h = float(np.degrees(np.arctan2(-reach ** 2 * 0.87 / (2 * EARTH_R) - eye, reach)))
+    ang = np.where(z <= 0.5, -90.0, ang)
+    edges = np.geomspace(max(near, 600) * 2.2, reach, bands)
+    layers = [(e / 1000, ang[dist <= e].max(axis=0)) for e in edges]
+    # named summits that stand on the horizon (not hidden behind nearer ground)
+    peak = maximum_filter(dem, size=max(3, int(90 / res)))
+    seen = []
+    for n in names(slug):
+        dx, dy = n["x"], n["y"]
+        dd = math.hypot(dx, dy)
+        if dd < near + 300 or dd > reach:
+            continue
+        off = (math.degrees(math.atan2(dx, dy)) - p["azimuth"] + 540) % 360 - 180
+        if abs(off) > p["fov"] / 2 * 0.97:
+            continue
+        r, c = int((d["half_h"] - dy) / res), int((dx + d["half_w"]) / res)
+        hz = max(n["ele"] or 0, float(peak[r, c]))
+        a = math.degrees(math.atan2(hz - dd * dd * 0.87 / (2 * EARTH_R) - eye, dd))
+        j = int(np.argmin(np.abs(offs - off)))
+        js = slice(max(0, j - 3), j + 4)
+        occ = ang[dist < dd - 250, js].max() if (dist < dd - 250).any() else -90
+        if a >= occ - 0.03:
+            seen.append(dict(name=n.get("name_en") or n["name"], off=off, ang=a, dist=dd / 1000, h=hz))
+    return dict(view=p, x=offs, layers=layers, eye=eye, summits=seen, sea=sea_h if (z <= 0.5).any() else None)
+
+
+def draw_skyline(ax, sd, colours, labels=10, label_room=0.42, line=None, text=None, halo=None):
+    """Layered silhouettes, farthest palest. colours = (far, near) hex."""
+    from matplotlib.colors import to_rgb
+    far, near = np.array(to_rgb(colours[0])), np.array(to_rgb(colours[1]))
+    x, layers = sd["x"], sd["layers"]
+    top = max(a.max() for _, a in layers)
+    land = [a[a > -89] for _, a in layers if (a > -89).any()]
+    bottom = np.percentile(land[0], 3) if len(land) else top - 1
+    if sd.get("sea") is not None:
+        bottom = min(bottom, sd["sea"] - (top - sd["sea"]) * 0.08)
+    span = top - bottom
+    n = len(layers)
+    if sd.get("sea") is not None:
+        ax.fill_between(x, bottom - span, sd["sea"], color=far + (near - far) * 0.45, lw=0, zorder=-1)
+    for i, (km, a) in enumerate(reversed(layers)):
+        t = i / max(1, n - 1)
+        c = far + (near - far) * t ** 1.35
+        ax.fill_between(x, bottom - span, a, color=c, lw=0, zorder=i)
+    ax.set_xlim(x[0], x[-1]); ax.set_ylim(bottom - span * 0.02, top + span * label_room)
     ax.axis("off")
-    _caption(fig, cols, p["title"],
-             [p["region"], f"{p.get('summit_m') or int(dem.max())} m", _dms(p["lat"], p["lon"]),
-              f"contours every {step:g} m"],
-             SOURCE + " · north up")
+    if labels and sd["summits"]:
+        s = sorted(sd["summits"], key=lambda p: -p["h"])
+        keep, sep = [], (x[-1] - x[0]) / 13
+        for p in s:
+            if all(abs(p["off"] - q["off"]) > sep for q in keep):
+                keep.append(p)
+            if len(keep) == labels:
+                break
+        keep.sort(key=lambda p: p["off"])
+        ytxt = top + span * label_room * 0.42
+        for k, p in enumerate(keep):
+            yy = ytxt + (span * label_room * 0.26 if k % 2 else 0)
+            ax.plot([p["off"], p["off"]], [p["ang"] + span * 0.012, yy - span * 0.012], color=line, lw=0.5, zorder=60)
+            ax.text(p["off"], yy, f"{p['name']}\n{p['h']:.0f} m", ha="center", va="bottom", fontsize=6.8,
+                    family=SANS, color=text, linespacing=1.05, zorder=61)
+
+
+def _sky(ax, top, bottom):
+    from matplotlib.colors import LinearSegmentedColormap
+    cm = LinearSegmentedColormap.from_list("sky", [bottom, top])
+    ax.imshow(np.linspace(0, 1, 256)[:, None], aspect="auto", cmap=cm, origin="lower",
+              extent=[*ax.get_xlim(), *ax.get_ylim()], zorder=-10)
+
+
+# ---------------------------------------------------------------- prints
+
+def contours(slug, theme="paper", out=None, filled=None):
+    th = THEMES[theme]
+    p, d = AREAS[slug], load(slug)
+    fig = _figure(th)
+    crop = _crop(d, aspect=0.80 / 0.70 * 297 / 420, **_frame(slug))
+    ax, box = _map_axes(fig, (0.09, 0.215, 0.82, 0.72), (crop[1] - crop[0]) / (crop[3] - crop[2]))
+    step = draw_contours(ax, slug, th, crop, filled=theme == "bands" if filled is None else filled)
+    _caption(fig, th, p["title"], _ll(p["lat"], p["lon"]),
+             f"{p['summit_m']} m   ·   {p['region']}   ·   contours every {step:g} m", y=0.165)
+    _credit(fig, th, SOURCE + "  ·  summits © OpenStreetMap contributors")
     return _save(fig, out or OUT_DIR / f"{slug}-contours-{theme}.png")
 
 
-def ridgelines(slug: str, theme="paper", out: Path | None = None, rows=90, exaggerate=1.0):
-    """Stacked east–west elevation profiles, each hiding those behind it."""
-    from scipy.ndimage import gaussian_filter
+def ridgelines(slug, theme="paper", out=None, rows=None, lift=None):
+    th = THEMES[theme]
     p, d = AREAS[slug], load(slug)
-    dem = d["dem"]
-    dem = np.where(np.isnan(dem), np.nanmin(dem), dem)
-    dem = gaussian_filter(dem, 1.0)
-    h, w = dem.shape
-    ys = np.linspace(0, h - 1, rows).astype(int)
-    lo, hi = float(dem.min()), float(dem.max())
-    # vertical scale: the highest point rises ~ 7 row-gaps above its baseline
-    gap = 1.0 / rows
-    scale = 7 * gap / (hi - lo) * exaggerate
-    fig, cols = _page(theme)
-    ink, paper, muted, accent = cols
-    ax = fig.add_axes([0.08, 0.17, 0.84, 0.77])
-    ax.set_facecolor(paper)
-    x = np.linspace(0, 1, w)
-    for i, r in enumerate(ys):  # north (back) first
-        base = 1 - (i + 1) * gap * 0.92
-        y = base + (dem[r] - lo) * scale
-        ax.fill_between(x, 0, y, color=paper, zorder=i * 2, lw=0)
-        ax.plot(x, y, color=ink, lw=0.7, zorder=i * 2 + 1, solid_capstyle="round")
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1.0); ax.axis("off")
-    _caption(fig, cols, p["title"],
-             [p["region"], f"{p.get('summit_m') or int(hi)} m", _dms(p["lat"], p["lon"]),
-              f"{rows} profiles, {p['width_km']} km across"],
-             SOURCE + " · profiles run west–east, north at the back")
+    fig = _figure(th)
+    crop = _crop(d, aspect=1.0, **_frame(slug))
+    wide = (crop[1] - crop[0]) > 16000
+    rows = rows or (80 if wide else 64)
+    lift = lift or (7 if wide else 15)
+    ax = fig.add_axes([0.09, 0.25, 0.82, 0.67])
+    draw_ridgelines(ax, slug, th, crop, rows=rows, lift=lift)
+    _caption(fig, th, p["title"], _ll(p["lat"], p["lon"]),
+             f"{p['summit_m']} m   ·   {p['region']}   ·   {rows} west–east profiles, north at the back", y=0.165)
+    _credit(fig, th, SOURCE)
     return _save(fig, out or OUT_DIR / f"{slug}-ridgelines-{theme}.png")
 
 
-def _skyline_angles(slug: str, cols_n=2400, bands=(1.5, 3, 5, 8, 12, 18, 25, 40)):
-    """Elevation angle of the skyline for each column, per distance band (cumulative)."""
-    from scipy.ndimage import map_coordinates
-    p, d = VIEWS[slug], load(slug)
-    dem, res = d["dem"], d["res"]
-    dem = np.where(np.isnan(dem), np.nanmin(dem), dem)
-    h, w = dem.shape
-    eye = dem[h // 2, w // 2] + p["lift_m"]
-    az = np.radians(p["azimuth"] + np.linspace(-p["fov"] / 2, p["fov"] / 2, cols_n))
-    reach = p["reach_km"] * 1000
-    dist = np.concatenate([np.arange(60, 2000, res / 2), np.arange(2000, reach, res)])
-    X = np.sin(az)[None, :] * dist[:, None]
-    Y = np.cos(az)[None, :] * dist[:, None]
-    rr, cc = d["half_h"] / res - Y / res - .5, X / res + d["half_w"] / res - .5
-    z = map_coordinates(dem, [rr, cc], order=1, mode="nearest")
-    drop = dist[:, None] ** 2 * (1 - 0.13) / (2 * EARTH_R)  # curvature with refraction
-    ang = np.degrees(np.arctan2(z - drop - eye, dist[:, None]))
-    out = []
-    for b in bands:
-        m = dist <= b * 1000
-        if m.any():
-            out.append((b, ang[m].max(axis=0)))
-    return p, out, eye
-
-
-def skyline(slug: str, theme="paper", out: Path | None = None):
-    """Layered silhouettes from a real viewpoint: far ridges pale, near ridges dark."""
-    from matplotlib.colors import to_rgb
-    p, layers, eye = _skyline_angles(slug)
-    fig, cols = _page(theme, size=(16.54, 11.69))
-    ink, paper, muted, accent = cols
-    ax = fig.add_axes([0.06, 0.24, 0.88, 0.68])
-    ax.set_facecolor(paper)
-    n = len(layers)
-    x = np.linspace(-p["fov"] / 2, p["fov"] / 2, len(layers[0][1]))
-    allang = np.concatenate([a for _, a in layers])
-    top, bottom = np.max(allang), np.percentile(layers[0][1], 2)
-    pad = (top - bottom)
-    ink_c, paper_c = np.array(to_rgb(ink)), np.array(to_rgb(paper))
-    for i, (b, a) in enumerate(reversed(layers)):  # farthest first
-        t = (i + 1) / n
-        c = paper_c + (ink_c - paper_c) * (0.12 + 0.88 * t ** 1.6)
-        ax.fill_between(x, bottom - pad, a, color=c, lw=0)
-    ax.set_xlim(x[0], x[-1]); ax.set_ylim(bottom - pad * 0.05, top + pad * 0.9)
-    ax.axis("off")
-    fig.text(0.06, 0.17, p["title"], color=ink, fontsize=40, weight="bold", va="top")
-    fig.text(0.06, 0.115, f"{p['subtitle']}   ·   {_dms(p['lat'], p['lon'])}   ·   eye {eye:.0f} m",
-             color=muted, fontsize=13, va="top")
-    fig.text(0.06, 0.04, SOURCE + f" · {p['fov']}° field of view · earth curvature and refraction applied",
-             color=muted, fontsize=7.5)
+def skyline(slug, theme="green", out=None):
+    sky_top, sky_bottom, far, near = SKIES[theme]
+    dark = theme == "night"
+    th = dict(page=sky_bottom if not dark else "#0E151A", text="#E9E3D3" if dark else near,
+              muted="#76858B" if dark else "#7D817C", panel=sky_bottom)
+    p = VIEWS[slug]
+    sd = skyline_data(slug)
+    fig = _figure(th, 420, 297)
+    ax = fig.add_axes([0.06, 0.25, 0.88, 0.68])
+    draw_skyline(ax, sd, (far, near), line=th["muted"], text=th["text"])
+    _sky(ax, sky_top, sky_bottom)
+    _caption(fig, th, p["title"], f"{p['subtitle']}   ·   {_ll(p['lat'], p['lon'])}",
+             f"eye {sd['eye']:.0f} m   ·   {p['fov']}° wide   ·   reaching {p['reach_km']} km", y=0.185, x=0.06, ha="left")
+    _credit(fig, th, SOURCE + "  ·  summits © OpenStreetMap contributors  ·  earth curvature and refraction applied")
     return _save(fig, out or OUT_DIR / f"{slug}-skyline-{theme}.png")
+
+
+POSTERS = {  # contour place -> (skyline that shows it, half-width of the strip in degrees or None for all)
+    "cuillin": ("cuillin-from-elgol", None), "matterhorn": ("matterhorn-from-riffelsee", 17),
+    "ben-nevis": ("ben-nevis-from-corpach", 24), "helvellyn": ("helvellyn-from-place-fell", 26),
+    "cheviot": ("cheviot-from-hedgehope", None), "lake-district": ("lakes-from-orrest-head", None),
+}
+
+
+def poster(slug, theme="paper", out=None):
+    """Contour map above, the same mountain's skyline below, sharing one palette."""
+    from matplotlib.colors import to_rgb
+    th = THEMES[theme]
+    p, d = AREAS[slug], load(slug)
+    view, half = POSTERS[slug]
+    fig = _figure(th)
+    crop = _crop(d, aspect=1.0, **_frame(slug))
+    ax, box = _map_axes(fig, (0.09, 0.40, 0.82, 0.54), 1.0)
+    step = draw_contours(ax, slug, th, crop, filled=theme == "bands", summits=5)
+    ax2 = fig.add_axes([box[0], 0.232, box[2], 0.15])
+    sd = skyline_data(view, cols_n=1800)
+    if half:
+        keep = np.abs(sd["x"]) <= half
+        sd = dict(sd, x=sd["x"][keep], layers=[(k, a[keep]) for k, a in sd["layers"]])
+    page = np.array(to_rgb(th["page"]))
+    ink = np.array(to_rgb(th["panel"] if th["panel"] != th["page"] else th["line"]))
+    draw_skyline(ax2, sd, (page + (ink - page) * 0.2, ink), labels=0, label_room=0.08)
+    _caption(fig, th, p["title"], _ll(p["lat"], p["lon"]),
+             f"{p['summit_m']} m   ·   contours every {step:g} m   ·   skyline {VIEWS[view]['subtitle']}", y=0.185)
+    _credit(fig, th, SOURCE + "  ·  summits © OpenStreetMap contributors")
+    return _save(fig, out or OUT_DIR / f"{slug}-poster-{theme}.png")
 
 
 def _save(fig, path: Path, dpi=110) -> Path:
@@ -342,7 +581,7 @@ def _save(fig, path: Path, dpi=110) -> Path:
     return path
 
 
-STYLES = {"contours": contours, "ridgelines": ridgelines, "skyline": skyline}
+STYLES = {"contours": contours, "ridgelines": ridgelines, "skyline": skyline, "poster": poster}
 
 
 def main():
@@ -351,7 +590,7 @@ def main():
     f = sub.add_parser("fetch"); f.add_argument("slugs", nargs="*"); f.add_argument("--all", action="store_true")
     f.add_argument("--force", action="store_true", help="refetch files that already exist")
     r = sub.add_parser("render"); r.add_argument("slugs", nargs="*"); r.add_argument("--all", action="store_true")
-    r.add_argument("--style", choices=list(STYLES)); r.add_argument("--theme", default="paper", choices=list(THEMES))
+    r.add_argument("--style", choices=list(STYLES)); r.add_argument("--theme")
     a = ap.parse_args()
     every = list(AREAS) + list(VIEWS)
     if a.cmd == "fetch":
@@ -365,7 +604,7 @@ def main():
     for s in slugs:
         styles = [a.style] if a.style else (["skyline"] if s in VIEWS else ["contours", "ridgelines"])
         for st in styles:
-            STYLES[st](s, a.theme)
+            STYLES[st](s, a.theme or ("green" if st == "skyline" else "paper"))
 
 
 if __name__ == "__main__":
