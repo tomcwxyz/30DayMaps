@@ -21,7 +21,7 @@
     <main class="experience">
       <section class="toolbar" aria-label="3D terrain controls">
         <div class="toolbar-block"><span class="control-label">Your viewpoint</span>
-          <div class="buttons"><button class="on" id="summit-view" type="button" aria-pressed="true">From the summit</button><button id="overview-view" type="button" aria-pressed="false">3D overview</button></div>
+          <div class="buttons"><button class="on" id="summit-view" type="button" aria-pressed="true">From the summit</button><button id="overview-view" type="button" aria-pressed="false">3D overview</button><button id="viewshed-view" type="button" aria-pressed="false" disabled title="Waiting for computed viewshed data">Visible ground</button></div>
         </div>
         <div class="toolbar-block"><span class="control-label">Look towards</span>
           <div class="buttons directions"><button class="on" data-direction="north" type="button" aria-pressed="true">North</button><button data-direction="east" type="button" aria-pressed="false">East</button><button data-direction="south" type="button" aria-pressed="false">South</button><button data-direction="west" type="button" aria-pressed="false">West</button></div>
@@ -33,12 +33,18 @@
       <div class="scene">
         <div id="map" role="region" aria-label="Interactive 3D terrain of Dale Head and surrounding fells"></div>
         <div class="top-note"><span class="dot"></span><span id="status" role="status" aria-live="polite">Loading terrain heights…</span></div>
-        <div class="compass" aria-hidden="true"><span id="compass-direction">N</span><small>LOOKING</small></div>
+        <div id="viewshed-legend" class="viewshed-legend" hidden>
+    <strong>Visibility from Dale Head</strong>
+    <div><span class="visible-swatch"></span> Ground visible from the summit</div>
+    <div><span class="hidden-swatch"></span> Ground hidden behind terrain</div>
+    <small>Terrain only: trees, buildings and weather not included.</small>
+  </div>
+  <div class="compass" aria-hidden="true"><span id="compass-direction">N</span><small>LOOKING</small></div>
         <div class="scene-bottom"><div><span class="small">VIEWPOINT</span><strong>Dale Head</strong><span>54.527271° N · 3.201936° W</span></div><div><span class="small">DATA</span><strong>Real elevation</strong><span>Tilezen / AWS Terrarium terrain</span></div></div>
       </div>
       <section class="below">
         <div class="story"><span class="eyebrow">The question</span><h2>How does a mountain change what we see?</h2><p>This first study reconstructs the topography around Dale Head using published elevation tiles. Change direction or leave the summit to explore the ridges and valleys from above. This is a terrain model, not a photograph or a claim to recreate trees, buildings or atmospheric conditions.</p></div>
-        <div class="method"><span class="eyebrow">Reading the map</span><h3>Terrain first, then visibility</h3><p>The summit camera is an experimental low-level terrain view. Relief comes from actual digital elevation data, but the result is not a surveyed optical panorama. A proper line-of-sight <em>viewshed</em> layer must be computed and validated separately, and is <strong>not yet shown</strong> in this version.</p><p>On touch screens, drag to look around. Use the direction buttons to return to a known heading, or switch to 3D overview for a conventional map.</p></div>
+        <div class="method"><span class="eyebrow">Reading the map</span><h3>Terrain first, then visibility</h3><p>The summit camera is an experimental low-level terrain view. Relief comes from actual digital elevation data, but the result is not a surveyed optical panorama. When the independently generated GDAL data are available, <strong>Visible ground</strong> displays a calculated terrain-only viewshed: green is visible and grey is obscured by intervening land. If computation is unavailable, that control remains disabled rather than presenting invented visibility.</p><p>On touch screens, drag to look around. Use the direction buttons to return to a known heading, or switch to 3D overview for a conventional map.</p></div>
       </section>
       <footer><span>Elevation tiles from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS open terrain</a> · Base map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span><span>A mapping experiment, not a navigation aid.</span></footer>
     </main>
