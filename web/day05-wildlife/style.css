@@ -435,3 +435,26 @@ label {
 @media (prefers-reduced-motion: reduce) {
   .month-strip { scroll-behavior: auto; scroll-snap-type: none; }
 }
+
+
+/* The month ribbon is the sole season picker: leave room for the place search. */
+@media (min-width: 1021px) {
+  .filters {
+    grid-template-columns: minmax(280px, 2.4fr) minmax(135px, .8fr) minmax(160px, 1fr);
+    align-items: start;
+  }
+}
+@media (min-width: 741px) and (max-width: 1020px) {
+  .filters {
+    grid-template-columns: minmax(250px, 2fr) minmax(150px, 1fr);
+  }
+  .place-field { grid-column: 1 / -1; }
+  .radius-field { grid-column: 1; }
+  .location-field { grid-column: 2; }
+}
+@media (max-width: 740px) {
+  .place-field { grid-column: 1 / -1; }
+  .radius-field { grid-column: 1; }
+  .location-field { grid-column: 2; }
+  .location-field .light-button { width: 100%; }
+}
