@@ -8,11 +8,11 @@
   <title>What’s outside your window? · Day 5 / Sight</title>
   <link rel="preconnect" href="https://api.gbif.org">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./style.css?v=20261105-photos-3">
+  <link rel="stylesheet" href="./style.css?v=20261105-seasons-1">
   <script defer src="./vendor/leaflet.js"></script>
   <script defer src="./geo.js"></script>
   <script defer src="./media.js"></script>
-  <script defer src="./app.js?v=20261105-photos-3"></script>
+  <script defer src="./app.js?v=20261105-seasons-1"></script>
 </head>
 <body>
   <div class="page">
@@ -37,6 +37,19 @@
         <div class="radius-field"><label for="radius">How far?</label><select id="radius"><option value="1">1 km</option><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option></select><p class="hint">Around the selected location.</p></div>
         <div class="location-field"><label for="locate">Location</label><button id="locate" class="light-button" type="button">Use my location</button><p class="hint">Or choose anywhere on the map.</p></div>
       </section>
+      <section class="month-explorer" aria-labelledby="month-heading">
+        <div class="month-explorer-heading">
+          <div>
+            <h2 id="month-heading">Through the year</h2>
+            <p id="month-summary">Choose a month to see what people recorded around you.</p>
+          </div>
+          <div class="month-arrows" aria-label="Step between months">
+            <button id="month-prev" type="button" aria-label="Previous month" title="Previous month">‹</button>
+            <button id="month-next" type="button" aria-label="Next month" title="Next month">›</button>
+          </div>
+        </div>
+        <nav class="month-strip" id="month-strip" aria-label="Observation month"></nav>
+      </section>
       <div class="period-row"><label class="check"><input id="include-current" type="checkbox"> Include observations from 2026</label><span id="period-note">Comparison years: 2021–2025</span></div>
       <nav class="taxa" aria-label="Wildlife group"><button class="active" type="button" data-taxon="birds" aria-pressed="true">Birds</button><button type="button" data-taxon="mammals" aria-pressed="false">Mammals</button><button type="button" data-taxon="butterflies" aria-pressed="false">Butterflies &amp; moths</button><button type="button" data-taxon="plants" aria-pressed="false">Plants</button></nav>
       <div class="content">
@@ -48,7 +61,7 @@
           <section id="seasonality" class="seasonality" aria-labelledby="season-title" hidden>
             <h3 id="season-title">Records through the year</h3>
             <p id="season-note">The monthly pattern of published observations for the selected species.</p>
-            <div id="season-bars" class="season-bars" role="img" aria-label="Monthly occurrence counts"></div>
+            <div id="season-bars" class="season-bars" role="group" aria-label="Monthly occurrence counts. Choose a bar to explore that month."></div>
           </section>
           <div class="guide-intro"><h3 id="list-title">Species recorded nearby</h3><p id="list-description">Based on actual records. Photographs, where available, show the species — not necessarily an observation from here.</p></div>
           <div id="species-list" class="species-list"></div>
