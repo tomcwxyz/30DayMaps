@@ -1,0 +1,41 @@
+name: Peaks
+# Downloads elevation for the places in maps/peak_places.json, draws every style and
+# commits the elevation files and previews to the branch it ran on.
+on:
+  push:
+    paths: ["maps/peak_places.json", ".github/workflows/peaks.yml"]
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: "Place slugs to fetch, separated by spaces (blank = all)"
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: peaks-${{ github.ref }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e ".[sight]"
+      - name: Fetch elevation
+        env: {SLUGS: "${{ inputs.slugs }}"}
+        run: |
+          if [ -n "$SLUGS" ]; then python -m maps.peaks fetch $SLUGS; else python -m maps.peaks fetch --all; fi
+      - name: Draw previews
+        run: python -m maps.peaks render --all
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add peaks
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Peaks: elevation and previews"
+          git pull --rebase -q && git push

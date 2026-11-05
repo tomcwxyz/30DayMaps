@@ -1,0 +1,22 @@
+{
+  "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look).",
+  "areas": [
+    {"slug": "helvellyn", "name": "Helvellyn", "title": "Helvellyn", "region": "Lake District", "lat": 54.5270, "lon": -3.0164, "width_km": 7, "summit_m": 950},
+    {"slug": "scafell", "name": "The Scafells", "title": "Scafell Pike", "region": "Lake District", "lat": 54.4542, "lon": -3.2116, "width_km": 8, "summit_m": 978},
+    {"slug": "lake-district", "name": "Lake District", "title": "The Lakeland Fells", "region": "Cumbria", "lat": 54.4900, "lon": -3.0900, "width_km": 34, "summit_m": 978},
+    {"slug": "cheviot", "name": "The Cheviot", "title": "The Cheviot", "region": "Northumberland", "lat": 55.4785, "lon": -2.1456, "width_km": 12, "summit_m": 815},
+    {"slug": "ben-nevis", "name": "Ben Nevis", "title": "Ben Nevis", "region": "Lochaber", "lat": 56.7969, "lon": -5.0036, "width_km": 9, "summit_m": 1345},
+    {"slug": "cuillin", "name": "Black Cuillin", "title": "The Black Cuillin", "region": "Isle of Skye", "lat": 57.2120, "lon": -6.2200, "width_km": 9, "summit_m": 992},
+    {"slug": "yr-wyddfa", "name": "Yr Wyddfa", "title": "Yr Wyddfa", "region": "Eryri", "lat": 53.0685, "lon": -4.0763, "width_km": 8, "summit_m": 1085},
+    {"slug": "matterhorn", "name": "Matterhorn", "title": "Matterhorn", "region": "Pennine Alps", "lat": 45.9763, "lon": 7.6586, "width_km": 10, "summit_m": 4478},
+    {"slug": "mont-blanc", "name": "Mont Blanc", "title": "Mont Blanc", "region": "Mont Blanc massif", "lat": 45.8700, "lon": 6.9100, "width_km": 20, "summit_m": 4806},
+    {"slug": "everest", "name": "Everest", "title": "Sagarmāthā · Chomolungma", "region": "Khumbu", "lat": 27.9881, "lon": 86.9250, "width_km": 18, "summit_m": 8849}
+  ],
+  "views": [
+    {"slug": "lakes-from-orrest-head", "title": "The Lakeland Fells", "subtitle": "from Orrest Head, looking north-west", "lat": 54.3790, "lon": -2.9040, "azimuth": 318, "fov": 80, "reach_km": 30, "lift_m": 2},
+    {"slug": "cheviot-from-simonside", "title": "The Cheviot Hills", "subtitle": "from Simonside, looking north-west", "lat": 55.2850, "lon": -1.9330, "azimuth": 318, "fov": 70, "reach_km": 35, "lift_m": 2},
+    {"slug": "cuillin-from-elgol", "title": "The Black Cuillin", "subtitle": "from Elgol, looking north-west", "lat": 57.1460, "lon": -6.1050, "azimuth": 322, "fov": 64, "reach_km": 18, "lift_m": 20},
+    {"slug": "matterhorn-from-riffelsee", "title": "Matterhorn", "subtitle": "from the Riffelsee, looking west", "lat": 45.9845, "lon": 7.7545, "azimuth": 262, "fov": 60, "reach_km": 18, "lift_m": 2},
+    {"slug": "everest-from-kala-patthar", "title": "Sagarmāthā · Chomolungma", "subtitle": "from Kala Patthar, looking east", "lat": 27.9960, "lon": 86.8285, "azimuth": 88, "fov": 80, "reach_km": 28, "lift_m": 2}
+  ]
+}
