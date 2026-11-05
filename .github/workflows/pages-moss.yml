@@ -34,6 +34,8 @@ jobs:
         run: |
           node --check web/moss/app.js
           node --check web/day05-wildlife/app.js
+          node --check web/day05-wildlife/geo.js
+          node --test tests/day05-geo.test.cjs
           node --check web/day05-dale-head/app.js
           python - <<'PY'
           import json
@@ -71,6 +73,7 @@ jobs:
               test -s "_site/$app/$file"
             done
           done
+          test -s _site/day05-wildlife/geo.js
 
       - name: Upload GitHub Pages artefact
         uses: actions/upload-pages-artifact@v4
