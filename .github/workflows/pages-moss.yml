@@ -6,6 +6,7 @@ on:
     paths:
       - 'web/moss/**'
       - 'web/day05-wildlife/**'
+      - 'tests/day05-media.test.cjs'
       - 'web/day05-dale-head/**'
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
@@ -44,7 +45,8 @@ jobs:
           node --check web/moss/app.js
           node --check web/day05-wildlife/app.js
           node --check web/day05-wildlife/geo.js
-          node --test tests/day05-geo.test.cjs
+          node --check web/day05-wildlife/media.js
+          node --test tests/day05-geo.test.cjs tests/day05-media.test.cjs
           node --check web/day05-dale-head/app.js
           node --check web/day05-dale-head/panorama.js
           python - <<'PY'
@@ -175,6 +177,7 @@ jobs:
             done
           done
           test -s _site/day05-wildlife/geo.js
+          test -s _site/day05-wildlife/media.js
           test -s _site/day05-dale-head/panorama.js
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
