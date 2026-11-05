@@ -1,0 +1,19 @@
+{
+  "_help": "Prepared cities. Edit this list, then run the 'Prepare footprint cities' workflow to rebuild the files. width_km is the widest map the prepared file covers; wider maps load from tiles.",
+  "cities": [
+    {"slug": "london", "name": "London", "title": "Central London", "lat": 51.5095, "lon": -0.1100, "width_km": 8},
+    {"slug": "newcastle", "name": "Newcastle", "title": "Newcastle and Gateshead", "lat": 54.9738, "lon": -1.6132, "width_km": 9},
+    {"slug": "edinburgh", "name": "Edinburgh", "title": "Edinburgh", "lat": 55.9533, "lon": -3.1883, "width_km": 7},
+    {"slug": "paris", "name": "Paris", "title": "Paris", "lat": 48.8590, "lon": 2.3400, "width_km": 8},
+    {"slug": "amsterdam", "name": "Amsterdam", "title": "Amsterdam", "lat": 52.3702, "lon": 4.8952, "width_km": 6},
+    {"slug": "venice", "name": "Venice", "title": "Venice", "lat": 45.4380, "lon": 12.3300, "width_km": 4},
+    {"slug": "barcelona", "name": "Barcelona", "title": "Barcelona", "lat": 41.3930, "lon": 2.1650, "width_km": 6},
+    {"slug": "rome", "name": "Rome", "title": "Rome", "lat": 41.8986, "lon": 12.4769, "width_km": 6},
+    {"slug": "munich", "name": "Munich", "title": "München", "lat": 48.1372, "lon": 11.5755, "width_km": 7},
+    {"slug": "berlin", "name": "Berlin", "title": "Berlin", "lat": 52.5170, "lon": 13.3889, "width_km": 8},
+    {"slug": "copenhagen", "name": "Copenhagen", "title": "København", "lat": 55.6761, "lon": 12.5683, "width_km": 6},
+    {"slug": "new-york", "name": "New York", "title": "Manhattan", "lat": 40.7484, "lon": -73.9857, "width_km": 6},
+    {"slug": "sydney", "name": "Sydney", "title": "Sydney", "lat": -33.8688, "lon": 151.2093, "width_km": 7},
+    {"slug": "tokyo", "name": "Tokyo", "title": "東京 Tokyo", "lat": 35.6812, "lon": 139.7671, "width_km": 6}
+  ]
+}
