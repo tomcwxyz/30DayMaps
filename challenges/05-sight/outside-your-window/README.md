@@ -2,7 +2,7 @@
 
 **Status: first interactive implementation committed at [`web/day05-wildlife/`](../../../web/day05-wildlife/); live API behaviour and deployment need browser verification.**
 
-Run `python -m http.server 8000` from the repository root and open `http://localhost:8000/web/day05-wildlife/`. No front-end build step. Run the geodesic radius tests with `node --test tests/day05-geo.test.cjs`.
+Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0` then `node scripts/prepare_day05_vendor.cjs web` once, followed by `python -m http.server 8000` from the repository root. Open `http://localhost:8000/web/day05-wildlife/`. This copies the open-source map library into a locally hosted vendor directory; it is not a JavaScript framework build. Run the geodesic radius tests with `node --test tests/day05-geo.test.cjs`.
 
 **Implemented:** place search (submit only, via Nominatim), map-point selection, optional browser geolocation, month and radius controls, 2021–2025 baseline plus optional 2026, four GBIF taxon groups, real occurrence-map points with source links, and full-search species facet counts for the leading 25 species. The map shows at most the first 300 returned points (clearly labelled) and lets a user fetch points for a selected species. No predictive probability is claimed. Future work remains in the brief below.
 
