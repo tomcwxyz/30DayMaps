@@ -17,6 +17,14 @@ Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0` then `node scripts/p
 - The first load and fallbacks have a Playwright mobile browser regression test using **simulated Edinburgh coordinates**, with no access to a real visitor's position.
 - The interface now shows the species field guide before the map on mobile, with a direct map link. The muted, lighter style follows the Day 5 field-notes approach.
 
+## Data and image audit (5 November 2026)
+
+The live source comparison is available from GitHub Actions as **Day 05 GBIF and NBN coverage audit**. Three locations are checked with fixed November 2021–2025 and 5 km filters. GBIF filters to georeferenced records without known geospatial issues; NBN uses its independent public spatial index, with co-ordinate generalisation and licence restrictions. Totals must never be added or presented as equivalent samples.
+
+The initial GBIF audit returned 51 November bird records in the Newton Aycliffe example area, 391 near Keswick and 9,294 near Edinburgh. NBN's documented location, year and month filters were verified; its working bird-class filter is `classs:Aves`. NBN Atlas may expose records under CC-BY-NC terms and may hide or generalise sensitive species locations. We **do not** merge or republish NBN individual records.
+
+The first photo audit used eight leading species actually returned by the local GBIF query. Four had a photo in the first sixteen globally indexed multimedia occurrences with an explicitly suitable media licence. The field-guide implementation queries a small, lazy-loaded global sample, checks each media licence independently, and includes the creator, licence and parent GBIF occurrence link. A photo is never described as a local sighting. If the licence is missing, restricted or ambiguous, no photo appears.
+
 ## Next priorities
 
 1. Audit additional UK wildlife recording coverage, especially NBN Atlas, against GBIF. Check dataset licences, masking and duplicate occurrence IDs before introducing any second source.
