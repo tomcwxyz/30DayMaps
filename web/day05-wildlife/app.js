@@ -152,6 +152,7 @@
   function createSpeciesRow(taxon, count, isSelected) {
     const button = document.createElement("button");
     button.type = "button"; button.className = "species-item" + (isSelected ? " selected" : "");
+    button.dataset.speciesKey = String(taxon.key);
     const names = document.createElement("span"); names.className = "names";
     const common = document.createElement("span"); common.className = "common"; common.textContent = taxon.common;
     const latin = document.createElement("span"); latin.className = "latin";
@@ -165,7 +166,7 @@
   }
   async function renderFacets(facets, sample, requestId, signal) {
     const container = $("species-list"); container.replaceChildren();
-    const counts = facets.find(f => f.field === "SPECIES_KEY" || f.field === "speciesKey");
+    const counts = facets.find(f => /species.?key/i.test(f.field || ""));
     const ranking = (counts && counts.counts || []).filter(x => x.name && x.count > 0);
     $("species-total").textContent = nf.format(ranking.length) + (ranking.length >= 25 ? "+" : "");
     if (!ranking.length) {
@@ -199,7 +200,7 @@
       if (requestId !== state.requestId) return;
       plotRecords(data.results || [], data.count || 0, true);
       $("species-list").querySelectorAll(".species-item").forEach(row => {
-        const selectedRow = row === state.rowForKey;
+        const selectedRow = row.dataset.speciesKey === String(key);
         row.classList.toggle("selected", selectedRow);
       });
       setStatus(nf.format(data.count || 0) + " records match this species. The map shows at most the first 300.");
@@ -228,7 +229,7 @@
       if (requestId !== state.requestId) return;
       state.observed = data.results || [];
       state.total = Number(data.count || 0);
-      state.facet = ((data.facets || []).find(f => f.field === "SPECIES_KEY" || f.field === "speciesKey") || {}).counts || [];
+      state.facet = ((data.facets || []).find(f => /species.?key/i.test(f.field || "")) || {}).counts || [];
       $("record-total").textContent = nf.format(state.total);
       plotRecords(state.observed, state.total, false);
       if (!state.total) {
