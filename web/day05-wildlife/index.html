@@ -39,13 +39,9 @@
       <div class="period-row"><label class="check"><input id="include-current" type="checkbox"> Include observations from 2026</label><span id="period-note">Comparison years: 2021–2025</span></div>
       <nav class="taxa" aria-label="Wildlife group"><button class="active" type="button" data-taxon="birds" aria-pressed="true">Birds</button><button type="button" data-taxon="mammals" aria-pressed="false">Mammals</button><button type="button" data-taxon="butterflies" aria-pressed="false">Butterflies &amp; moths</button><button type="button" data-taxon="plants" aria-pressed="false">Plants</button></nav>
       <div class="content">
-        <section class="map-panel" aria-label="Map of nearby observations">
-          <div id="map" role="region" aria-label="Choose a point on the map and explore the observations"></div>
-          <div class="map-overlay"><span class="map-key"></span><span id="map-note">Select a place to explore records.</span></div>
-          <button type="button" id="clear-filter" class="map-clear" hidden>Show all sampled records</button>
-        </section>
         <aside class="field-guide" aria-label="Seasonal field guide">
-          <div class="guide-head"><p class="eyebrow">Seen around here</p><h2 id="guide-title">Birds in November</h2><p id="guide-subtitle">Finding your location…</p></div>
+          <div class="guide-head"><p class="eyebrow">Seen around here</p><h2 id="guide-title">Birds in November</h2><p id="guide-subtitle">Finding your location…</p>
+          <a class="map-jump" href="#map">See the map of observations</a></div>
           <div id="status" role="status" aria-live="polite">Waiting for a location before searching published records…</div>
           <div class="totals"><div><strong id="record-total">—</strong><span>Published records matching your search</span></div><div><strong id="species-total">—</strong><span>Species listed in the field guide</span></div></div>
           <section id="seasonality" class="seasonality" aria-labelledby="season-title" hidden>
@@ -57,9 +53,14 @@
           <div id="species-list" class="species-list"></div>
           <div id="empty" class="empty" hidden><strong>No matching records found</strong><p>Try a wider radius, another month or a different location. A gap in records doesn't mean wildlife is absent.</p></div>
         </aside>
+        <section class="map-panel" aria-label="Map of nearby observations">
+          <div id="map" role="region" aria-label="Choose a point on the map and explore the observations"></div>
+          <div class="map-overlay"><span class="map-key"></span><span id="map-note">Select a place to explore records.</span></div>
+          <button type="button" id="clear-filter" class="map-clear" hidden>Show all sampled records</button>
+        </section>
       </div>
       <footer class="footnotes">
-        <p><strong>What this shows.</strong> Records reported to <a href="https://www.gbif.org/" target="_blank" rel="noopener">GBIF</a> by participating publishers. Counts are occurrence records, <em>not</em> animals, species abundance or your chance of a sighting. Recording effort, seasonality and the source datasets vary. Some records have deliberately generalised locations or large coordinate uncertainty. Map markers represent published coordinates, not guaranteed exact sightings.</p>
+        <p><strong>About these records.</strong> Records reported to <a href="https://www.gbif.org/" target="_blank" rel="noopener">GBIF</a> by participating publishers. Counts are occurrence records, <em>not</em> animals, species abundance or your chance of a sighting. Recording effort, seasonality and the source datasets vary. Some records have deliberately generalised locations or large coordinate uncertainty. Map markers represent published coordinates, not guaranteed exact sightings.</p>
         <p id="data-notes">Default observation years: 2021–2025. The map displays a sample of the matching records, labelled with its size, while the field-guide counts come from the GBIF species facet over the full filtered search. Exact source records and licences are linked from map pop-ups.</p>
         <p class="credit">Data © contributing GBIF publishers, subject to each record’s licence · Map © OpenStreetMap contributors · Place search © OpenStreetMap / Nominatim. The page does not save your location; when you allow it, an approximate location is sent to the map and wildlife data services to find nearby records.</p>
       </footer>
