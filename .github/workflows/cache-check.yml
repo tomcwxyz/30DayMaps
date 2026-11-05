@@ -1,0 +1,23 @@
+name: Place cache check
+on:
+  push:
+    branches: ["fix/private-blob-cache"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - shell: bash
+        run: |
+          set +e
+          S=https://30daymaps-footprints.vercel.app
+          echo "== save"; curl -s -m 120 -X POST $S/api/pack -H 'content-type: application/json' -d '{"lat":54.9815,"lon":-1.5975,"w":2}' -w ' HTTP %{http_code}\n'
+          echo "== look up"; curl -s "$S/api/pack?lat=54.9816&lon=-1.5976&w=1.5" -w ' HTTP %{http_code}\n' | tee get.txt
+          rel=$(python3 -c "import json; print(json.loads(open('get.txt').read().rsplit(' HTTP',1)[0])['url'])")
+          echo "== file"; curl -s -D h.txt -o pack.gz "$S/$rel"; grep -iE '^HTTP|content-type|cache-control|x-vercel-cache' h.txt
+          python3 - <<'PY'
+          import gzip, json, struct
+          d = gzip.decompress(open("pack.gz", "rb").read()); n = struct.unpack_from("<I", d, 4)[0]
+          h = json.loads(d[8:8 + n]); print("== pack:", {k: h[k] for k in ("w", "h", "buildings", "rings", "tiles")})
+          PY
+          echo "== second fetch (CDN)"; curl -s -D - -o /dev/null "$S/$rel" | grep -iE '^HTTP|x-vercel-cache'
