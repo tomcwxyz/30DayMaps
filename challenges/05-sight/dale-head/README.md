@@ -1,6 +1,10 @@
 # Day 05 · Sight — What the Mountain Sees
 
-**Status: independently scoped concept, not yet a calculated 3D viewshed.**
+**Status: first interactive 3D terrain implementation committed at [`web/day05-dale-head/`](../../../web/day05-dale-head/); calculated viewshed and live-browser verification still outstanding.**
+
+Run `python -m http.server 8000` from the repository root and open `http://localhost:8000/web/day05-dale-head/`. No build step is required.
+
+**Implemented:** MapLibre 3D raster-DEM terrain from public AWS/Tilezen Terrarium tiles, low-level summit camera, four directions, relief-exaggeration controls and 3D overview. This *is not* yet a scientifically computed line-of-sight viewshed, nor should the experimental summit camera be represented as a surveyed panorama. The detailed computation plan remains below.
 
 ## The question
 
