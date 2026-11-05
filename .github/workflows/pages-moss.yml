@@ -10,6 +10,7 @@ on:
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
       - 'tests/test_dale_head_peaks.py'
+      - 'scripts/check_day05_browser.cjs'
       - 'tests/test_dale_head_viewshed.py'
       - 'pyproject.toml'
       - '.github/workflows/pages-moss.yml'
@@ -148,6 +149,36 @@ jobs:
             done
           done
           test -s _site/day05-wildlife/geo.js
+
+      - name: Browser smoke checks on desktop and mobile
+        continue-on-error: true
+        env:
+          DAY05_BROWSER_BASE: http://127.0.0.1:8000
+          DAY05_BROWSER_OUTPUT: browser-screenshots
+        run: |
+          python -m http.server 8000 --directory _site > /tmp/day05-static-server.log 2>&1 &
+          python - <<'PY'
+          import time, urllib.request
+          for attempt in range(30):
+              try:
+                  urllib.request.urlopen('http://127.0.0.1:8000/day05-dale-head/', timeout=3)
+                  break
+              except Exception:
+                  time.sleep(1)
+          else:
+              raise RuntimeError('Local test server did not start')
+          PY
+          npm install --no-save playwright@1.56.0
+          node scripts/check_day05_browser.cjs
+
+      - name: Preserve real browser screenshots and test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day05-browser-screenshots
+          path: browser-screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload GitHub Pages artefact
         uses: actions/upload-pages-artifact@v4
