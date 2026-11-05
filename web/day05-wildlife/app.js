@@ -2,6 +2,7 @@
 (() => {
   "use strict";
   const API = "https://api.gbif.org/v1";
+  const { circlePolygon } = window.SightGeo;
   const TAXA = {
     birds: { key: 212, label: "Birds" },
     mammals: { key: 359, label: "Mammals" },
@@ -32,26 +33,6 @@
   const occurrences = L.layerGroup().addTo(map);
   const nf = new Intl.NumberFormat("en-GB");
   let debounce = null;
-
-  function circlePolygon(lon, lat, radiusKm, sides = 36) {
-    if (Math.abs(lat) > 85) throw new Error("Please choose a location in Britain.");
-    const earthKm = 6371.0088;
-    const distance = radiusKm / earthKm;
-    const latitude = lat * Math.PI / 180;
-    const longitude = lon * Math.PI / 180;
-    const points = [];
-    for (let i = 0; i <= sides; i++) {
-      const bearing = 2 * Math.PI * i / sides;
-      const destLat = Math.asin(Math.sin(latitude) * Math.cos(distance) +
-        Math.cos(latitude) * Math.sin(distance) * Math.cos(bearing));
-      const destLon = longitude + Math.atan2(Math.sin(bearing) * Math.sin(distance) * Math.cos(latitude),
-        Math.cos(distance) - Math.sin(latitude) * Math.sin(destLat));
-      points.push([destLon * 180 / Math.PI, destLat * 180 / Math.PI]);
-    }
-    // GBIF interprets exterior polygons counter-clockwise. Bearings generate a clockwise ring.
-    points.reverse();
-    return "POLYGON((" + points.map(p => p[0].toFixed(6) + " " + p[1].toFixed(6)).join(",") + "))";
-  }
 
   function getQuery(taxonKey = TAXA[state.taxon].key) {
     const p = new URLSearchParams({
