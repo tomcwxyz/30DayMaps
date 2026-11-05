@@ -52,6 +52,7 @@ async function checkWildlife(browser) {
   await page.waitForFunction(() => (document.querySelector("#guide-subtitle")?.textContent || "").includes("10 km"));
   pass("Wildlife radius selector", "10 km");
   await page.selectOption("#radius", "5");
+  await page.locator('#species-list[data-ready="true"]').waitFor({ timeout: 60000 });
   await page.locator(".species-item").first().waitFor({ timeout: 60000 });
   // Lazy photos are not requested until each species enters the scrollable
   // field-guide viewport. Exercise that user journey, not the initial fold.
@@ -70,7 +71,14 @@ async function checkWildlife(browser) {
     "No licensed species photos loaded after scrolling eight species into view");
   pass("Wildlife licensed photographs", livePhotos + " actual photographs loaded with visible source credits");
   await page.locator(".species-item").first().click();
-  await page.locator("#seasonality:not([hidden])").waitFor({ timeout: 45000 });
+  await page.waitForFunction(() => {
+    const chart = document.querySelector("#seasonality");
+    const status = document.querySelector("#status")?.textContent || "";
+    return (chart && !chart.hidden) || /Could not load this species/i.test(status);
+  }, null, { timeout: 45000 });
+  if (await page.locator("#seasonality").getAttribute("hidden") !== null) {
+    throw new Error("Species detail failed: " + await page.locator("#status").textContent());
+  }
   assert.equal(await page.locator("#season-bars .season-month").count(), 12);
   assert.equal((await page.locator("#season-bars .abbr").allTextContents()).join(" "), 
     "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec");
@@ -111,11 +119,13 @@ async function checkWildlife(browser) {
     const text = document.querySelector("#status")?.textContent || "";
     return /published records|No published records matched/i.test(text);
   }, null, { timeout: 45000 });
+  await mobile.locator('#species-list[data-ready="true"]').waitFor({ timeout: 50000 });
   await mobile.locator(".species-entry").first().waitFor({ timeout: 50000 });
   assert.equal(await mobile.locator("#field-guide").evaluate(
     el => getComputedStyle(el).overflowY), "visible",
     "Mobile field guide must not trap touch scrolling in a nested panel");
   const listedCount = await mobile.locator(".species-entry").count();
+  assert.ok(listedCount > 6, "Expected at least seven listed species in the 5 km December fixture location");
   if (listedCount > 6) {
     await mobile.locator("#species-more").waitFor({ state: "visible", timeout: 12000 });
     assert.equal(await mobile.locator(".species-entry:visible").count(), 6);
