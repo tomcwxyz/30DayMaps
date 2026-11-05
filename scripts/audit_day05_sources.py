@@ -81,7 +81,7 @@ def audit_site(site):
         "endpoint":NBN,
         "query":{
             "q":"*:*",
-            "fq":["-occurrence_status:\\"absent\\"",
+            "fq":["-occurrence_status:absent",
                   "year:[2021 TO 2025]",
                   # NBN indexed search-field names should be checked in practice.
                   "month:11",
