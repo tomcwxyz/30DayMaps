@@ -19,9 +19,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compare published source coverage without merging datasets
-        run: python scripts/audit_day05_sources.py day05-audits/coverage.json
+        run: python -m scripts.audit_day05_sources day05-audits/coverage.json
       - name: Check openly licensed species reference photos
-        run: python scripts/audit_day05_images.py day05-audits/photos.json
+        run: python -m scripts.audit_day05_images day05-audits/photos.json
       - name: Preserve independent data audit
         if: always()
         uses: actions/upload-artifact@v4
