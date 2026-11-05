@@ -3,7 +3,8 @@
   "use strict";
   const SUMMIT = { lng: -3.201936, lat: 54.527271 };
   const DIRECTIONS = { north: 0, east: 90, south: 180, west: 270 };
-  const state = { mode: "summit", direction: "north", exaggeration: 1, ready: false };
+  const state = { mode: "summit", direction: "north", exaggeration: 1, ready: false,
+    viewshedReady: false, viewshedManifest: null };
   const $ = id => document.getElementById(id);
   const map = new maplibregl.Map({
     container: "map",
@@ -49,7 +50,7 @@
     } catch (_) { return null; }
   }
   function markControls() {
-    for (const [id, mode] of [["summit-view", "summit"], ["overview-view", "overview"]]) {
+    for (const [id, mode] of [["summit-view", "summit"], ["overview-view", "overview"], ["viewshed-view", "viewshed"]]) {
       const el = $(id), on = state.mode === mode;
       el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(on));
     }
@@ -63,7 +64,30 @@
     }
     $("compass-direction").textContent = state.direction.slice(0, 1).toUpperCase();
   }
+  function showComputedLayer(on) {
+    if (map.getLayer("viewshed-layer")) {
+      map.setLayoutProperty("viewshed-layer", "visibility", on ? "visible" : "none");
+    }
+    // A flat, accurate 2D projected overlay must not be draped over a
+    // vertically exaggerated 3D surface.
+    map.setTerrain(on ? null : { source: "dem", exaggeration: state.exaggeration });
+    $("viewshed-legend").hidden = !on;
+  }
+  function showViewshed() {
+    if (!state.viewshedReady || !state.viewshedManifest) return;
+    showComputedLayer(true);
+    map.easeTo({
+      center: [SUMMIT.lng, SUMMIT.lat], zoom: 10.7,
+      pitch: 0, bearing: 0, duration: 1200
+    });
+    const meta = state.viewshedManifest;
+    const visibleArea = meta.approx_visible_ground_area_km2;
+    status("Calculated ground visibility within " + meta.analysis_radius_km +
+      " km · approx. " + visibleArea + " km² visible · " +
+      meta.dem_resolution_m + " m terrain grid.");
+  }
   function showOverview() {
+    showComputedLayer(false);
     map.easeTo({
       center: [SUMMIT.lng, SUMMIT.lat], zoom: 12.6, pitch: 74,
       bearing: DIRECTIONS[state.direction], duration: 1300
@@ -71,6 +95,7 @@
     status("3D overview · real terrain, at " + state.exaggeration + "× vertical scale.");
   }
   function showSummit() {
+    showComputedLayer(false);
     // A FreeCamera placed near the real summit ground is more faithful to a human viewpoint
     // than the usual 3D map 'drone' camera. DEM tile accuracy limits exact eye height.
     const elevation = summitElevation();
@@ -95,8 +120,49 @@
     markControls();
     if (!state.ready) return;
     if (state.mode === "summit") showSummit();
+    else if (state.mode === "viewshed") showViewshed();
     else showOverview();
   }
+  async function loadCalculatedViewshed() {
+    try {
+      const response = await fetch("./data/viewshed-manifest.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("viewshed data not yet generated");
+      const meta = await response.json();
+      const corners = meta.image_corners_lonlat;
+      if (meta.status !== "computed" ||
+          !Array.isArray(corners) || corners.length !== 4 ||
+          !corners.every(p => Array.isArray(p) && p.length === 2 &&
+          p.every(Number.isFinite))) {
+        throw new Error("the viewshed manifest is incomplete");
+      }
+      const imageName = String(meta.overlay_png || "");
+      if (!/^viewshed-overlay\.png$/.test(imageName)) throw new Error("unexpected overlay path");
+      map.addSource("viewshed-image", {
+        type: "image",
+        url: "./data/" + imageName,
+        coordinates: corners,
+        attribution: "Calculated from Tilezen terrain with GDAL"
+      });
+      map.addLayer({
+        id: "viewshed-layer", type: "raster", source: "viewshed-image",
+        layout: { visibility: "none" }, paint: { "raster-opacity": 1 }
+      });
+      state.viewshedManifest = meta;
+      state.viewshedReady = true;
+      $("viewshed-view").disabled = false;
+      $("viewshed-view").title = "Switch to the computed terrain viewshed";
+      if (state.mode !== "viewshed") {
+        status("Real elevation loaded. Calculated viewshed also available.");
+      }
+    } catch (error) {
+      $("viewshed-view").disabled = true;
+      $("viewshed-view").title = "Calculated viewshed not yet available";
+      if (state.ready) status(
+        "Real elevation loaded. Computed viewshed not available in this preview."
+      );
+    }
+  }
+
   map.on("load", () => {
     map.addSource("dem", {
       type: "raster-dem",
@@ -123,12 +189,18 @@
     status("Elevation tiles connected. Waiting for detailed terrain…");
     // Wait for visible DEM tiles to settle before positioning a near-surface camera.
     map.once("idle", () => updateView());
+    loadCalculatedViewshed();
   });
   map.on("error", (event) => {
     if (!state.ready) status("The basemap or elevation tiles could not load. Check your connection.");
   });
   $("summit-view").addEventListener("click", () => { state.mode = "summit"; updateView(); });
   $("overview-view").addEventListener("click", () => { state.mode = "overview"; updateView(); });
+  $("viewshed-view").addEventListener("click", () => {
+    if (!state.viewshedReady) return;
+    state.mode = "viewshed";
+    updateView();
+  });
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
       state.direction = button.dataset.direction; updateView();
@@ -138,7 +210,9 @@
   $("exaggerate").addEventListener("click", () => setVerticalScale(1.5));
   function setVerticalScale(value) {
     state.exaggeration = value;
-    if (state.ready) map.setTerrain({ source: "dem", exaggeration: value });
+    if (state.ready && state.mode !== "viewshed") {
+      map.setTerrain({ source: "dem", exaggeration: value });
+    }
     updateView();
   }
   markControls();
