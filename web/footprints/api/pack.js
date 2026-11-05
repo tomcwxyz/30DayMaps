@@ -62,7 +62,10 @@ async function lookup(c) {
     const found = await blobApi().head(c.pathname);
     return { url: found.url, lat: c.lat, lon: c.lon, w: c.w, h: c.h };
   } catch (e) {
-    if (e && (e.name === "BlobNotFoundError" || /not.?found/i.test(e.message || ""))) return null;
+    const api = blobApi();
+    const missing = (api.BlobNotFoundError && e instanceof api.BlobNotFoundError) || (e && e.name === "BlobNotFoundError")
+      || /not.?found|does not exist/i.test((e && e.message) || "");
+    if (missing) return null;
     throw e;
   }
 }
