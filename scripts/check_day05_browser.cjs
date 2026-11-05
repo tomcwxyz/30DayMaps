@@ -24,6 +24,11 @@ async function checkWildlife(browser) {
   await page.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
   assert.match(await page.title(), /outside your window/i);
   await page.locator("#map.leaflet-container").waitFor({ timeout: 30000 });
+  await page.waitForFunction(() => /example|approximate location/i.test(
+    document.querySelector("#location-status")?.textContent || ""
+  ), null, { timeout: 20000 });
+  pass("Wildlife location permission fallback clearly labelled",
+    (await page.locator("#location-status").textContent()).trim());
   pass("Wildlife Leaflet canvas loaded");
   await page.waitForFunction(() => /published records|No published records matched|Couldn't load GBIF/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 70000 });
   let status = (await page.locator("#status").textContent()).trim();
@@ -51,6 +56,39 @@ async function checkWildlife(browser) {
   await mobile.screenshot({ path: path.join(folder, "wildlife-mobile.png"), fullPage: true });
   pass("Wildlife mobile map rendered");
   await mobile.close();
+
+  // A new visitor who allows location sharing must begin in their real area,
+  // not the Newton Aycliffe example. The test uses invented browser coordinates,
+  // never the user's actual location.
+  const localContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true,
+    geolocation: { latitude: 55.9533, longitude: -3.1883, accuracy: 80 },
+    permissions: ["geolocation"]
+  });
+  const localPage = await localContext.newPage();
+  const locationQuery = localPage.waitForRequest(
+    request => request.url().includes("api.gbif.org/v1/occurrence/search?"),
+    { timeout: 30000 }
+  );
+  await localPage.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
+  await localPage.waitForFunction(() =>
+    (document.querySelector("#guide-subtitle")?.textContent || "").includes("your approximate location"),
+    null, { timeout: 20000 }
+  );
+  const query = new URL((await locationQuery).url());
+  const wkt = query.searchParams.get("geometry");
+  assert.ok(wkt?.startsWith("POLYGON(("), "GBIF must receive the selected location as search geometry");
+  const points = wkt.slice(9,-2).split(",").slice(0,-1)
+    .map(pair => pair.trim().split(" ").map(Number));
+  const centreLng = points.reduce((sum,p) => sum + p[0],0) / points.length;
+  const centreLat = points.reduce((sum,p) => sum + p[1],0) / points.length;
+  assert.ok(Math.abs(centreLng - (-3.188)) < .01 && Math.abs(centreLat - 55.953) < .01,
+    "The first data request did not use the permitted visitor location");
+  assert.doesNotMatch((await localPage.locator("#guide-subtitle").textContent()) || "", /Newton Aycliffe/i);
+  pass("Wildlife location first", "Permitted browser location used for the very first GBIF query");
+  await localPage.screenshot({ path: path.join(folder, "wildlife-location-first-mobile.png"), fullPage: true });
+  await localContext.close();
 }
 
 async function testCompassStability(page, device) {
