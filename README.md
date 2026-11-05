@@ -57,3 +57,22 @@ Planned definitions: (1) furthest from another distinct stop location, (2) furth
 Reusable foundations are minimal: fetching sources, boundary handling, attribution and styling. Individual challenges can switch tools: GeoPandas/Matplotlib first, then MapLibre, QGIS, H3, DuckDB Spatial, 3D, cartograms, animated cartography and unconventional approaches when the question merits it.
 
 Each map should answer a question, credit the data, document its technique, and state what it cannot tell us.
+
+## Day 05 — Sight: two separate experiments
+
+**What's outside your window?** is a location- and month-based atlas of published wildlife observation records. Select a location, month (observation month across years), radius and wildlife group; see the most recorded species (GBIF faceted record totals) alongside a map of the first 300 published points returned. Record counts are not abundance or probability. Geographical uncertainty and publication bias are important. The source is directly inspectable from map pop-ups.
+
+**What the mountain sees** is a 3D terrain viewer anchored at Dale Head summit in the Lake District. It uses real public Terrarium elevation tiles with a low-angle camera, direction and vertical-exaggeration controls. It does **not** yet show a calculated viewshed or a survey-accurate optical panorama.
+
+Run both independent web pages on a local static server, without a build step:
+
+```bash
+python -m http.server 8000
+```
+
+- Wildlife: http://localhost:8000/web/day05-wildlife/
+- Dale Head: http://localhost:8000/web/day05-dale-head/
+- Wildlife geometry unit tests: `node --test tests/day05-geo.test.cjs`
+- Browser scripts syntax checks: `node --check web/day05-wildlife/app.js` and `node --check web/day05-dale-head/app.js`
+
+The existing GitHub Pages workflow preserves the Day 04 moss map at the root and includes both Day 05 experiences under `day05-wildlife/` and `day05-dale-head/`. Publication still depends on the repository's GitHub Pages settings and a successful Actions deployment. These sites request third-party GBIF, basemap, elevation and (on user action) place search data directly. Detailed plans: [wildlife](challenges/05-sight/outside-your-window/README.md) and [Dale Head](challenges/05-sight/dale-head/README.md).
