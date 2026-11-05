@@ -216,6 +216,28 @@
    "fov": 90,
    "reach_km": 25,
    "lift_m": 2
+  },
+  {
+   "slug": "ben-nevis-from-corpach",
+   "title": "Ben Nevis",
+   "subtitle": "from Corpach, looking east",
+   "lat": 56.843,
+   "lon": -5.122,
+   "azimuth": 122,
+   "fov": 64,
+   "reach_km": 22,
+   "lift_m": 5
+  },
+  {
+   "slug": "helvellyn-from-place-fell",
+   "title": "Helvellyn",
+   "subtitle": "from Place Fell, looking west",
+   "lat": 54.553,
+   "lon": -2.918,
+   "azimuth": 248,
+   "fov": 70,
+   "reach_km": 18,
+   "lift_m": 2
   }
  ]
 }
