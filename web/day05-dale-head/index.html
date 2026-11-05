@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#162529">
+  <meta name="sight-release" content="20261105-renderfix-2">
   <meta name="description" content="Explore real 3D terrain around Dale Head in the Lake District — Day 05 / Sight.">
   <title>What the Mountain Sees · Dale Head · Day 05</title>
   <link href="./vendor/maplibre-gl.css" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=20261105-renderfix-2">
   <script defer src="./vendor/maplibre-gl.js"></script>
-  <script defer src="./panorama.js"></script>
-  <script defer src="./app.js"></script>
+  <script defer src="./panorama.js?v=20261105-renderfix-2"></script>
+  <script defer src="./app.js?v=20261105-renderfix-2"></script>
 </head>
 <body>
   <div class="page">
@@ -62,7 +63,7 @@
         <div class="story"><span class="eyebrow">The question</span><h2>How does a mountain change what we see?</h2><p>This study reconstructs the view from Dale Head using genuine elevation data. The summit mode is a calculated 360° landscape silhouette, with near and distant ridges layered by their measured heights and distances. The separate 3D overview lets you explore the terrain from above. Neither is a photograph or a claim to reproduce trees, buildings or the atmosphere.</p></div>
         <div class="method"><span class="eyebrow">Reading the map</span><h3>Terrain first, then visibility</h3><p>The summit panorama is computed from the height grid and the documented 753 m summit elevation; the 3D map is an elevated terrain study rather than a literal eye-level camera. When the independently generated GDAL data are available, <strong>Visible ground</strong> displays a calculated terrain-only viewshed: green is visible and grey is obscured by intervening land. If computation is unavailable, that control remains disabled rather than presenting invented visibility.</p><p>On touch screens, drag to look around. Use the direction buttons to return to a known heading, or switch to 3D overview for a conventional map.</p></div>
       </section>
-      <footer><span>Elevation tiles from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS open terrain</a> · Base map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span><span>A mapping experiment, not a navigation aid.</span></footer>
+      <footer><span>Elevation tiles from <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Tilezen / AWS open terrain</a> · Base map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span><span>Day 05 · rendering revision 2 · A mapping experiment, not a navigation aid.</span></footer>
     </main>
   </div>
 </body>
