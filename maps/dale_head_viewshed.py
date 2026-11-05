@@ -238,9 +238,10 @@ def export_overlay(
 def validate_rays(
     dem: np.ndarray, transform: Affine, visibility_file: Path,
     centre: tuple[float, float]
-) -> dict[str, float | int]:
+) -> dict:
     agreement = 0
     checked = 0
+    disagreements = []
     with rasterio.open(visibility_file) as src:
         result = src.read(1)
         for bearing in range(0, 360, 30):
@@ -258,9 +259,21 @@ def validate_rays(
                 except ValueError:
                     continue
                 checked += 1
-                agreement += int(verdict == (result[row, col] == 255))
+                gdal_visible = result[row, col] == 255
+                agreement += int(verdict == gdal_visible)
+                if verdict != gdal_visible:
+                    disagreements.append({
+                        "grid_bearing_deg": bearing,
+                        "distance_m": distance,
+                        "target_easting": round(x, 2),
+                        "target_northing": round(y, 2),
+                        "gdal_visible": bool(gdal_visible),
+                        "nearest_cell_ray_visible": bool(verdict),
+                        "interpretation": "Algorithms sample pixels differently; inspect the terrain profile before asserting physical visibility."
+                    })
     return {"checked": checked, "agreement": agreement,
-            "agreement_fraction": round(agreement / checked, 3) if checked else None}
+            "agreement_fraction": round(agreement / checked, 3) if checked else None,
+            "disagreements": disagreements}
 
 
 def build(output: Path, radius_km: int, resolution_m: int, tile_zoom: int) -> dict:
