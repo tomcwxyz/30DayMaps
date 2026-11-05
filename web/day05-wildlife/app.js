@@ -67,7 +67,6 @@
       " The map displays at most the first 300 returned records for the selected search. The field-guide species counts use the GBIF full-search species facets, not the map sample. All results are subject to recording and location biases.";
   }
   function renderMonthNavigation(shouldScroll = false) {
-    $("month").value = String(state.month);
     $("month-summary").textContent = MONTHS[state.month - 1] +
       " observations from previous years. Explore another month to see how the records change.";
     const buttons = $("month-strip").querySelectorAll("[data-month]");
@@ -524,13 +523,7 @@
       { enableHighAccuracy: false, timeout: 9000, maximumAge: 60000 }
     );
   }
-  for (let i = 0; i < MONTHS.length; i++) {
-    const option = document.createElement("option");
-    option.value = String(i + 1); option.textContent = MONTHS[i];
-    $("month").append(option);
-  }
   buildMonthNavigation();
-  $("month").addEventListener("change", (e) => chooseMonth(e.target.value));
   $("radius").addEventListener("change", (e) => {
     state.radius = Number(e.target.value); updateLocation(true); scheduleLoad();
   });
