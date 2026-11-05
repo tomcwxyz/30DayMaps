@@ -52,6 +52,33 @@ async function checkWildlife(browser) {
   pass("Wildlife mobile map rendered");
   await mobile.close();
 }
+
+async function testCompassStability(page, device) {
+  await page.locator("#overview-view").click();
+  await page.waitForFunction(() => document.querySelector("#map")?.dataset.direction !== undefined);
+  const before = Number(await page.locator("#map").getAttribute("data-terrain-changes"));
+  for (const [direction, bearing] of [["south","180"],["west","270"],["north","0"],["east","90"],["west","270"]]) {
+    await page.locator("[data-direction=" + direction + "]").click();
+    await page.waitForFunction(value => document.querySelector("#map")?.dataset.direction === value, bearing);
+    assert.equal(Number(await page.locator("#map").getAttribute("data-terrain-changes")), before,
+      "Changing direction to " + direction + " rebuilt the 3D terrain");
+  }
+  pass(device + " direction switches", "Five directions, no terrain rebuilds");
+  await page.locator("#exaggerate").click();
+  await page.waitForFunction(value => Number(document.querySelector("#map")?.dataset.terrainChanges) === value + 1, before);
+  await page.locator("[data-direction=south]").click();
+  assert.equal(Number(await page.locator("#map").getAttribute("data-terrain-changes")), before + 1);
+  pass(device + " relief then rotate", "Exactly one terrain update");
+  await page.screenshot({ path: path.join(folder, "dale-head-" + device.toLowerCase() + "-directions.png"), fullPage: true });
+  await page.locator("#summit-view").click();
+  await page.locator("#panorama:not([hidden])").waitFor({ timeout: 15000 });
+  for (const [direction, bearing] of [["west","270°"],["north","0°"],["south","180°"]]) {
+    await page.locator("[data-direction=" + direction + "]").click();
+    await page.waitForFunction(value => document.querySelector("#compass-direction")?.textContent.trim() === value, bearing);
+  }
+  pass(device + " summit compass", "Three headings immediately reflected");
+}
+
 async function checkDale(browser) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 860 } });
   const errors = [];
