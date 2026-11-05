@@ -9,6 +9,8 @@ on:
       - 'web/day05-dale-head/**'
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
+      - 'maps/dale_head_panorama.py'
+      - 'tests/test_dale_head_panorama.py'
       - 'tests/test_dale_head_peaks.py'
       - 'scripts/check_day05_browser.cjs'
       - 'scripts/prepare_day05_vendor.cjs'
@@ -44,6 +46,7 @@ jobs:
           node --check web/day05-wildlife/geo.js
           node --test tests/day05-geo.test.cjs
           node --check web/day05-dale-head/app.js
+          node --check web/day05-dale-head/panorama.js
           python - <<'PY'
           import json
           from pathlib import Path
@@ -68,7 +71,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: web/day05-dale-head/data
-          key: dale-head-terrain-v2-${{ hashFiles('maps/dale_head_viewshed.py', 'maps/dale_head_peaks.py') }}
+          key: dale-head-terrain-v3-${{ hashFiles('maps/dale_head_viewshed.py', 'maps/dale_head_peaks.py', 'maps/dale_head_panorama.py') }}
 
       - name: Install real viewshed calculation tools
         if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
@@ -117,6 +120,23 @@ jobs:
           print(f"Checked {d['modelled_peaks']} source peaks, {d['selected_label_count']} visible labels")
           PY
 
+      - name: Derive measured 360-degree summit panorama from the same DEM
+        if: steps.viewshed-cache.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          python -m maps.dale_head_panorama --data-dir web/day05-dale-head/data
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('web/day05-dale-head/data/panorama.json').read_text())
+          profile = data['profile']
+          assert data['status'] == 'computed_from_real_dem'
+          assert profile['samples_per_revolution'] == 720
+          assert len(profile['bands_near_to_far']) == 4
+          assert all(len(b['angles_deg']) == 720 for b in profile['bands_near_to_far'])
+          print("Verified real DEM panorama and four distance bands")
+          PY
+
       - name: Report availability of computed viewshed
         run: |
           if test -s web/day05-dale-head/data/viewshed-manifest.json &&
@@ -130,6 +150,11 @@ jobs:
             echo "Visibility-checked named summits available"
           else
             echo "::warning::Named-summit source unavailable; no unverified names will be presented"
+          fi
+          if test -s web/day05-dale-head/data/panorama.json; then
+            echo "Measured Dale Head panoramic skyline available"
+          else
+            echo "::warning::Panorama is missing; only the 3D overview will be offered"
           fi
 
       - name: Prepare Day 04 moss and both Day 05 static experiences
@@ -150,6 +175,7 @@ jobs:
             done
           done
           test -s _site/day05-wildlife/geo.js
+          test -s _site/day05-dale-head/panorama.js
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
         run: |
