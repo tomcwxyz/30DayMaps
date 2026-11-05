@@ -64,9 +64,11 @@ Each map should answer a question, credit the data, document its technique, and 
 
 **What the mountain sees** is a 3D terrain viewer anchored at Dale Head summit in the Lake District. It uses real public Terrarium elevation tiles with a low-angle camera, direction and vertical-exaggeration controls. It does **not** yet show a calculated viewshed or a survey-accurate optical panorama.
 
-Run both independent web pages on a local static server, without a build step:
+Run both independent web pages with pinned, locally hosted map libraries (one-time preparation requires Node 22+):
 
 ```bash
+npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0
+node scripts/prepare_day05_vendor.cjs web
 python -m http.server 8000
 ```
 
