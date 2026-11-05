@@ -79,3 +79,11 @@ test("a store connected by store ID (Vercel's own login) counts as set up", asyn
   assert.strictEqual(r.statusCode, 400);
   delete process.env.BLOB_STORE_ID;
 });
+
+test("the Blob library's 'does not exist' wording counts as not cached", async () => {
+  api._blob = { head: async () => { throw new Error("Vercel Blob: The requested blob does not exist"); }, put: async () => ({}) };
+  const r = res();
+  await api({ method: "GET", url: "/api/pack?lat=54.98&lon=-1.6&w=2" }, r);
+  assert.strictEqual(r.statusCode, 404);
+  delete api._blob;
+});
