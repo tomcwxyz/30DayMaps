@@ -9,3 +9,9 @@ __pycache__/
 /challenges/*/outputs/
 
 /explorations/*/outputs//prints/
+
+# Local-only static map vendor bundles and browser evidence
+node_modules/
+web/day05-wildlife/vendor/
+web/day05-dale-head/vendor/
+browser-screenshots/
