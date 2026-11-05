@@ -23,7 +23,7 @@ async function checkWildlife(browser) {
   page.on("pageerror", err => errors.push(String(err)));
   await page.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
   assert.match(await page.title(), /outside your window/i);
-  await page.locator("#map .leaflet-pane").waitFor({ timeout: 30000 });
+  await page.locator("#map .leaflet-map-pane").waitFor({ timeout: 30000 });
   pass("Wildlife Leaflet canvas loaded");
   await page.waitForFunction(() => /published records|No published records matched|Couldn't load GBIF/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 70000 });
   let status = (await page.locator("#status").textContent()).trim();
@@ -47,7 +47,7 @@ async function checkWildlife(browser) {
   await page.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await mobile.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
-  await mobile.locator("#map .leaflet-pane").waitFor({ timeout: 30000 });
+  await mobile.locator("#map .leaflet-map-pane").waitFor({ timeout: 30000 });
   await mobile.screenshot({ path: path.join(folder, "wildlife-mobile.png"), fullPage: true });
   pass("Wildlife mobile map rendered");
   await mobile.close();
@@ -75,7 +75,14 @@ async function checkDale(browser) {
     const count = await page.locator(".peak-button").count();
     assert.ok(count > 0);
     await page.locator(".peak-button").first().click();
-    await page.waitForFunction(() => (document.querySelector("#status")?.textContent || "").includes("Looking towards"));
+    await page.screenshot({ path: path.join(folder, "dale-head-after-peak.png"), fullPage: true });
+    try {
+      await page.waitForFunction(() => (document.querySelector("#status")?.textContent || "").includes("Looking towards"), null, { timeout: 15000 });
+    } catch (error) {
+      const text = (await page.locator("#status").textContent() || "").trim();
+      throw new Error("Summit camera did not turn; status: " + text +
+        "; page errors: " + errors.join("; ") + "; original: " + error.message);
+    }
     pass("Dale Head summit names and direction control", String(count) + " labelled summits");
   } else {
     assert.equal(await page.locator("#peak-guide").getAttribute("hidden") !== null, true);
