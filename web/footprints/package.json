@@ -3,6 +3,6 @@
   "private": true,
   "description": "Footprints print maker: static page plus Vercel functions in api/",
   "dependencies": {
-    "@vercel/blob": "1.1.1"
+    "@vercel/blob": "2.8.1"
   }
 }

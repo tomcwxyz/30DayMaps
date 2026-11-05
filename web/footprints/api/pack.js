@@ -9,7 +9,9 @@
 // Places are snapped to a grid (about 200 m) and widths rounded up to whole kilometres,
 // with a margin so any centre in the cell fits. The server builds packs itself rather
 // than accepting them from browsers, so nobody can plant fake maps in the cache.
-// Switched off (501) until a Blob store is connected to the project.
+// Switched off (501) until a Blob store is connected to the project. Newer stores connect
+// with BLOB_STORE_ID and Vercel's own login (OIDC); older ones with BLOB_READ_WRITE_TOKEN.
+// The Blob library handles both.
 
 const zlib = require("zlib");
 const D = require("../lib/footprints-data.js");
@@ -66,7 +68,8 @@ async function lookup(c) {
 }
 
 module.exports = async (req, res) => {
-  if (!process.env.BLOB_READ_WRITE_TOKEN && !module.exports._blob) return send(res, 501, { error: "Place cache isn't set up" });
+  const connected = process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID || module.exports._blob;
+  if (!connected) return send(res, 501, { error: "Place cache isn't set up" });
   let c;
   try {
     const q = req.method === "POST" ? await readBody(req) : Object.fromEntries(new URL(req.url, "http://x").searchParams);
@@ -94,7 +97,7 @@ module.exports = async (req, res) => {
     });
     return send(res, 200, { url: stored.url, lat: c.lat, lon: c.lon, w: c.w, h: c.h, built: true });
   } catch (e) {
-    console.error("pack failed:", e && e.message);
+    console.error("pack failed:", e && e.name, e && e.message);
     return send(res, 502, { error: "Couldn't cache this place" });
   }
 };

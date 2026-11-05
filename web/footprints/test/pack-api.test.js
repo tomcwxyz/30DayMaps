@@ -65,8 +65,17 @@ test("GET says whether a place is cached; POST builds, stores and then reuses it
 });
 
 test("switched off until a Blob store is connected", async () => {
-  delete api._blob; delete process.env.BLOB_READ_WRITE_TOKEN;
+  delete api._blob; delete process.env.BLOB_READ_WRITE_TOKEN; delete process.env.BLOB_STORE_ID;
   const r = res();
   await api({ method: "GET", url: "/api/pack?lat=1&lon=1&w=1" }, r);
   assert.strictEqual(r.statusCode, 501);
+});
+
+test("a store connected by store ID (Vercel's own login) counts as set up", async () => {
+  delete api._blob; delete process.env.BLOB_READ_WRITE_TOKEN;
+  process.env.BLOB_STORE_ID = "store_test";
+  const r = res();
+  await api({ method: "GET", url: "/api/pack?lat=1&lon=1&w=50" }, r);   // reaches validation, not the 501
+  assert.strictEqual(r.statusCode, 400);
+  delete process.env.BLOB_STORE_ID;
 });
