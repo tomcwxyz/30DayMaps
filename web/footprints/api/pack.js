@@ -3,12 +3,15 @@
 // somewhere nearby gets its buildings in one small file instead of dozens of tiles.
 //
 //   GET  /api/pack?lat=&lon=&w=   -> 200 {url, lat, lon, w, h} if cached, 404 if not
+//   GET  /api/pack?...&file=1     -> the cached pack itself (the "url" above points here)
 //   POST /api/pack {lat, lon, w}  -> builds the pack from OpenFreeMap tiles on the
 //                                    server, stores it in Vercel Blob, returns {url, ...}
 //
 // Places are snapped to a grid (about 200 m) and widths rounded up to whole kilometres,
 // with a margin so any centre in the cell fits. The server builds packs itself rather
 // than accepting them from browsers, so nobody can plant fake maps in the cache.
+// Packs are kept in a private Blob store and served through this function, with the
+// CDN caching repeat requests, so the store itself is never publicly readable.
 // Switched off (501) until a Blob store is connected to the project. Newer stores connect
 // with BLOB_STORE_ID and Vercel's own login (OIDC); older ones with BLOB_READ_WRITE_TOKEN.
 // The Blob library handles both.
@@ -20,7 +23,7 @@ const SNAP = 0.002;            // degrees
 const MARGIN = 600;            // metres added to width and height, covering any centre in the cell
 const ASPECT = 1.35;           // height / width: the tallest map (A-series portrait) is 1.3
 const MAX_KM = 20;
-const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;   // served through the function, so stay under its response limit
 const USER_AGENT = "30DayMaps-footprints/0.2 (+https://github.com/tomcwxyz/30DayMaps)";
 
 function send(res, code, obj, cache) {
@@ -57,10 +60,13 @@ async function readBody(req) {
 
 const blobApi = () => module.exports._blob || require("@vercel/blob");
 
+// Where the browser fetches a cached pack: this function, on the canonical cell.
+const fileUrl = c => `api/pack?${new URLSearchParams({ lat: c.lat, lon: c.lon, w: c.wk, file: 1 })}`;
+
 async function lookup(c) {
   try {
-    const found = await blobApi().head(c.pathname);
-    return { url: found.url, lat: c.lat, lon: c.lon, w: c.w, h: c.h };
+    await blobApi().head(c.pathname);
+    return { url: fileUrl(c), lat: c.lat, lon: c.lon, w: c.w, h: c.h };
   } catch (e) {
     const api = blobApi();
     const missing = (api.BlobNotFoundError && e instanceof api.BlobNotFoundError) || (e && e.name === "BlobNotFoundError")
@@ -73,14 +79,23 @@ async function lookup(c) {
 module.exports = async (req, res) => {
   const connected = process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID || module.exports._blob;
   if (!connected) return send(res, 501, { error: "Place cache isn't set up" });
-  let c;
+  let c, q;
   try {
-    const q = req.method === "POST" ? await readBody(req) : Object.fromEntries(new URL(req.url, "http://x").searchParams);
+    q = req.method === "POST" ? await readBody(req) : Object.fromEntries(new URL(req.url, "http://x").searchParams);
     c = cell(q);
   } catch { return send(res, 400, { error: "Bad request" }); }
   if (c.error) return send(res, 400, { error: c.error });
 
   try {
+    if (req.method === "GET" && q.file) {
+      const got = await blobApi().get(c.pathname, { access: "private" });
+      if (!got || !got.stream) return send(res, 404, { cached: false });
+      const body = Buffer.from(await new Response(got.stream).arrayBuffer());
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/octet-stream");
+      res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=2592000");
+      return res.end(body);
+    }
     const found = await lookup(c);
     if (req.method === "GET") {
       return found ? send(res, 200, found, "public, max-age=300") : send(res, 404, { cached: false });
@@ -94,11 +109,11 @@ module.exports = async (req, res) => {
       buildings: built.buildings, tiles: built.tiles, built: new Date().toISOString(),
     }), { level: 9 });
     if (pack.length > MAX_BYTES) return send(res, 413, { error: "Too big to cache" });
-    const stored = await blobApi().put(c.pathname, pack, {
-      access: "public", addRandomSuffix: false, allowOverwrite: true,
+    await blobApi().put(c.pathname, pack, {
+      access: "private", addRandomSuffix: false, allowOverwrite: true,
       contentType: "application/octet-stream", cacheControlMaxAge: 30 * 24 * 3600,
     });
-    return send(res, 200, { url: stored.url, lat: c.lat, lon: c.lon, w: c.w, h: c.h, built: true });
+    return send(res, 200, { url: fileUrl(c), lat: c.lat, lon: c.lon, w: c.w, h: c.h, built: true });
   } catch (e) {
     console.error("pack failed:", e && e.name, e && e.message);
     return send(res, 502, { error: "Couldn't cache this place" });
