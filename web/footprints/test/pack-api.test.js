@@ -20,6 +20,7 @@ function fakeBlob() {
     store,
     head: async p => { if (!store.has(p)) { const e = new Error("not found"); e.name = "BlobNotFoundError"; throw e; } return { url: `https://blob.test/${p}` }; },
     put: async (p, body, opts) => { store.set(p, { body, opts }); return { url: `https://blob.test/${p}` }; },
+    get: async (p, opts) => store.has(p) ? { stream: new Blob([store.get(p).body]).stream(), opts } : null,
   };
 }
 global.fetch = async url => url.endsWith("/planet")
@@ -49,14 +50,24 @@ test("GET says whether a place is cached; POST builds, stores and then reuses it
   assert.strictEqual(r.statusCode, 200);
   assert.strictEqual(r.body.built, true);
   const [pathname, saved] = [...blob.store.entries()][0];
-  assert.strictEqual(saved.opts.access, "public");
+  assert.strictEqual(saved.opts.access, "private");   // the store is never publicly readable
   const { header, rings } = D.decodePack(zlib.gunzipSync(saved.body));
   assert.ok(rings.length > 0 && header.w === 2600 && header.h === 3300 && header.tiles === "v1");
 
   r = res();
   await api({ method: "GET", url: "/api/pack?lat=54.9701&lon=-1.6099&w=1.5" }, r);
   assert.strictEqual(r.statusCode, 200);
-  assert.strictEqual(r.body.url, `https://blob.test/${pathname}`);
+  assert.strictEqual(r.body.url, "api/pack?lat=54.97&lon=-1.61&w=2&file=1");   // served by this function
+  assert.ok(pathname.endsWith("2km.fpk.gz"));
+
+  // the file itself, through the function, cacheable by the CDN
+  const raw = { statusCode: 0, headers: {} };
+  raw.setHeader = (k, v) => { raw.headers[k] = v; };
+  raw.end = b => { raw.body = b; };
+  await api({ method: "GET", url: "/" + r.body.url }, raw);
+  assert.strictEqual(raw.statusCode, 200);
+  assert.match(raw.headers["Cache-Control"], /s-maxage/);
+  assert.ok(D.decodePack(zlib.gunzipSync(raw.body)).rings.length > 0);
 
   r = res();
   await api({ method: "POST", body: { lat: 54.97, lon: -1.61, w: 2 } }, r);

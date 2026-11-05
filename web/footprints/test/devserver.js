@@ -31,6 +31,7 @@ if (process.env.MOCK_BLOB) {
   require(path.join(ROOT, "api", "pack.js"))._blob = {
     head: async p => { if (!blobs.has(p)) { const e = new Error("not found"); e.name = "BlobNotFoundError"; throw e; } return { url: `http://localhost:${PORT}/__mock_blob/${p}` }; },
     put: async (p, body) => { blobs.set(p, body); console.log("MOCK BLOB stored", p, body.length, "bytes"); return { url: `http://localhost:${PORT}/__mock_blob/${p}` }; },
+    get: async p => blobs.has(p) ? { stream: new Blob([blobs.get(p)]).stream() } : null,
   };
 }
 
