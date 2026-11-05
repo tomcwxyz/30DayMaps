@@ -32,24 +32,6 @@
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
   const status = message => { $("status").textContent = message; };
 
-  // Approximate great-circle target in the desired direction. These are view headings, not named peaks.
-  function lookTarget(heading, kilometres = 14) {
-    const bearing = heading * Math.PI / 180;
-    const lat = SUMMIT.lat * Math.PI / 180;
-    const lon = SUMMIT.lng * Math.PI / 180;
-    const angle = kilometres / 6371.0088;
-    const destLat = Math.asin(Math.sin(lat) * Math.cos(angle) +
-      Math.cos(lat) * Math.sin(angle) * Math.cos(bearing));
-    const destLon = lon + Math.atan2(Math.sin(bearing) * Math.sin(angle) * Math.cos(lat),
-      Math.cos(angle) - Math.sin(lat) * Math.sin(destLat));
-    return [destLon * 180 / Math.PI, destLat * 180 / Math.PI];
-  }
-  function summitElevation() {
-    try {
-      const val = map.queryTerrainElevation([SUMMIT.lng, SUMMIT.lat], { exaggerated: false });
-      return typeof val === "number" && Number.isFinite(val) ? val : null;
-    } catch (_) { return null; }
-  }
   function markControls() {
     for (const [id, mode] of [["summit-view", "summit"], ["overview-view", "overview"], ["viewshed-view", "viewshed"]]) {
       const el = $(id), on = state.mode === mode;
@@ -97,27 +79,32 @@
   }
   function showSummit() {
     showComputedLayer(false);
-    // A FreeCamera placed near the real summit ground is more faithful to a human viewpoint
-    // than the usual 3D map 'drone' camera. DEM tile accuracy limits exact eye height.
-    const elevation = summitElevation();
-    const modelHeight = elevation === null ? 753 : elevation;
-    const eyeHeight = modelHeight * state.exaggeration + 2.5;
-    const camera = map.getFreeCameraOptions();
-    camera.position = maplibregl.MercatorCoordinate.fromLngLat(
-      [SUMMIT.lng, SUMMIT.lat], eyeHeight
-    );
-    const targetCoordinates = state.targetPeak
-      ? [state.targetPeak.longitude, state.targetPeak.latitude]
-      : lookTarget(DIRECTIONS[state.direction]);
-    camera.lookAtPoint(targetCoordinates);
+    const heading = state.targetPeak
+      ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction];
+    const sight = state.targetPeak
+      ? "towards " + state.targetPeak.name + " (" + state.targetPeak.distance_km + " km)"
+      : state.direction;
+    // MapLibre (unlike Mapbox) does not expose getFreeCameraOptions.
+    // Its documented camera-position conversion keeps the origin at Dale Head.
+    // The 40m analysis DEM smooths the narrow summit: the surveyed 753m
+    // height is more faithful than this particular DEM cell's sampled height.
+    const altitude = 753 * state.exaggeration + 1.7;
     try {
-      map.setFreeCameraOptions(camera);
-      status("Looking " + (state.targetPeak ? "towards " + state.targetPeak.name + " (" + state.targetPeak.distance_km + " km)" : state.direction) + " from near the summit · DEM height " +
-        (elevation === null ? "estimated" : Math.round(elevation) + " m") +
-        " · " + state.exaggeration + "× relief.");
+      const options = map.calculateCameraOptionsFromCameraLngLatAltRotation(
+        [SUMMIT.lng, SUMMIT.lat], altitude, heading, 80, 0
+      );
+      map.jumpTo(options);
+      status("Looking " + sight +
+        " from Dale Head · camera at the documented 753 m summit, 1.7 m eye height" +
+        " · relief " + state.exaggeration + "×.");
     } catch (error) {
-      status("Ground-level camera unavailable. Showing a 3D overview instead.");
-      showOverview();
+      console.warn("Low-level MapLibre terrain camera unavailable:", error);
+      map.easeTo({
+        center: [SUMMIT.lng, SUMMIT.lat], zoom: 13,
+        pitch: 74, bearing: heading, duration: 1100
+      });
+      status("Looking " + sight +
+        " in an elevated 3D approximation · low-level summit camera unavailable.");
     }
   }
   function updateView() {
