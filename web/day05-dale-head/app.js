@@ -4,7 +4,8 @@
   const SUMMIT = { lng: -3.201936, lat: 54.527271 };
   const DIRECTIONS = { north: 0, east: 90, south: 180, west: 270 };
   const state = { mode: "summit", direction: "north", exaggeration: 1, ready: false,
-    viewshedReady: false, viewshedManifest: null };
+    viewshedReady: false, viewshedManifest: null, targetPeak: null,
+    visiblePeaks: [], peakMarkers: [] };
   const $ = id => document.getElementById(id);
   const map = new maplibregl.Map({
     container: "map",
@@ -55,14 +56,14 @@
       el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(on));
     }
     for (const b of document.querySelectorAll("[data-direction]")) {
-      const on = b.dataset.direction === state.direction;
+      const on = !state.targetPeak && b.dataset.direction === state.direction;
       b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
     }
     for (const [id, value] of [["true-scale", 1], ["exaggerate", 1.5]]) {
       const el = $(id), on = state.exaggeration === value;
       el.classList.toggle("on", on); el.setAttribute("aria-pressed", String(on));
     }
-    $("compass-direction").textContent = state.direction.slice(0, 1).toUpperCase();
+    $("compass-direction").textContent = state.targetPeak ? Math.round(state.targetPeak.bearing_deg) + "°" : state.direction.slice(0, 1).toUpperCase();
   }
   function showComputedLayer(on) {
     if (map.getLayer("viewshed-layer")) {
@@ -90,7 +91,7 @@
     showComputedLayer(false);
     map.easeTo({
       center: [SUMMIT.lng, SUMMIT.lat], zoom: 12.6, pitch: 74,
-      bearing: DIRECTIONS[state.direction], duration: 1300
+      bearing: state.targetPeak ? state.targetPeak.bearing_deg : DIRECTIONS[state.direction], duration: 1300
     });
     status("3D overview · real terrain, at " + state.exaggeration + "× vertical scale.");
   }
@@ -105,10 +106,13 @@
     camera.position = maplibregl.MercatorCoordinate.fromLngLat(
       [SUMMIT.lng, SUMMIT.lat], eyeHeight
     );
-    camera.lookAtPoint(lookTarget(DIRECTIONS[state.direction]));
+    const targetCoordinates = state.targetPeak
+      ? [state.targetPeak.longitude, state.targetPeak.latitude]
+      : lookTarget(DIRECTIONS[state.direction]);
+    camera.lookAtPoint(targetCoordinates);
     try {
       map.setFreeCameraOptions(camera);
-      status("Looking " + state.direction + " from near the summit · DEM height " +
+      status("Looking " + (state.targetPeak ? "towards " + state.targetPeak.name + " (" + state.targetPeak.distance_km + " km)" : state.direction) + " from near the summit · DEM height " +
         (elevation === null ? "estimated" : Math.round(elevation) + " m") +
         " · " + state.exaggeration + "× relief.");
     } catch (error) {
@@ -163,6 +167,71 @@
     }
   }
 
+
+  function turnTowardsPeak(peak) {
+    state.targetPeak = peak;
+    state.mode = "summit";
+    updateView();
+  }
+
+  async function loadNamedPeaks() {
+    try {
+      const response = await fetch("./data/peaks.json", { cache: "no-store" });
+      if (!response.ok) return; // No invented names if the OSM source failed.
+      const data = await response.json();
+      if (data.status !== "computed_from_real_data" || !Array.isArray(data.labelled_peaks)) {
+        throw new Error("Summit name data are incomplete");
+      }
+      const entries = data.labelled_peaks.filter(p =>
+        p.visibility === "visible" && p.gdal_visible === true &&
+        p.independent_ray_visible === true && typeof p.name === "string" &&
+        p.name.length <= 65 && Number.isFinite(p.longitude) &&
+        Number.isFinite(p.latitude) && Number.isFinite(p.bearing_deg) &&
+        Number.isFinite(p.distance_km));
+      if (!entries.length) return;
+      const list = $("peak-list");
+      list.replaceChildren();
+      for (const peak of entries) {
+        const markerButton = document.createElement("button");
+        markerButton.type = "button";
+        markerButton.className = "peak-marker";
+        markerButton.textContent = peak.name;
+        markerButton.title = "Look towards " + peak.name;
+        markerButton.setAttribute("aria-label", "Look towards " + peak.name);
+        markerButton.addEventListener("click", () => turnTowardsPeak(peak));
+        const marker = new maplibregl.Marker({ element: markerButton, anchor: "bottom" })
+          .setLngLat([peak.longitude, peak.latitude])
+          .addTo(map);
+        state.peakMarkers.push(marker);
+
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "peak-button";
+        const label = document.createElement("span");
+        const title = document.createElement("strong"); title.textContent = peak.name;
+        const details = document.createElement("small");
+        const height = peak.osm_height_m == null
+          ? Math.round(peak.dem_height_m) + " m DEM"
+          : Math.round(peak.osm_height_m) + " m mapped";
+        details.textContent = height + " · " + peak.distance_km +
+          " km away · " + Math.round(peak.bearing_deg) + "°";
+        label.append(title, details);
+        const arrow = document.createElement("span"); arrow.className = "arrow";
+        arrow.textContent = "↗"; arrow.setAttribute("aria-hidden", "true");
+        button.append(label, arrow);
+        button.addEventListener("click", () => turnTowardsPeak(peak));
+        list.append(button);
+      }
+      state.visiblePeaks = entries;
+      $("peak-guide").hidden = false;
+      $("peak-summary").textContent = entries.length +
+        " named summits are labelled here, from " + data.visible_count +
+        " candidate peaks modelled visible in the 20 km terrain study. Only places where the GDAL viewshed and an independent ray agree are included. Select one to look towards it.";
+    } catch (error) {
+      // This is enrichment, not a prerequisite for displaying terrain/viewshed.
+      console.warn("Named summit data unavailable:", error);
+    }
+  }
+
   map.on("load", () => {
     map.addSource("dem", {
       type: "raster-dem",
@@ -190,6 +259,7 @@
     // Wait for visible DEM tiles to settle before positioning a near-surface camera.
     map.once("idle", () => updateView());
     loadCalculatedViewshed();
+    loadNamedPeaks();
   });
   map.on("error", (event) => {
     if (!state.ready) status("The basemap or elevation tiles could not load. Check your connection.");
@@ -203,7 +273,7 @@
   });
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
-      state.direction = button.dataset.direction; updateView();
+      state.targetPeak = null; state.direction = button.dataset.direction; updateView();
     });
   });
   $("true-scale").addEventListener("click", () => setVerticalScale(1));
