@@ -3,6 +3,7 @@
   "use strict";
   const API = "https://api.gbif.org/v1";
   const { circlePolygon } = window.SightGeo;
+  const { pickSpeciesPhoto } = window.SightMedia;
   const TAXA = {
     birds: { key: 212, label: "Birds" },
     mammals: { key: 359, label: "Mammals" },
@@ -145,19 +146,98 @@
     }
   }
   function createSpeciesRow(taxon, count, isSelected) {
+    const wrapper=document.createElement("div");
+    wrapper.className="species-entry";
     const button = document.createElement("button");
     button.type = "button"; button.className = "species-item" + (isSelected ? " selected" : "");
     button.dataset.speciesKey = String(taxon.key);
+    const photo=document.createElement("span"); photo.className="species-photo";
+    const noPhoto=document.createElement("span");
+    noPhoto.className="species-no-photo";
+    noPhoto.textContent="PHOTO";
+    photo.append(noPhoto);
     const names = document.createElement("span"); names.className = "names";
     const common = document.createElement("span"); common.className = "common"; common.textContent = taxon.common;
     const latin = document.createElement("span"); latin.className = "latin";
     if (taxon.scientific !== taxon.common) latin.textContent = taxon.scientific;
     names.append(common, latin);
     const amount = document.createElement("span"); amount.className = "n"; amount.textContent = nf.format(count) + " records";
-    button.append(names, amount);
+    button.append(photo, names, amount);
     button.setAttribute("aria-pressed", isSelected ? "true" : "false");
     button.addEventListener("click", () => selectSpecies(taxon.key));
-    return button;
+    const credit=document.createElement("div");
+    credit.className="photo-credit"; credit.hidden=true;
+    wrapper.append(button,credit);
+    return wrapper;
+  }
+  function showSpeciesPhoto(row, photo, title) {
+    if (!photo || !row.isConnected) return;
+    const container=row.querySelector(".species-photo");
+    const img=document.createElement("img");
+    img.loading="lazy"; img.decoding="async"; img.referrerPolicy="no-referrer";
+    img.src=photo.url;
+    img.alt=title+" — species reference photograph, not a local sighting";
+    img.addEventListener("load",()=>{
+      if(!row.isConnected)return;
+      container.replaceChildren(img);
+      const credit=row.querySelector(".photo-credit");
+      const link=document.createElement("a");
+      link.href=photo.sourceUrl; link.target="_blank"; link.rel="noopener noreferrer";
+      link.textContent="Photograph: "+photo.creator+" · "+photo.licence+" · source record";
+      credit.replaceChildren(link);
+      credit.hidden=false;
+    },{once:true});
+    img.addEventListener("error",()=>{ img.remove(); },{once:true});
+  }
+  const photoQueue=[];
+  let photoActive=0;
+  function runPhotoQueue() {
+    while(photoActive<2 && photoQueue.length) {
+      const job=photoQueue.shift();
+      if(job.signal.aborted || !job.row.isConnected) continue;
+      photoActive++;
+      (async()=>{
+        try {
+          const cached=pickSpeciesPhoto(job.sample,job.taxon.key);
+          if(cached) { showSpeciesPhoto(job.row,cached,job.taxon.common); return; }
+          // Media are species-wide reference pictures, NOT local observations.
+          // Check the media licence itself: occurrence/data licences can differ.
+          const params=new URLSearchParams({
+            taxonKey:String(job.taxon.key), mediaType:"StillImage",limit:"16",
+            occurrenceStatus:"PRESENT"
+          });
+          const data=await getJson(API+"/occurrence/search?"+params,job.signal);
+          if(job.signal.aborted || !job.row.isConnected) return;
+          showSpeciesPhoto(job.row,pickSpeciesPhoto(data.results,job.taxon.key),
+            job.taxon.common);
+        } catch(error) {
+          // A missing or unlicensed photograph is an acceptable state.
+          if(error.name!=="AbortError") console.info("Species photo unavailable:",job.taxon.common);
+        } finally {
+          photoActive--; runPhotoQueue();
+        }
+      })();
+    }
+  }
+  const photoObserver=typeof IntersectionObserver==="function"
+    ? new IntersectionObserver(entries=>{
+        for(const entry of entries) {
+          if(!entry.isIntersecting)continue;
+          photoObserver.unobserve(entry.target);
+          const task=entry.target._speciesPhotoTask;
+          if(task)photoQueue.push(task);
+        }
+        runPhotoQueue();
+      },{root:$("field-guide"),rootMargin:"160px 0px"})
+    : null;
+  function queueSpeciesPhoto(row,taxon,sample,signal) {
+    const job={row,taxon,sample,signal};
+    if(photoObserver) {
+      row._speciesPhotoTask=job;
+      photoObserver.observe(row);
+    } else {
+      photoQueue.push(job);runPhotoQueue();
+    }
   }
   async function renderFacets(facets, sample, requestId, signal) {
     const container = $("species-list"); container.replaceChildren();
@@ -177,7 +257,9 @@
       const labels = await Promise.all(chunk.map(x => speciesLabel(x.name, sample, signal)));
       if (requestId !== state.requestId) return;
       for (let j = 0; j < chunk.length; j++) {
-        container.append(createSpeciesRow(labels[j], chunk[j].count, false));
+        const row=createSpeciesRow(labels[j],chunk[j].count,false);
+        container.append(row);
+        if(i+j<8)queueSpeciesPhoto(row,labels[j],sample,signal);
       }
     }
   }
@@ -263,6 +345,7 @@
       return;
     }
     if (state.controller) state.controller.abort();
+    photoQueue.length=0;
     state.controller = new AbortController();
     const signal = state.controller.signal;
     const requestId = ++state.requestId;
