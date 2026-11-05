@@ -107,7 +107,8 @@ def source_candidates(elements: list[dict], radius_m: int) -> list[dict]:
 
 
 def classify_candidates(candidates: list[dict], dem_file: Path, viewshed_file: Path,
-                        observer: tuple[float, float]) -> list[dict]:
+                        observer: tuple[float, float],
+                        eye_height_m: float = EYE_HEIGHT_M) -> list[dict]:
     projector = Transformer.from_crs("EPSG:4326", "EPSG:27700", always_xy=True)
     records = []
     with rasterio.open(dem_file) as dem_src, rasterio.open(viewshed_file) as view_src:
@@ -133,7 +134,7 @@ def classify_candidates(candidates: list[dict], dem_file: Path, viewshed_file: P
                 if classification not in (0, 255):
                     continue
                 ray_visible = line_of_sight(
-                    dem, dem_src.transform, observer, (e, n), eye_height=EYE_HEIGHT_M
+                    dem, dem_src.transform, observer, (e, n), eye_height=eye_height_m
                 )
                 visible_by_gdal = classification == 255
                 status = ("uncertain" if ray_visible != visible_by_gdal
@@ -191,7 +192,8 @@ def build(data_dir: Path, radius_m: int = QUERY_RADIUS_M) -> dict:
     source = source_candidates(elements, radius_m)
     classified = classify_candidates(
         source, data_dir / "dale-head-dem-bng.tif",
-        data_dir / "dale-head-viewshed-bng.tif", centre
+        data_dir / "dale-head-viewshed-bng.tif", centre,
+        eye_height_m=float(observer_meta["effective_eye_height_m_above_dem"])
     )
     labelled = pick_labels(classified)
     output = {
