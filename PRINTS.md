@@ -11,6 +11,20 @@ Any place drawn as buildings and nothing else, sized for print or the web, with 
 
 It uses OpenStreetMap everywhere (buildings from OpenFreeMap's OpenMapTiles vector tiles, search from Nominatim), so it works worldwide but differs a little from the OS-based prints. Prints made from it carry the credit "Data from OpenStreetMap · © OpenMapTiles · OpenFreeMap". Open it locally by double-clicking the file, or host it (GitHub Pages serves it at `/web/footprints/`).
 
+### Ready-made cities and the place cache
+
+Picking a place loads its buildings from the quickest source available:
+
+1. **Ready-made cities.** The gallery on the page lists the cities in `web/footprints/cities/cities.json` (London, Newcastle, Edinburgh, Paris, Amsterdam, Venice, Barcelona, Rome, Munich, Berlin, Copenhagen, New York, Sydney and Tokyo to start with). Each is one small file (0.2–2.2 MB), so it opens in about a second, with a thumbnail. Any width up to the city's `width_km` uses it; wider maps load from tiles.
+2. **The place cache.** Once someone draws a new place, the server builds the same kind of file for it and keeps it in Vercel Blob, so the next person who picks somewhere within about 200 m, at the same width or narrower, gets it straight away. The server builds these itself from the tiles; it never stores anything a browser sends, so nobody can plant a fake map.
+3. **OpenFreeMap tiles**, as before, for everything else.
+
+To add or change cities, edit `cities.json` and commit. The **Prepare footprint cities** workflow rebuilds the files and thumbnails and commits them to the same branch. Run it by hand (Actions → Prepare footprint cities) now and then to pick up new OpenStreetMap mapping.
+
+To switch on the place cache, connect a Blob store to the Vercel project (Storage → Create → Blob → connect to `30daymaps-footprints`). Vercel then sets `BLOB_READ_WRITE_TOKEN` and the cache starts working on the next deploy. Without it the page simply loads tiles. Each cached place takes 0.1–2 MB; Blob's free allowance holds several hundred.
+
+The shared code for all three lives in `web/footprints/lib/footprints-data.js` (tile reading and the file format), `web/footprints/api/pack.js` (the cache) and `web/footprints/lib/build-cities.js` (ready-made cities). `maps/footprint_packs.py` reads the files in Python.
+
 ## 2. Terminal
 
     python -m pip install -e .
