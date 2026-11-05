@@ -42,6 +42,15 @@
   <div class="compass" aria-hidden="true"><span id="compass-direction">N</span><small>LOOKING</small></div>
         <div class="scene-bottom"><div><span class="small">VIEWPOINT</span><strong>Dale Head</strong><span>54.527271° N · 3.201936° W</span></div><div><span class="small">DATA</span><strong>Real elevation</strong><span>Tilezen / AWS Terrarium terrain</span></div></div>
       </div>
+      <section id="peak-guide" class="peak-guide" aria-labelledby="peak-heading" hidden>
+        <div class="peak-guide-intro">
+          <span class="eyebrow">Reading the skyline</span>
+          <h2 id="peak-heading">Mountains on the horizon.</h2>
+          <p id="peak-summary">Named summits checked against the actual Dale Head elevation model. Only peaks where GDAL and a separate terrain ray agree are labelled as visible. Select a summit to turn towards it.</p>
+        </div>
+        <div id="peak-list" class="peak-list" aria-label="Visible summits"></div>
+        <p class="peak-credit">Peak names and coordinates © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL. A mapped summit point and 40 m elevation grid cannot resolve every small obstruction; these are modelled bare-earth sightlines, not confirmed real-world sightings.</p>
+      </section>
       <section class="below">
         <div class="story"><span class="eyebrow">The question</span><h2>How does a mountain change what we see?</h2><p>This first study reconstructs the topography around Dale Head using published elevation tiles. Change direction or leave the summit to explore the ridges and valleys from above. This is a terrain model, not a photograph or a claim to recreate trees, buildings or atmospheric conditions.</p></div>
         <div class="method"><span class="eyebrow">Reading the map</span><h3>Terrain first, then visibility</h3><p>The summit camera is an experimental low-level terrain view. Relief comes from actual digital elevation data, but the result is not a surveyed optical panorama. When the independently generated GDAL data are available, <strong>Visible ground</strong> displays a calculated terrain-only viewshed: green is visible and grey is obscured by intervening land. If computation is unavailable, that control remains disabled rather than presenting invented visibility.</p><p>On touch screens, drag to look around. Use the direction buttons to return to a known heading, or switch to 3D overview for a conventional map.</p></div>
