@@ -8,11 +8,11 @@
   <title>What’s outside your window? · Day 5 / Sight</title>
   <link rel="preconnect" href="https://api.gbif.org">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./style.css?v=20261105-seasons-2">
+  <link rel="stylesheet" href="./style.css?v=20261105-seasons-3">
   <script defer src="./vendor/leaflet.js"></script>
   <script defer src="./geo.js"></script>
   <script defer src="./media.js"></script>
-  <script defer src="./app.js?v=20261105-seasons-2"></script>
+  <script defer src="./app.js?v=20261105-seasons-3"></script>
 </head>
 <body>
   <div class="page">
@@ -64,6 +64,7 @@
           </section>
           <div class="guide-intro"><h3 id="list-title">Species recorded nearby</h3><p id="list-description">Based on actual records. Photographs, where available, show the species — not necessarily an observation from here.</p></div>
           <div id="species-list" class="species-list"></div>
+          <button id="species-more" class="species-more" type="button" aria-controls="species-list" aria-expanded="false" hidden>Show more species</button>
           <div id="empty" class="empty" hidden><strong>No matching records found</strong><p>Try a wider radius, another month or a different location. A gap in records doesn't mean wildlife is absent.</p></div>
         </aside>
         <section class="map-panel" aria-label="Map of nearby observations">
