@@ -1,0 +1,34 @@
+name: Peaks web check
+# Runs the Peaks print maker in Chromium against the real elevation tiles, Overpass and
+# Nominatim, and keeps screenshots of every style as the 'peaks-web-shots' artifact.
+on:
+  push:
+    paths: ["web/peaks/**", ".github/workflows/peaks-web.yml"]
+  pull_request:
+    paths: ["web/peaks/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: peaks-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.head_ref || github.ref_name }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e ".[sight]" playwright && python -m playwright install --with-deps chromium
+      - name: Screenshots with live data
+        run: python web/peaks/test/harness.py live peaks/web-shots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: peaks-web-shots
+          path: peaks/web-shots
+          retention-days: 30
