@@ -304,10 +304,22 @@
     return { offs, layers, eye, sea, summits: seen, v };
   }
 
-  function drawSkyline(items, { sd, box, th, u, labels, labelRoom, crop, colours, sky = true, compass = false }) {
+  function drawSkyline(items, { sd, box, th, u, labels, labelRoom, crop, colours, sky = true, compass = false, exag = 0 }) {
     const [skyTop, skyBottom, far, near] = colours || th.sky;
     let x0 = 0, x1 = sd.offs.length - 1;
     if (crop) { while (Math.abs(sd.offs[x0]) > crop) x0++; while (Math.abs(sd.offs[x1]) > crop) x1--; }
+    if (exag) {
+      // Choose how much of the view to show so heights come out about `exag` times true,
+      // centred on the highest point (a narrow strip of a wide view flattens mountains).
+      x0 = 0; x1 = sd.offs.length - 1;
+      const far = sd.layers[sd.layers.length - 1];
+      let hiC = 0, vmax = -90;
+      for (let c = 0; c <= x1; c++) if (far[c] > vmax) { vmax = far[c]; hiC = c; }
+      const sorted = Array.from(far).sort((p, q) => p - q), v5 = sorted[Math.floor(sorted.length * 0.05)];
+      const vspan = (vmax - v5) * 1.45 || 1;
+      const n = Math.round(exag * vspan * box.w / box.h / (sd.offs[1] - sd.offs[0]));
+      if (n < x1) { x0 = Math.max(0, Math.min(x1 - n, hiC - (n >> 1))); x1 = x0 + n; }
+    }
     const L = sd.layers.map(a => a.subarray(x0, x1 + 1)), offs = sd.offs.subarray(x0, x1 + 1);
     let top = -90;
     for (const a of L) for (const v of a) top = Math.max(top, v);

@@ -273,7 +273,7 @@ function areaFrame(box) {
   }
   const p = state.place, a = p.area, W = parseFloat($("width").value) * 1000;
   let lat = p.lat, lon = p.lon;
-  if (a && a.frame && Math.abs(W - a.width_km * 1000 / (a.frame.zoom || 1)) < 1) [lat, lon] = T.toLL(p.lat, p.lon, (a.frame.dx_km || 0) * 1000, (a.frame.dy_km || 0) * 1000);
+  if (a && a.frame && Math.abs(W - p.defaultW * 1000) < 1) [lat, lon] = T.toLL(p.lat, p.lon, (a.frame.dx_km || 0) * 1000, (a.frame.dy_km || 0) * 1000);
   return { lat, lon, x0: -W / 2, x1: W / 2, y0: -W / aspect / 2, y1: W / aspect / 2 };
 }
 
@@ -298,11 +298,13 @@ function skylineView(fr) {
   const c = fr ? [fr.lat, fr.lon] : [p.lat, p.lon];
   const [lat, lon] = T.toLL(c[0], c[1], dist * Math.sin(b), dist * Math.cos(b));
   return { lat, lon, az: (bearing + 180) % 360, fov: Math.max(24, Math.min(110, 2 * Math.atan(0.62 * W / dist) * 180 / Math.PI)),
-           reach: dist + W * 0.9, lift: 2, near: Math.min(2500, dist * 0.12), label: `from ${words}, ${D.fmtKm(dist)} away` };
+           reach: dist + W * 0.9, lift: 2, near: dist * 0.4, label: `from ${words}, ${D.fmtKm(dist)} away` };
 }
 
 function panoramaView() {
-  let lat = state.place ? state.place.lat : 0, lon = state.place ? state.place.lon : 0, label = "from the summit";
+  const top = state.place && state.place.top;
+  let lat = top ? top.lat : state.place.lat, lon = top ? top.lon : state.place.lon;
+  let label = top && top.name !== state.place.name ? `from ${top.name}` : "from the summit";
   let names = null;
   if (state.route) { const hp = state.route.high; lat = hp[0]; lon = hp[1]; label = "from the high point of the route"; }
   else {
@@ -434,7 +436,7 @@ async function refresh() {
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
             const ink = th.panel !== th.page ? th.panel : th.line;
             sd.v.floor = v.floor;
-            D.drawSkyline(items, { sd, box: strip, th, u, labels: false, labelRoom: 0.08, crop: v.crop, colours: [th.page, th.page, D.mix(th.page, ink, 0.2), ink], sky: false });
+            D.drawSkyline(items, { sd, box: strip, th, u, labels: false, labelRoom: 0.08, exag: 1.6, colours: [th.page, th.page, D.mix(th.page, ink, 0.2), ink], sky: false });
             details += `   ·   skyline ${v.label}`;
           }
         }
@@ -536,6 +538,12 @@ function choosePlace(p, { keepStyle = true } = {}) {
   const a = p.area;
   const w = a ? a.width_km / ((a.frame && a.frame.zoom) || 1) : p.widthKm || 8;
   $("width").value = Math.max(2, Math.min(50, Math.round(w * 2) / 2));
+  p.defaultW = +$("width").value;
+  // a panorama stands on the highest named top near the middle of a ready-made range
+  if (a && p.names && p.names.length) {
+    const tops = p.names.filter(n => n.ele && Math.hypot(...T.toXY(p.lat, p.lon, n.lat, n.lon)) < 3000).sort((x, y) => y.ele - x.ele);
+    if (tops.length) p.top = tops[0];
+  }
   $("detail").value = w > 16 ? 60 : 90;
   $("dist").value = Math.max(4, Math.min(40, Math.round(w * 1.4)));
   const pv = PLACES.views.find(v => v.panorama && Math.hypot(...T.toXY(p.lat, p.lon, v.lat, v.lon)) < 1500);
