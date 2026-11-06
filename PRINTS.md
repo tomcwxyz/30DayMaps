@@ -4,10 +4,7 @@ Any place drawn as buildings and nothing else, sized for print or the web, with 
 
 ## 1. Web page
 
-`web/footprints/index.html` is a single page with no build step. Search a place (or pick an example), edit the words, choose paper and colours, press **Draw buildings**, then download:
-
-- **PNG**: web size (2000 px long edge), or 150/300 dpi for print. Phones may refuse very large images; use 150 dpi or the SVG.
-- **SVG**: vector, prints sharp at any size. It names the Archivo font; a printer without it substitutes a similar sans.
+`web/footprints/index.html` is a single page with no build step. Search a place (or pick an example), edit the words, choose paper and colours, press **Draw buildings**, then order a printed copy or a digital file (see `SHOP.md`). The page has no free download; files for your own use come from the terminal or GitHub versions below.
 
 It uses OpenStreetMap everywhere (buildings from OpenFreeMap's OpenMapTiles vector tiles, search from Nominatim), so it works worldwide but differs a little from the OS-based prints. Prints made from it carry the credit "Data from OpenStreetMap · © OpenMapTiles · OpenFreeMap". Open it locally by double-clicking the file, or host it (GitHub Pages serves it at `/web/footprints/`).
 

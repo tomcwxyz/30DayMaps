@@ -349,7 +349,8 @@ def test_print_order_gets_a_confirmation_email_once(monkeypatch, capsys):
     assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up,
                           renderer=fake_render, shop=SHOP) == "submit"
     assert len(sent) == 1 and sent[0]["json"]["to"] == ["jo@example.com"]
-    assert sent[0]["json"]["subject"].startswith("Order received")
+    assert sent[0]["json"]["subject"].startswith("Thanks for your order")
+    assert sent[0]["json"]["text"].startswith("Hi Jo,") and "\nTom\n" in sent[0]["json"]["text"]
     assert sent[0]["headers"]["Idempotency-Key"] == "email_received-pi_3Abcdefgh12345678"
     flags = [c[2]["data"] for c in http.calls if c[0] == "POST" and "payment_intents" in c[1]]
     assert any("metadata[email_received]" in f for f in flags)
@@ -385,4 +386,12 @@ def test_shipping_sends_the_tracking_link_once(monkeypatch):
     up, _ = uploads()
     fulfil.status(http=http, key="sk", prodigi_key="pk", uploader=up, shop=SHOP, now=1_000_000 + 3600)
     assert len(sent) == 1 and "https://track.example/1" in sent[0]["json"]["text"]
-    assert sent[0]["json"]["subject"].startswith("On its way")
+    assert sent[0]["json"]["subject"].startswith("Your print is on its way")
+    assert sent[0]["json"]["text"].startswith("Hi Jo,")
+
+
+def test_first_names_are_used_only_when_sensible():
+    assert fulfil.first_name("Jo Bloggs") == "Jo"
+    assert fulfil.first_name("") == "" and fulfil.first_name(None) == "" and fulfil.first_name("123") == ""
+    subject, text, html = fulfil.received_email("Home <b>", "A3 print", "", {"email": {"signoff": "Sam"}})
+    assert text.startswith("Hello,") and "\nSam\n" in text and "<b>" not in html
