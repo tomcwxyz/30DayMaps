@@ -1,0 +1,57 @@
+name: Render Day 02 lost railways
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/railways.py'
+      - 'maps/common.py'
+      - 'tests/test_railways.py'
+      - '.github/workflows/render-railways.yml'
+      - 'pyproject.toml'
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Osmium and Python mapping tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y osmium-tool
+          python -m pip install -e '.[test]'
+      - name: Test railway data processing and cartography
+        run: python -m pytest -q tests/test_railways.py
+      - name: Download England OSM extract with progress and a strict time limit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/raw
+          echo "Fetching England OpenStreetMap PBF (~1.6 GB). Download timeout: 12 minutes."
+          curl --fail --location --retry 1 --retry-delay 5 \
+            --connect-timeout 20 --max-time 720 \
+            --speed-time 60 --speed-limit 2048 --progress-bar \
+            https://download.geofabrik.de/europe/united-kingdom/england-latest.osm.pbf \
+            --output data/raw/england-latest.osm.pbf
+          ls -lh data/raw/england-latest.osm.pbf
+      - name: Extract railway ways from England
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python -u -m maps.railways --pbf data/raw/england-latest.osm.pbf
+      - name: Attach Day 02 maps and reusable geodata
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: day02-railways-england-north-east
+          path: challenges/02-lines/outputs/
+          retention-days: 30
+      - name: Map summary
+        if: success()
+        run: |
+          echo '## Day 02 — The Railways We Lost' >> "$GITHUB_STEP_SUMMARY"
+          echo '### England mapped feature kilometres by OSM status' >> "$GITHUB_STEP_SUMMARY"
+          cat challenges/02-lines/outputs/england-railway-summary.csv >> "$GITHUB_STEP_SUMMARY"
+          echo 'See the attached map/GeoPackage artifact. These are mapped OSM geometries, not a full historic network.' >> "$GITHUB_STEP_SUMMARY"

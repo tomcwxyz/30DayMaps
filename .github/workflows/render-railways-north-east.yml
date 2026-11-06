@@ -1,0 +1,63 @@
+name: Render Day 02 North East preview
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'maps/railways.py'
+      - 'tests/test_railways.py'
+      - '.github/workflows/render-railways-north-east.yml'
+jobs:
+  north-east:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y osmium-tool
+          python -m pip install -e '.[test]'
+      - name: Validate railway code
+        run: python -m pytest -q tests/test_railways.py
+      - name: Download North East and adjoining extracts (much smaller than England PBF)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/raw
+          # North Yorkshire ensures the Tees Valley edge is covered before clipping.
+          for county in northumberland tyne-and-wear durham north-yorkshire; do
+            echo "::group::Downloading ${county}"
+            curl --fail --location --retry 2 --retry-delay 4 \
+              --connect-timeout 20 --max-time 240 \
+              --speed-time 45 --speed-limit 2048 --progress-bar \
+              "https://download.geofabrik.de/europe/united-kingdom/england/${county}-latest.osm.pbf" \
+              --output "data/raw/${county}.osm.pbf"
+            ls -lh "data/raw/${county}.osm.pbf"
+            echo "::endgroup::"
+          done
+      - name: Merge county extracts without duplicating overlapping OSM features
+        run: |
+          osmium merge --overwrite -o data/raw/north-east-combined.osm.pbf \
+            data/raw/northumberland.osm.pbf data/raw/tyne-and-wear.osm.pbf \
+            data/raw/durham.osm.pbf data/raw/north-yorkshire.osm.pbf
+          ls -lh data/raw/north-east-combined.osm.pbf
+      - name: Extract railways and render North East only
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: python -u -m maps.railways --pbf data/raw/north-east-combined.osm.pbf --area north-east
+      - name: Upload North East map and GIS data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: day02-railways-north-east-preview
+          path: challenges/02-lines/outputs/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Map summary
+        if: success()
+        run: |
+          echo '## Day 02 · North East railway map' >> "$GITHUB_STEP_SUMMARY"
+          cat challenges/02-lines/outputs/north-east-railway-summary.csv >> "$GITHUB_STEP_SUMMARY"
