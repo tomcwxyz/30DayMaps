@@ -10,7 +10,7 @@ Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0` then `node scripts/p
 
 - On first opening the page, the browser asks for geolocation permission. A successful permission response starts the **first GBIF occurrence query** for the user's approximate position.
 - The browser location is rounded to three decimal places before it is used in the circle query. The map does not store this position in cookies, local storage, URLs or a database.
-- If the user declines permission, geolocation is unavailable, times out or reports a location outside the map's Britain coverage, the page loads a **clearly labelled example near Newton Aycliffe** and provides manual place search and map-pin selection. It never claims the example is the user's location.
+- If the user declines permission, geolocation is unavailable, times out or reports a location outside the map's Britain coverage, the page loads a **clearly labelled example at Hamsterley Forest (visitor-centre area, Forestry England OS grid NZ092312)** and provides manual place search and map-pin selection. It never claims the example is the user's location.
 - Manual place search or map-click choices win over a late geolocation callback; no delayed browser permission response can silently move the map somewhere else.
 - The map is temporarily centred over Britain, without a fake local radius or record count, until a location is resolved.
 - **Provider disclosure:** The GBIF search request contains a polygon around the rounded location, and map-tile providers receive the selected map area. We cannot claim that third-party services don't log requests. Don't include precise home coordinates in shareable links.
