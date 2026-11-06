@@ -248,7 +248,7 @@ def download_link(pathname: str, days: int, now: float | None = None) -> str:
         {"f": pathname, "x": expiry, "s": sig})
 
 
-# --- Email (digital orders) ----------------------------------------------------
+# --- Email ----------------------------------------------------------------------
 
 def _esc(text: str) -> str:
     return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
@@ -269,6 +269,50 @@ def digital_email(title: str, png_url: str, pdf_url: str, days: int) -> tuple[st
             "<p>The file is for your own use. Please keep the map data credit on it if you print or share it.</p>"
             "<p>Any problem? Just reply to this email.</p>")
     return subject, text, html
+
+
+def _paper_label(recipe: dict, shop: dict) -> str:
+    size = (shop.get("sizes") or {}).get(recipe.get("paper")) or {}
+    return size.get("label") or f"{recipe.get('paper', '')} print"
+
+
+def received_email(title: str, paper: str) -> tuple[str, str, str]:
+    subject = f"Order received: {title}"[:150]
+    text = (f"Thanks for your order. We've got it: \"{title}\", {paper}.\n\n"
+            "Every print is made to order. We check each one before it goes to the printer, "
+            "then it's printed and posted, usually reaching you within a week.\n\n"
+            "We'll email you again with a tracking link when it's on its way.\n\n"
+            "Any problem? Just reply to this email.")
+    html = (f"<p>Thanks for your order. We've got it: <strong>{_esc(title)}</strong>, {_esc(paper)}.</p>"
+            "<p>Every print is made to order. We check each one before it goes to the printer, "
+            "then it's printed and posted, usually reaching you within a week.</p>"
+            "<p>We'll email you again with a tracking link when it's on its way.</p>"
+            "<p>Any problem? Just reply to this email.</p>")
+    return subject, text, html
+
+
+def shipped_email(title: str, tracking: str) -> tuple[str, str, str]:
+    subject = f"On its way: {title}"[:150]
+    text = (f"Good news: your print, \"{title}\", has been posted.\n\n"
+            f"Track it here:\n{tracking}\n\n"
+            "Any problem when it arrives? Just reply to this email.")
+    html = (f"<p>Good news: your print, <strong>{_esc(title)}</strong>, has been posted.</p>"
+            f'<p><a href="{_esc(tracking)}">Track your parcel</a></p>'
+            "<p>Any problem when it arrives? Just reply to this email.</p>")
+    return subject, text, html
+
+
+def notify(http, key: str, pid: str, to: str | None, flag: str, message: tuple[str, str, str]) -> bool:
+    """Send an order update once, noting it on the payment. A failed update never holds up the order."""
+    if not to:
+        return False
+    try:
+        send_email(http, to, *message, idempotency=f"{flag}-{pid}")
+    except FulfilError as e:
+        print(f"{ref(pid)}: customer update not sent ({e})")
+        return False
+    stripe_set_metadata(http, key, pid, {flag: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+    return True
 
 
 def send_email(http, to: str, subject: str, text: str, html: str, idempotency: str):
@@ -298,6 +342,11 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
         return "skip"
     from maps import prints
     sku_for(shop, prints.spec_from_recipe(order.recipe).paper)  # fail early if the size can't be printed
+    if not order.metadata.get("email_received"):
+        recipe = json.loads(order.recipe)
+        if notify(http, key, order.pi_id, order.email, "email_received",
+                  received_email(recipe.get("title") or "your map", _paper_label(recipe, shop))):
+            print(f"{ref(order.pi_id)}: order confirmation emailed")
     if order.metadata.get("print_file"):
         print(f"{ref(order.pi_id)}: print file already made; waiting for approval")
         return "submit"
@@ -439,6 +488,10 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                         if sh.get("status") == "Shipped" and (sh.get("tracking") or {}).get("url")]
             if tracking:
                 stripe_set_metadata(http, key, pid, {"print_status": "shipped", "tracking": tracking[0]})
+                if not meta.get("email_shipped"):
+                    title = json.loads(s["metadata"]["recipe"]).get("title") or "your map"
+                    notify(http, key, pid, (s.get("customer_details") or {}).get("email"), "email_shipped",
+                           shipped_email(title, tracking[0]))
                 old = [meta["print_file"], f"orders/{pid}-preview.png"] if meta.get("print_file") else []
                 if old:
                     uploader("del", *old)
