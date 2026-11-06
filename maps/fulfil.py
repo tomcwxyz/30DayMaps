@@ -128,6 +128,7 @@ class Order:
     email: str | None
     created: int
     product: str = "print"
+    name: str = ""
 
 
 def load_order(http, key: str, session_id: str) -> Order:
@@ -135,6 +136,11 @@ def load_order(http, key: str, session_id: str) -> Order:
         raise FulfilError("That isn't a Stripe Checkout session ID (cs_…)")
     s = stripe_get(http, key, f"/checkout/sessions/{session_id}", params={"expand[]": "payment_intent"})
     return order_from_session(s)
+
+
+def customer_name(s: dict) -> str:
+    shipping = s.get("shipping_details") or (s.get("collected_information") or {}).get("shipping_details") or {}
+    return (s.get("customer_details") or {}).get("name") or shipping.get("name") or ""
 
 
 def order_from_session(s: dict) -> Order:
@@ -157,7 +163,8 @@ def order_from_session(s: dict) -> Order:
     if product == "digital" and not email:
         raise FulfilError("This order has no email address")
     return Order(session_id=s["id"], pi_id=pi["id"], metadata=pi.get("metadata") or {}, recipe=recipe,
-                 shipping=shipping or {}, email=email, created=int(s.get("created") or 0), product=product)
+                 shipping=shipping or {}, email=email, created=int(s.get("created") or 0), product=product,
+                 name=customer_name(s))
 
 
 def recipient(shipping: dict, email: str | None) -> dict:
@@ -254,51 +261,80 @@ def _esc(text: str) -> str:
     return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def digital_email(title: str, png_url: str, pdf_url: str, days: int) -> tuple[str, str, str]:
-    subject = f"Your footprints print: {title}"[:150]
-    text = (f"Thanks for your order. Here's your print, \"{title}\".\n\n"
-            f"High-resolution PNG, sharp printed up to A2, for printing or screens:\n{png_url}\n\n"
-            f"PDF, which prints sharp at any size:\n{pdf_url}\n\n"
-            f"These links work for {days} days, so save the files somewhere safe.\n\n"
-            "The file is for your own use. Please keep the map data credit on it if you print or share it.\n\n"
-            "Any problem? Just reply to this email.")
-    html = (f"<p>Thanks for your order. Here's your print, <strong>{_esc(title)}</strong>.</p>"
-            f'<p><a href="{_esc(png_url)}">Download the high-resolution PNG</a>, sharp printed up to A2, for printing or screens.</p>'
-            f'<p><a href="{_esc(pdf_url)}">Download the PDF</a>, which prints sharp at any size.</p>'
-            f"<p>These links work for {days} days, so save the files somewhere safe.</p>"
-            "<p>The file is for your own use. Please keep the map data credit on it if you print or share it.</p>"
-            "<p>Any problem? Just reply to this email.</p>")
-    return subject, text, html
-
-
 def _paper_label(recipe: dict, shop: dict) -> str:
     size = (shop.get("sizes") or {}).get(recipe.get("paper")) or {}
     return size.get("label") or f"{recipe.get('paper', '')} print"
 
 
-def received_email(title: str, paper: str) -> tuple[str, str, str]:
-    subject = f"Order received: {title}"[:150]
-    text = (f"Thanks for your order. We've got it: \"{title}\", {paper}.\n\n"
-            "Every print is made to order. We check each one before it goes to the printer, "
-            "then it's printed and posted, usually reaching you within a week.\n\n"
-            "We'll email you again with a tracking link when it's on its way.\n\n"
-            "Any problem? Just reply to this email.")
-    html = (f"<p>Thanks for your order. We've got it: <strong>{_esc(title)}</strong>, {_esc(paper)}.</p>"
-            "<p>Every print is made to order. We check each one before it goes to the printer, "
-            "then it's printed and posted, usually reaching you within a week.</p>"
-            "<p>We'll email you again with a tracking link when it's on its way.</p>"
-            "<p>Any problem? Just reply to this email.</p>")
+def first_name(full: str | None) -> str:
+    """'Jo Bloggs' -> 'Jo'. Blank if there's nothing sensible to use."""
+    word = (full or "").strip().split(" ")[0] if full else ""
+    return word[:40] if word and any(ch.isalpha() for ch in word) else ""
+
+
+def _letter(name: str, paras: list[str], signoff: str, site: str) -> tuple[str, str]:
+    """Plain-text and HTML versions of a short personal email. paras are (text, html) pairs."""
+    hello = f"Hi {name}," if name else "Hello,"
+    sign = [signoff, f"Footprints · {site}" if site else "Footprints"]
+    text = "\n\n".join([hello] + [t for t, _ in paras] + ["\n".join(sign)])
+    html = "".join([f"<p>{_esc(hello)}</p>"] + [f"<p>{h}</p>" for _, h in paras]
+                   + [f"<p>{_esc(sign[0])}<br><span style=\"color:#666\">{_esc(sign[1])}</span></p>"])
+    return text, html
+
+
+def _voice(shop: dict) -> tuple[str, str]:
+    signoff = ((shop or {}).get("email") or {}).get("signoff") or "Tom"
+    site = os.environ.get("SITE_URL", "").replace("https://", "").rstrip("/")
+    return signoff, site
+
+
+def digital_email(title: str, png_url: str, pdf_url: str, days: int, name: str = "", shop: dict | None = None) -> tuple[str, str, str]:
+    signoff, site = _voice(shop)
+    subject = f"Your map of {title} is ready"[:150]
+    text, html = _letter(first_name(name), [
+        (f"Thanks for buying a footprints map. Here's \"{title}\", made just now from every building in OpenStreetMap.",
+         f"Thanks for buying a footprints map. Here's <strong>{_esc(title)}</strong>, made just now from every building in OpenStreetMap."),
+        (f"The high-resolution PNG, sharp printed up to A2:\n{png_url}\n\nThe PDF, which prints sharp at any size:\n{pdf_url}",
+         f'<a href="{_esc(png_url)}">Download the high-resolution PNG</a>, sharp printed up to A2.<br>'
+         f'<a href="{_esc(pdf_url)}">Download the PDF</a>, which prints sharp at any size.'),
+        (f"The links work for {days} days, so save the files somewhere safe. They're yours to print and frame; "
+         "please keep the small map data credit on if you share it.",
+         f"The links work for {days} days, so save the files somewhere safe. They're yours to print and frame; "
+         "please keep the small map data credit on if you share it."),
+        ("If anything's not right, just reply. It comes straight to me.",
+         "If anything's not right, just reply. It comes straight to me."),
+    ], signoff, site)
     return subject, text, html
 
 
-def shipped_email(title: str, tracking: str) -> tuple[str, str, str]:
-    subject = f"On its way: {title}"[:150]
-    text = (f"Good news: your print, \"{title}\", has been posted.\n\n"
-            f"Track it here:\n{tracking}\n\n"
-            "Any problem when it arrives? Just reply to this email.")
-    html = (f"<p>Good news: your print, <strong>{_esc(title)}</strong>, has been posted.</p>"
-            f'<p><a href="{_esc(tracking)}">Track your parcel</a></p>'
-            "<p>Any problem when it arrives? Just reply to this email.</p>")
+def received_email(title: str, paper: str, name: str = "", shop: dict | None = None) -> tuple[str, str, str]:
+    signoff, site = _voice(shop)
+    subject = f"Thanks for your order: {title}"[:150]
+    text, html = _letter(first_name(name), [
+        (f"Thanks for ordering \"{title}\" ({paper}). I hope you love it.",
+         f"Thanks for ordering <strong>{_esc(title)}</strong> ({_esc(paper)}). I hope you love it."),
+        ("Every print is made to order. I check each one myself before it goes to the printer, "
+         "then it's printed and posted. It usually reaches you within a week.",
+         "Every print is made to order. I check each one myself before it goes to the printer, "
+         "then it's printed and posted. It usually reaches you within a week."),
+        ("I'll email again with a tracking link as soon as it's on its way. "
+         "If you have any questions in the meantime, just reply. It comes straight to me.",
+         "I'll email again with a tracking link as soon as it's on its way. "
+         "If you have any questions in the meantime, just reply. It comes straight to me."),
+    ], signoff, site)
+    return subject, text, html
+
+
+def shipped_email(title: str, tracking: str, name: str = "", shop: dict | None = None) -> tuple[str, str, str]:
+    signoff, site = _voice(shop)
+    subject = f"Your print is on its way: {title}"[:150]
+    text, html = _letter(first_name(name), [
+        (f"Good news: \"{title}\" has been printed and posted.",
+         f"Good news: <strong>{_esc(title)}</strong> has been printed and posted."),
+        (f"You can track it here:\n{tracking}", f'<a href="{_esc(tracking)}">Track your parcel</a>'),
+        ("I hope it looks great on the wall. If anything's wrong when it arrives, just reply and I'll put it right.",
+         "I hope it looks great on the wall. If anything's wrong when it arrives, just reply and I'll put it right."),
+    ], signoff, site)
     return subject, text, html
 
 
@@ -345,7 +381,7 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     if not order.metadata.get("email_received"):
         recipe = json.loads(order.recipe)
         if notify(http, key, order.pi_id, order.email, "email_received",
-                  received_email(recipe.get("title") or "your map", _paper_label(recipe, shop))):
+                  received_email(recipe.get("title") or "your map", _paper_label(recipe, shop), order.name, shop)):
             print(f"{ref(order.pi_id)}: order confirmation emailed")
     if order.metadata.get("print_file"):
         print(f"{ref(order.pi_id)}: print file already made; waiting for approval")
@@ -387,7 +423,7 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
         raise FulfilError(f"Rendering the digital file failed ({type(e).__name__})") from None
     title = json.loads(order.recipe).get("title") or "your map"
     png_url, pdf_url = download_link(png_path, days), download_link(pdf_path, days)
-    send_email(http, order.email, *digital_email(title, png_url, pdf_url, days), idempotency=f"digital-{order.pi_id}")
+    send_email(http, order.email, *digital_email(title, png_url, pdf_url, days, order.name, shop), idempotency=f"digital-{order.pi_id}")
     stripe_set_metadata(http, key, order.pi_id, {"print_status": "emailed", "print_error": "",
                                                  "digital_sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     print(f"{ref(order.pi_id)}: digital file emailed")
@@ -491,7 +527,7 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                 if not meta.get("email_shipped"):
                     title = json.loads(s["metadata"]["recipe"]).get("title") or "your map"
                     notify(http, key, pid, (s.get("customer_details") or {}).get("email"), "email_shipped",
-                           shipped_email(title, tracking[0]))
+                           shipped_email(title, tracking[0], customer_name(s), shop))
                 old = [meta["print_file"], f"orders/{pid}-preview.png"] if meta.get("print_file") else []
                 if old:
                     uploader("del", *old)

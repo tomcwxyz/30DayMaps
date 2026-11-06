@@ -12,6 +12,7 @@
   },
   "shipping": {"label": "Free UK delivery", "price": 0},
   "digital": {"label": "Digital file by email", "price": 500, "link_days": 30},
+  "email": {"signoff": "Tom"},
   "fulfilment": {"provider": "prodigi", "shipping_method": "Standard"},
   "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged.",
   "digital_note": "Your file is made for you and emailed straight away. By paying you agree to that, and that you lose the 14-day right to cancel once it's sent."
