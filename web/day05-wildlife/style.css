@@ -1,13 +1,16 @@
-/* Day 5 / Sight — an everyday field guide, not a data dashboard. */
+/* Day 5 / Sight — editorial field notes, not a product dashboard. */
 :root {
-  --page: #f5f3ec;
-  --paper: #fffefa;
-  --ink: #2d342f;
-  --muted: #667269;
-  --line: #d4d9cf;
-  --forest: #365b49;
-  --leaf: #e6eee5;
-  --accent: #b27348;
+  --page: #f2eee5;
+  --paper: #fcfaf5;
+  --ink: #272c26;
+  --muted: #62695f;
+  --line: #c8c8bb;
+  --forest: #3a513f;
+  --leaf: #e9ece3;
+  --accent: #996044;
+  --serif: "Iowan Old Style", Baskerville, "Palatino Linotype", Georgia, serif;
+  --sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --label: "Courier New", Courier, monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
@@ -15,9 +18,9 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--page);
   color: var(--ink);
-  font-family: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--sans);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.58;
 }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
@@ -25,12 +28,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-a { color: #315c4b; text-underline-offset: 3px; }
+a {
+  color: var(--forest);
+  text-underline-offset: 3px;
+}
 p { line-height: 1.55; }
-.page { max-width: 1640px; margin: auto; }
+.page {
+  max-width: 1510px;
+  margin: auto;
+}
 .masthead {
   background: var(--page);
-  padding: 22px clamp(18px,4vw,62px) 28px;
+  padding: 18px clamp(18px,4.2vw,62px) 32px;
+  border-top: 5px solid var(--forest);
   border-bottom: 1px solid var(--line);
 }
 .topline {
@@ -38,40 +48,36 @@ p { line-height: 1.55; }
   justify-content: space-between;
   gap: 15px;
   border-bottom: 1px solid var(--line);
-  padding-bottom: 14px;
-  font-size: .76rem;
+  padding-bottom: 12px;
+  font: 400 .69rem/1.5 var(--label);
+  letter-spacing: .065em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 .masthead-content { display: block; }
 .eyebrow {
-  color: var(--muted);
-  font-weight: 500;
-  font-size: .79rem;
-  letter-spacing: 0;
-  text-transform: none;
+  color: var(--forest);
+  font: 400 .72rem/1.45 var(--label);
+  letter-spacing: .045em;
+  text-transform: uppercase;
 }
-.masthead .eyebrow { margin: 28px 0 8px; }
+.masthead .eyebrow { margin: 25px 0 10px; }
 .masthead h1 {
   margin: 0;
-  max-width: 1050px;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(2.5rem,5.8vw,5.3rem);
-  font-weight: 630;
-  letter-spacing: -.05em;
-  line-height: 1.07;
-}
-.masthead h1 em {
-  font-family: Georgia, "Times New Roman", serif;
+  max-width: 950px;
+  font-family: var(--serif);
+  font-size: clamp(2.75rem,5.1vw,4.75rem);
   font-weight: 400;
-  letter-spacing: -.05em;
+  letter-spacing: -.034em;
+  line-height: 1.08;
 }
 .intro {
-  max-width: 690px;
-  margin: 16px 0 0;
-  color: #545c54;
-  font-size: clamp(.96rem,1.45vw,1.17rem);
+  max-width: 620px;
+  margin: 17px 0 0;
+  color: #4e584e;
+  font: 400 clamp(1rem,1.4vw,1.14rem)/1.62 var(--serif);
 }
-main { padding: 0 clamp(13px,3.2vw,51px) 25px; }
+main { padding: 0 clamp(15px,4.2vw,62px) 32px; }
 .filters {
   display: grid;
   grid-template-columns: minmax(230px, 2.2fr) minmax(145px, 1fr) minmax(115px, .7fr) minmax(140px, .8fr);
@@ -82,17 +88,17 @@ main { padding: 0 clamp(13px,3.2vw,51px) 25px; }
 label {
   display: block;
   margin-bottom: 7px;
-  color: #425249;
-  font-size: .81rem;
-  font-weight: 650;
+  color: #49564a;
+  font-size: .77rem;
+  font-weight: 600;
 }
 .filters select, .filters input {
   width: 100%;
   height: 44px;
   padding: 0 12px;
   background: var(--paper);
-  border: 1px solid #bdc7bb;
-  border-radius: 3px;
+  border: 1px solid #b9bdaf;
+  border-radius: 0;
   color: var(--ink);
 }
 .search-line { display: flex; gap: 6px; }
@@ -102,9 +108,9 @@ label {
   background: var(--forest);
   color: white;
   border: 1px solid var(--forest);
-  border-radius: 3px;
+  border-radius: 0;
   white-space: nowrap;
-  font-size: .83rem;
+  font-size: .79rem;
   font-weight: 600;
 }
 .search-line button:hover { background: #274b39; }
@@ -126,23 +132,25 @@ label {
 .taxa {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 17px;
+  gap: 4px 21px;
+  margin: 0 0 19px;
+  border-bottom: 1px solid var(--line);
 }
 .taxa button {
-  padding: 8px 13px;
-  border: 1px solid #c4d0c2;
-  border-radius: 3px;
+  padding: 10px 1px 11px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
-  color: #506b56;
-  font-size: .84rem;
+  color: #59645a;
+  font-size: .86rem;
 }
-.taxa button:hover { background: #e7ede6; }
-.taxa button.active { background: var(--forest); border-color: var(--forest); color: white; }
+.taxa button:hover { color: var(--forest); border-bottom-color: #9da99a; }
+.taxa button.active { color: var(--ink); background: transparent; border-bottom-color: var(--forest); font-weight: 650; }
 
 .content {
   display: grid;
-  grid-template-columns: minmax(310px,.87fr) minmax(0,1.13fr);
+  grid-template-columns: minmax(315px,.82fr) minmax(0,1.18fr);
   align-items: stretch;
   border: 1px solid var(--line);
   background: var(--paper);
@@ -155,8 +163,8 @@ label {
 }
 .guide-head .eyebrow { margin: 0 0 7px; }
 .field-guide h2 {
-  font: 500 clamp(1.8rem,2.5vw,2.45rem)/1.15 Georgia, serif;
-  letter-spacing: -.034em;
+  font: 400 clamp(1.9rem,2.5vw,2.55rem)/1.13 var(--serif);
+  letter-spacing: -.025em;
   margin: 0;
 }
 .guide-head #guide-subtitle { margin: 8px 0 0; color: var(--muted); font-size: .85rem; }
@@ -171,11 +179,11 @@ label {
   border-bottom: 1px solid var(--line);
 }
 .totals>div { display: flex; flex-direction: column; gap: 5px; }
-.totals strong { font: 500 2.03rem/1.05 Georgia,serif; }
+.totals strong { font: 400 2.03rem/1.05 var(--serif); }
 .totals span { color: var(--muted); font-size: .7rem; line-height: 1.4; }
 .guide-intro { padding: 21px 0 8px; }
 .guide-intro h3, .seasonality h3 {
-  font: 500 1.22rem Georgia,serif;
+  font: 400 1.32rem var(--serif);
   letter-spacing: -.018em;
   margin: 0 0 6px;
 }
@@ -194,10 +202,10 @@ label {
   color: var(--ink);
   text-align: left;
 }
-.species-item:hover, .species-item.selected { background: #eff3ec; }
-.species-item.selected { box-shadow: inset 3px 0 0 var(--forest); }
+.species-item:hover, .species-item.selected { background: #f1f0e9; }
+.species-item.selected { box-shadow: inset 2px 0 0 var(--forest); }
 .species-item .names { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
-.species-item .common { font-weight: 640; font-size: .92rem; }
+.species-item .common { font-weight: 600; font-size: .94rem; }
 .species-item .latin { color: #778077; font-size: .74rem; font-style: italic; }
 .species-item .n {
   color: #556958;
@@ -229,7 +237,7 @@ label {
   gap: 8px;
   padding: 9px 12px;
   border: 1px solid #d7dbd1;
-  background: rgba(255,254,250,.94);
+  background: rgba(252,250,245,.96);
   color: #485a4f;
   font-size: .72rem;
 }
@@ -246,7 +254,7 @@ label {
 .footnotes { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; padding-top: 22px; margin-top: 27px; border-top: 1px solid var(--line); }
 .footnotes p { margin: 0 0 13px; color: #66746a; font-size: .76rem; }
 .footnotes .credit { grid-column: 1 / -1; font-size: .72rem; }
-.leaflet-popup-content { font: 13px/1.45 "Trebuchet MS",sans-serif; max-width: 270px; }
+.leaflet-popup-content { font: 13px/1.5 var(--sans); max-width: 270px; }
 .leaflet-popup-content strong { display: block; font-size: 1rem; }
 .leaflet-popup-content .date { display: block; margin: 4px 0 8px; color: #617569; }
 .leaflet-popup-content a { display: block; margin-top: 8px; }
@@ -325,8 +333,8 @@ label {
 }
 .month-explorer h2 {
   margin: 0;
-  font: 500 1.25rem/1.2 Georgia, "Times New Roman", serif;
-  letter-spacing: -.02em;
+  font: 400 1.4rem/1.2 var(--serif);
+  letter-spacing: -.025em;
 }
 .month-explorer p {
   margin: 4px 0 0;
@@ -340,7 +348,7 @@ label {
   background: transparent;
   color: #394a3e;
   border-radius: 2px;
-  font: 400 1.25rem/1 Georgia, serif;
+  font: 400 1.25rem/1 var(--serif);
   width: 33px;
   height: 31px;
   padding: 0;
@@ -362,7 +370,7 @@ label {
   appearance: none;
   border: 1px solid transparent;
   border-bottom: 2px solid #cbd5ca;
-  border-radius: 2px 2px 0 0;
+  border-radius: 0;
   padding: 10px 3px 9px;
   background: transparent;
   color: #667669;
@@ -374,8 +382,8 @@ label {
 .month-choice.active {
   border-bottom-color: var(--forest);
   color: var(--ink);
-  background: #e7eee5;
-  font-weight: 750;
+  background: transparent;
+  font-weight: 700;
 }
 .month-choice:focus-visible { outline-offset: -2px; }
 .seasonality .season-bars { min-height: 110px; gap: 3px; }
@@ -486,4 +494,17 @@ label {
     font-weight: 650;
   }
   .field-guide .species-more:hover { background: #e1eadf; }
+}
+
+/* Keep the small details as quiet as the main layout. */
+.leaflet-container { font-family: var(--sans); }
+.map-overlay, .map-clear { border-radius: 0; }
+.season-month .chart-fill { background: #9da99a; }
+@media (max-width: 740px) {
+  .masthead { padding-top: 14px; padding-bottom: 24px; }
+  .masthead h1 { font-size: clamp(2.45rem, 10vw, 3.5rem); }
+  .masthead .eyebrow { margin-top: 21px; }
+  .topline { font-size: .62rem; }
+  .taxa { gap: 4px 15px; }
+  .taxa button { min-height: 44px; font-size: .81rem; }
 }
