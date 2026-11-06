@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(res, 405, { error: "Use POST" }); }
   const key = process.env.STRIPE_SECRET_KEY;
   const github = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPO || "tomcwxyz/30daymaps";
+  const repo = process.env.GITHUB_REPO || "tomcwxyz/30DayMaps";
   if (!key || !github) return send(res, 503, { error: "Order processing isn't set up" });
 
   let id;
