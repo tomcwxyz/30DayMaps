@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f3ed">
+  <meta name="theme-color" content="#f2eee5">
   <meta name="description" content="Find wildlife observations recorded near a place, month by month. A Day 05 / Sight experiment using GBIF data.">
   <title>What’s outside your window? · Day 5 / Sight</title>
   <link rel="preconnect" href="https://api.gbif.org">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./style.css?v=20261105-seasons-4">
+  <link rel="stylesheet" href="./style.css?v=20261106-field-notes-1">
   <script defer src="./vendor/leaflet.js"></script>
   <script defer src="./geo.js"></script>
   <script defer src="./media.js"></script>
-  <script defer src="./app.js?v=20261105-seasons-4"></script>
+  <script defer src="./app.js?v=20261106-field-notes-1"></script>
 </head>
 <body>
   <div class="page">
     <header class="masthead">
-      <div class="topline"><span>30 Day Map Challenge 2026</span><span>Day 5 / Sight</span></div>
+      <div class="topline"><span>30 Day Map Challenge · 2026</span><span>05 — Sight</span></div>
       <div class="masthead-content">
-        <div><p class="eyebrow">A little map of what’s been seen nearby</p>
-          <h1>What’s outside <em>your window?</em></h1>
-          <p class="intro">There’s more going on beyond the glass than we notice. Choose a month to explore the wildlife people have recorded around you.</p>
+        <div><p class="eyebrow">A seasonal field guide</p>
+          <h1>What’s outside your window?</h1>
+          <p class="intro">Look a little closer at the places around us. Explore what people have recorded, month by month — an invitation to notice, not a prediction of what you’ll see.</p>
         </div>
 
       </div>
@@ -31,7 +31,7 @@
         <form id="place-form" class="place-field">
           <label for="place">Where are you looking?</label>
           <div class="search-line"><input id="place" name="place" value="" autocomplete="off" placeholder="Search for a place or postcode"><button type="submit">Find place</button></div>
-          <p id="location-status" class="hint location-status" role="status" aria-live="polite">Finding your location… Your browser may ask for permission.</p>
+          <p id="location-status" class="hint location-status" role="status" aria-live="polite">Checking your location… If unavailable, we’ll begin in Hamsterley Forest.</p>
         </form>
         <div class="radius-field"><label for="radius">How far?</label><select id="radius"><option value="1">1 km</option><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option></select><p class="hint">Around the selected location.</p></div>
         <div class="location-field"><label for="locate">Location</label><button id="locate" class="light-button" type="button">Use my location</button><p class="hint">Or choose anywhere on the map.</p></div>
@@ -55,7 +55,7 @@
         <aside id="field-guide" class="field-guide" aria-label="Seasonal field guide">
           <div class="guide-head"><p class="eyebrow">Seen around here</p><h2 id="guide-title">Birds in November</h2><p id="guide-subtitle">Finding your location…</p>
           <a class="map-jump" href="#map">See the map of observations</a></div>
-          <div id="status" role="status" aria-live="polite">Waiting for a location before searching published records…</div>
+          <div id="status" role="status" aria-live="polite">Looking up published wildlife records…</div>
           <div class="totals"><div><strong id="record-total">—</strong><span>Published records matching your search</span></div><div><strong id="species-total">—</strong><span>Species listed in the field guide</span></div></div>
           <section id="seasonality" class="seasonality" aria-labelledby="season-title" hidden>
             <h3 id="season-title">Records through the year</h3>
