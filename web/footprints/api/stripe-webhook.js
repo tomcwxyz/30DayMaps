@@ -30,32 +30,35 @@ async function readJson(req) {
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(res, 405, { error: "Use POST" }); }
+  // One log line per call (status and outcome only, never order details) so a missing
+  // order can be traced in Vercel's logs.
+  const reply = (code, obj) => { console.log(`stripe-webhook ${code} ${JSON.stringify(obj)}`); return send(res, code, obj); };
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return reply(405, { error: "Use POST" }); }
   const key = process.env.STRIPE_SECRET_KEY;
   const github = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPO || "tomcwxyz/30DayMaps";
-  if (!key || !github) return send(res, 503, { error: "Order processing isn't set up" });
+  if (!key || !github) return reply(503, { error: "Order processing isn't set up", missing: [!key && "STRIPE_SECRET_KEY", !github && "GITHUB_TOKEN"].filter(Boolean) });
 
   let id;
-  try { id = (await readJson(req)).id; } catch { return send(res, 400, { error: "Bad request" }); }
-  if (typeof id !== "string" || !/^evt_[A-Za-z0-9]+$/.test(id)) return send(res, 400, { error: "Bad request" });
+  try { id = (await readJson(req)).id; } catch { return reply(400, { error: "Bad request" }); }
+  if (typeof id !== "string" || !/^evt_[A-Za-z0-9]+$/.test(id)) return reply(400, { error: "Bad request" });
 
   const stripeBase = process.env.STRIPE_API_BASE || "https://api.stripe.com";
   let event;
   try {
     const r = await fetch(`${stripeBase}/v1/events/${id}`, { headers: { Authorization: `Bearer ${key}` } });
-    if (r.status === 404) return send(res, 400, { error: "Unknown event" });
+    if (r.status === 404) return reply(400, { error: "Unknown event" });
     if (!r.ok) throw new Error(`Stripe ${r.status}`);
     event = await r.json();
   } catch (e) {
     console.error("Couldn't check event with Stripe:", e.message);
-    return send(res, 502, { error: "Try again" });  // Stripe retries
+    return reply(502, { error: "Try again" });  // Stripe retries
   }
 
-  if (!HANDLED.has(event.type)) return send(res, 200, { ignored: event.type });
+  if (!HANDLED.has(event.type)) return reply(200, { ignored: event.type });
   const session = event.data && event.data.object;
   if (!session || session.payment_status !== "paid" || !session.metadata || !session.metadata.recipe) {
-    return send(res, 200, { ignored: "not a paid shop order" });
+    return reply(200, { ignored: "not a paid shop order" });
   }
 
   const githubBase = process.env.GITHUB_API_BASE || "https://api.github.com";
@@ -68,10 +71,10 @@ module.exports = async (req, res) => {
       },
       body: JSON.stringify({ ref: process.env.PRINT_WORKFLOW_BRANCH || "main", inputs: { session: session.id } }),
     });
-    if (r.status !== 204) throw new Error(`GitHub ${r.status}`);
+    if (r.status !== 204) throw new Error(`GitHub ${r.status} ${(await r.text()).slice(0, 200)}`);
   } catch (e) {
     console.error("Couldn't start the print job:", e.message);
-    return send(res, 502, { error: "Try again" });  // Stripe retries for up to three days
+    return reply(502, { error: "Try again" });  // Stripe retries for up to three days
   }
-  return send(res, 200, { started: true });
+  return reply(200, { started: true });
 };
