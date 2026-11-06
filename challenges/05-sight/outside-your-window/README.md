@@ -1,6 +1,6 @@
 # Day 05 · Sight — What's Outside Your Window?
 
-**Status: published interactive wildlife explorer at [`web/day05-wildlife/`](../../../web/day05-wildlife/), deployed to GitHub Pages. Browser and live GBIF tests exist. The page now starts from the visitor’s browser location, when permitted, rather than a fixed example town.**
+**Status: interactive wildlife explorer at [`web/day05-wildlife/`](../../../web/day05-wildlife/) published via GitHub Pages. On every visit it starts at Hamsterley Forest. Browser location is requested only after choosing "Use my location".**
 
 Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0` then `node scripts/prepare_day05_vendor.cjs web` once, followed by `python -m http.server 8000` from the repository root. Open `http://localhost:8000/web/day05-wildlife/`. This copies the open-source map library into a locally hosted vendor directory; it is not a JavaScript framework build. Run the geodesic radius tests with `node --test tests/day05-geo.test.cjs`.
 
@@ -8,13 +8,13 @@ Run `npm install --no-save leaflet@1.9.4 maplibre-gl@5.9.0` then `node scripts/p
 
 ## Location-first behaviour (November 2026)
 
-- On first opening the page, the browser asks for geolocation permission. A successful permission response starts the **first GBIF occurrence query** for the user's approximate position.
+- On first opening the page, the **first GBIF occurrence query always uses Hamsterley Forest**, a clearly labelled example near the forest visitor centre. No permission prompt appears automatically. The visitor may search for a place, click the map or choose "Use my location".
 - The browser location is rounded to three decimal places before it is used in the circle query. The map does not store this position in cookies, local storage, URLs or a database.
-- If the user declines permission, geolocation is unavailable, times out or reports a location outside the map's Britain coverage, the page loads a **clearly labelled example near Newton Aycliffe** and provides manual place search and map-pin selection. It never claims the example is the user's location.
-- Manual place search or map-click choices win over a late geolocation callback; no delayed browser permission response can silently move the map somewhere else.
-- The map is temporarily centred over Britain, without a fake local radius or record count, until a location is resolved.
+- If location permission is declined or unavailable after pressing "Use my location", the currently selected map stays put. The site never claims Hamsterley Forest is the visitor's location.
+- Manual place search or map-click choices win over a late **explicitly requested** geolocation callback; no delayed browser response can silently move the map somewhere else.
+- The first map view centres on Hamsterley Forest and shows its real selected-radius circle, with current-month GBIF records loaded against that example.
 - **Provider disclosure:** The GBIF search request contains a polygon around the rounded location, and map-tile providers receive the selected map area. We cannot claim that third-party services don't log requests. Don't include precise home coordinates in shareable links.
-- The first load and fallbacks have a Playwright mobile browser regression test using **simulated Edinburgh coordinates**, with no access to a real visitor's position.
+- Playwright browser checks confirm Hamsterley Forest remains the default even if browser permission was previously granted, then test explicit opt-in geolocation using **simulated Edinburgh coordinates**.
 - The interface now shows the species field guide before the map on mobile, with a direct map link. The muted, lighter style follows the Day 5 field-notes approach.
 
 ## Data and image audit (5 November 2026)
@@ -71,7 +71,7 @@ This is a **seasonal atlas of nearby records**, not a claim to identify animals 
 
 ## Audience experience
 
-1. Request an approximate browser location when the page opens. If declined or unavailable, start on a **clearly labelled example** and allow manual place search or map selection. Never confuse the example with the visitor's location.
+1. Begin at the **clearly labelled Hamsterley Forest example** on every page load. Allow voluntary geolocation with a button, place search and map selection; never confuse the example with the visitor's location.
 2. Choose a month from the prominent January–December ribbon, initially set to the current month. This means *observations made in this calendar month across previous years*, not records uploaded this month.
 3. Choose a radius (1, 3, 5 or 10 km; default 5 km). Draw the real-radius circle and show the scale.
 4. Switch between **Birds** (first complete vertical), **Mammals**, **Butterflies & moths**, and **Plants** (later verticals, independently checked taxonomy).

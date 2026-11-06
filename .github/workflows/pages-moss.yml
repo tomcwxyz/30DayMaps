@@ -167,6 +167,8 @@ jobs:
           mkdir -p _site/day05-wildlife _site/day05-dale-head
           cp -a web/day05-wildlife/. _site/day05-wildlife/
           cp -a web/day05-dale-head/. _site/day05-dale-head/
+          mkdir -p _site/day05-wildlife/fonts
+          cp -a web/peaks/fonts/. _site/day05-wildlife/fonts/
           touch _site/.nojekyll
           for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
             test -s "_site/$file"
@@ -178,6 +180,8 @@ jobs:
           done
           test -s _site/day05-wildlife/geo.js
           test -s _site/day05-wildlife/media.js
+          test -s _site/day05-wildlife/fonts/jost-latin-400-normal.woff2
+          test -s _site/day05-wildlife/fonts/ibm-plex-mono-latin-400-normal.woff2
           test -s _site/day05-dale-head/panorama.js
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
@@ -239,3 +243,42 @@ jobs:
       - name: Deploy static map experiences
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify the published wildlife page is the current build
+        env:
+          PAGE_ROOT: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          python - <<'PY'
+          import os
+          import time
+          from urllib.request import Request, urlopen
+
+          root = os.environ["PAGE_ROOT"].rstrip("/") + "/day05-wildlife/"
+          revision = os.environ["GITHUB_SHA"]
+          expected = {
+              "": "20261106-hamsterley-v3",
+              "app.js": "useExample();",
+              "style.css": "font-family: var(--serif)",
+          }
+          for attempt in range(1, 13):
+              try:
+                  for filename, marker in expected.items():
+                      url = root + filename + "?build=" + revision
+                      request = Request(url, headers={"Cache-Control": "no-cache"})
+                      with urlopen(request, timeout=20) as response:
+                          body = response.read().decode("utf-8")
+                      if marker not in body:
+                          raise ValueError(f"{filename or 'index.html'} is still an old version")
+                  font_request = Request(root + "fonts/jost-latin-400-normal.woff2?build=" + revision,
+                                         headers={"Cache-Control": "no-cache"})
+                  with urlopen(font_request, timeout=20) as font_response:
+                      if font_response.read(4) != b"wOF2":
+                          raise ValueError("Published Jost font missing or invalid")
+                  print(f"Verified published Day 5 HTML, JS, CSS and font for {revision}: {root}")
+                  break
+              except Exception as error:
+                  if attempt == 12:
+                      raise RuntimeError(f"GitHub Pages has not served the current Day 5 build: {error}")
+                  print(f"Waiting for latest GitHub Pages assets (attempt {attempt}): {error}")
+                  time.sleep(10)
+          PY

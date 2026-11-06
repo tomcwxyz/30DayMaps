@@ -12,9 +12,10 @@
   };
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
-  // Only use the example town if the browser location is unavailable or refused.
-  // It must never be described as the visitor's location.
-  const EXAMPLE = { lat: 54.617, lng: -1.578, place: "Newton Aycliffe (example)" };
+  // Starting map: Hamsterley Forest visitor-centre area (OS grid NZ092312).
+  // Geolocation is never automatic: the visitor can opt in with "Use my location".
+  // Never describe the starting point as the visitor's own location.
+  const EXAMPLE = { lat: 54.676, lng: -1.859, place: "Hamsterley Forest (example)" };
   const state = {
     lat: null, lng: null, place: "",
     locationResolved: false, locationToken: 0,
@@ -529,27 +530,28 @@
     scheduleLoad();
   }
 
-  function useExample(reason) {
+  function useExample(reason = "") {
+    const prefix = reason ? reason + " " : "";
     moveTo(EXAMPLE.lat, EXAMPLE.lng, EXAMPLE.place,
-      reason + " Showing Newton Aycliffe as an example; search or click the map to change it.",
+      prefix + "Starting in Hamsterley Forest (example). Search for another place, select a point on the map or use your location.",
       true);
   }
 
   function requestVisitorLocation() {
     const attempt = ++state.locationToken;
     if (!navigator.geolocation || !window.isSecureContext) {
-      useExample("Your browser cannot share a location here.");
+      setLocationStatus("Your browser cannot share a location here. Your current map location is unchanged.");
       return;
     }
     setLocationStatus("Finding your area… Your browser may ask for location permission.");
-    setStatus("Waiting for your location before looking up nearby wildlife…");
+    setStatus("Finding your location…");
     navigator.geolocation.getCurrentPosition(
       position => {
         if (attempt !== state.locationToken) return;
         const lat = Math.round(Number(position.coords.latitude) * 1000) / 1000;
         const lng = Math.round(Number(position.coords.longitude) * 1000) / 1000;
         if (!withinBritain(lat, lng)) {
-          useExample("Your location appears to be outside the current Britain-only map.");
+          setLocationStatus("Your location appears to be outside Britain; the map has not moved.");
           return;
         }
         $("place").value = "";
@@ -561,7 +563,7 @@
         const reason = error && error.code === 1
           ? "Location permission wasn't granted."
           : "We couldn't find your location.";
-        useExample(reason);
+        setLocationStatus(reason + " Your current map location is unchanged.");
       },
       { enableHighAccuracy: false, timeout: 9000, maximumAge: 60000 }
     );
@@ -645,7 +647,7 @@
       if (!state.locationResolved) useExample("Place search couldn't be completed.");
     }
   });
-  // Location is the first choice, not a fixed hometown. This deliberately
-  // defers the first GBIF query until the browser answers or the example is shown.
-  requestVisitorLocation();
+  // Everyone starts at the same clearly labelled woodland example.
+  // Browser location is accessed only after the visitor selects "Use my location".
+  useExample();
 })();

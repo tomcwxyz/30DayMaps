@@ -218,6 +218,7 @@ const FD = window.FootprintsData;
 const CREDIT = FD.CREDIT;
 
 const state = { lat: 54.9738, lon: -1.6132, place: "Newcastle and Gateshead", theme: "paper", rings: null, loaded: null };
+const START = { lat: state.lat, lon: state.lon };   // still here means nobody has picked a place yet
 const $ = id => document.getElementById(id);
 
 // ---- Layout (mirrors maps/prints.py so web and print agree) -------------------
@@ -545,6 +546,12 @@ async function loadGallery() {
       $("gallery").appendChild(b);
     }
     $("gallery").hidden = false; $("presets").hidden = true;
+    // Open with a finished map rather than an empty sheet: ?city=<slug> if given, else Newcastle.
+    // Skipped if someone has already picked or loaded a place while the list was loading.
+    const want = new URLSearchParams(location.search).get("city") || "newcastle";
+    const first = cities.find(c => c.slug === want) || cities.find(c => c.slug === "newcastle") || cities[0];
+    const untouched = state.lat === START.lat && state.lon === START.lon && !state.rings && !$("load").disabled;
+    if (untouched) choose(first.lat, first.lon, first.title || first.name, first.width_km, first);
   } catch { /* keep the example buttons */ }
 }
 
