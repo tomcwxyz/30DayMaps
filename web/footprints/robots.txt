@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /thanks.html
+
+Sitemap: https://footprints.tomcw.xyz/sitemap.xml
