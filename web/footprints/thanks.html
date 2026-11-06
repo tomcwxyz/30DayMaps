@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Order Received · Footprints</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;800&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root { --bg: #EEF0EE; --fg: #1B2528; --muted: #5F6D70; --accent: #2E6B5A; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #121A1C; --fg: #E6ECEA; --muted: #93A3A5; --accent: #6FB29C; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 "Archivo", "Helvetica Neue", Arial, sans-serif;
+  padding: 48px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
+main { max-width: 34rem; margin: 0 auto; display: grid; gap: 14px; }
+h1 { font-weight: 800; font-size: 30px; line-height: 1.15; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.ref { font: 13px "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); overflow-wrap: anywhere; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="head">Thanks, your print is ordered.</h1>
+  <p id="line1">We print each one to order. You'll get a receipt by email now, and a tracking email when it's posted.</p>
+  <p id="line2">If anything's wrong with your print when it arrives, reply to your receipt email and we'll put it right.</p>
+  <p class="ref" id="ref"></p>
+  <p><a href="./">Make another print</a></p>
+</main>
+<script>
+  const q = new URLSearchParams(location.search), id = q.get("order");
+  if (q.get("type") === "digital") {
+    document.getElementById("head").textContent = "Thanks, your file is on its way.";
+    document.getElementById("line1").textContent = "We're making your high-resolution file now. It'll arrive by email, usually within 10 minutes, with links to the PNG and the PDF.";
+    document.getElementById("line2").textContent = "Nothing after half an hour? Check your spam folder, then reply to your receipt email and we'll sort it.";
+  }
+  if (id) document.getElementById("ref").textContent = "Order reference: " + id.slice(-12);
+</script>
+</body>
+</html>

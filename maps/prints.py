@@ -246,6 +246,40 @@ def make(spec: Spec, out: Path = OUT) -> dict:
     return summary
 
 
+RECIPE_LIMITS = {"name": 60, "title": 60, "subtitle": 140, "kicker": 40}
+
+
+def spec_from_recipe(recipe: str | dict) -> Spec:
+    """Rebuild a shop order exactly: the recipe saved with the Stripe payment.
+
+    Accepts the JSON text (as copied from Stripe's metadata), a path to a JSON file,
+    or a dict. Re-checks every field, since it arrives from outside.
+    """
+    if isinstance(recipe, str):
+        text = Path(recipe).read_text() if recipe.strip().endswith(".json") and Path(recipe).exists() else recipe
+        recipe = json.loads(text)
+    if recipe.get("v") != 1:
+        raise ValueError("Unknown recipe version")
+    lat, lon = float(recipe["lat"]), float(recipe["lon"])
+    width = float(recipe["width_km"])
+    if not (-85 <= lat <= 85 and -180 <= lon <= 180 and 0.5 <= width <= 20):
+        raise ValueError("Recipe position or width out of range")
+    if recipe["paper"] not in PAPERS or recipe["theme"] not in THEMES:
+        raise ValueError("Recipe paper or colours not recognised")
+    text = {}
+    for key, limit in RECIPE_LIMITS.items():
+        value = str(recipe.get(key) or "").strip()
+        if len(value) > limit:
+            raise ValueError(f"Recipe {key} is too long")
+        text[key] = value
+    if not text["title"]:
+        raise ValueError("Recipe has no title")
+    return Spec(name=text["name"] or "Place", lat=lat, lon=lon, title=text["title"],
+                subtitle=text["subtitle"], kicker=text["kicker"], paper=recipe["paper"],
+                landscape=recipe.get("orient") == "landscape", width_km=width,
+                theme=recipe["theme"], source=recipe.get("source", "osm"))
+
+
 def spec_from_args(args) -> Spec:
     preset = {}
     if args.place:
@@ -287,13 +321,20 @@ def main(argv=None):
     p.add_argument("--source", default="auto", choices=["auto", "os", "osm"])
     p.add_argument("--dpi", type=int, default=300)
     p.add_argument("--formats", default="print,web,pdf", help="any of print,web,pdf")
+    p.add_argument("--recipe", help="render a shop order: the recipe JSON (or a .json file); other design options are ignored")
     p.add_argument("--out", type=Path, default=OUT)
     args = p.parse_args(argv)
     if args.list:
         for key, v in PLACES.items():
             print(f"{key:15} {v['name']}")
         return
-    print(json.dumps(make(spec_from_args(args), args.out), indent=2))
+    if args.recipe:
+        spec = spec_from_recipe(args.recipe)
+        spec.dpi = args.dpi
+        spec.formats = [f.strip() for f in args.formats.split(",") if f.strip()]
+    else:
+        spec = spec_from_args(args)
+    print(json.dumps(make(spec, args.out), indent=2))
 
 
 if __name__ == "__main__":

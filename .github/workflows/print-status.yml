@@ -1,0 +1,31 @@
+name: Print orders check
+# Daily: records tracking on each payment in Stripe once Prodigi ships it, deletes
+# shipped print files, and fails (so GitHub emails you) if an order needs attention
+# or has waited more than two days for approval. The summary shows counts only.
+on:
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: vars.PRINT_ORDERS == 'on' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: python -m pip install requests
+      - run: npm ci --prefix web/footprints --omit=dev --no-audit --no-fund
+      - env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
+          PRODIGI_ENV: ${{ vars.PRODIGI_ENV || 'sandbox' }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+        run: python -u -m maps.fulfil status
