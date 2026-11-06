@@ -9,6 +9,6 @@ Everything runs in the browser. Elevation comes straight from the Mapzen/Tilezen
 - `lib/draw.js`: styles and layout, as a list of items in millimetres
 - `lib/render.js`: paints that list to canvas (preview, PNG) or SVG (fonts embedded)
 - `places.json`: ready-made mountains, written by `python -m maps.peaks web` from `maps/peak_places.json`
-- `test/harness.py`: drives the page in Chromium. `suite OUT` runs offline with stand-in tiles built from `peaks/dem`; `live OUT` uses the real services. The **Peaks web check** workflow runs `live` on every change and commits screenshots to `peaks/web-shots`.
+- `test/harness.py`: drives the page in Chromium. `suite OUT` runs offline with stand-in tiles built from `peaks/dem`; `live OUT` uses the real services. The **Peaks web check** workflow runs `live` on every change and keeps the screenshots as an artifact. The offline suite needs the elevation grids: download the `peaks-dem` artifact from the **Peaks** workflow into `peaks/dem`.
 
 Serve the folder with any static server (`python -m http.server -d web/peaks`). `?place=cuillin&style=panorama` opens a ready-made mountain in a style; `?tiles=` points the page at another Terrarium tile server.

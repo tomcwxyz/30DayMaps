@@ -16,3 +16,5 @@ web/day05-wildlife/vendor/
 web/day05-dale-head/vendor/
 browser-screenshots/
 peaks/out/
+peaks/dem/*.npz
+peaks/web-shots/

@@ -1,6 +1,7 @@
 name: Peaks
-# Downloads elevation and named summits for new places in maps/peak_places.json and
-# commits them to the branch it ran on. Drawing happens locally: python -m maps.peaks render.
+# Downloads elevation and named summits for the places in maps/peak_places.json. Summit names
+# and web/peaks/places.json are committed; the elevation grids are kept as the 'peaks-dem'
+# artifact (download it into peaks/dem to draw prints locally). Drawing happens locally: python -m maps.peaks render.
 on:
   push:
     paths: ["maps/peak_places.json", ".github/workflows/peaks.yml"]
@@ -30,11 +31,19 @@ jobs:
         env: {SLUGS: "${{ inputs.slugs }}"}
         run: |
           if [ -n "$SLUGS" ]; then python -m maps.peaks fetch --force $SLUGS; else python -m maps.peaks fetch --all; fi
-      - name: Commit
+      - name: Refresh the print maker's places
+        run: python -m maps.peaks web
+      - name: Keep the elevation grids as an artifact (too big for git)
+        uses: actions/upload-artifact@v4
+        with:
+          name: peaks-dem
+          path: peaks/dem/*.npz
+          retention-days: 90
+      - name: Commit summit names and places
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add peaks/dem
+          git add peaks/dem/*.names.json web/peaks/places.json
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
-          git commit -m "Peaks: elevation and previews"
+          git commit -m "Peaks: summit names and places"
           git pull --rebase --autostash -q && git push
