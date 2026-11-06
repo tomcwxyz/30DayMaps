@@ -167,6 +167,8 @@ jobs:
           mkdir -p _site/day05-wildlife _site/day05-dale-head
           cp -a web/day05-wildlife/. _site/day05-wildlife/
           cp -a web/day05-dale-head/. _site/day05-dale-head/
+          mkdir -p _site/day05-wildlife/fonts
+          cp -a web/peaks/fonts/. _site/day05-wildlife/fonts/
           touch _site/.nojekyll
           for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
             test -s "_site/$file"
@@ -178,6 +180,8 @@ jobs:
           done
           test -s _site/day05-wildlife/geo.js
           test -s _site/day05-wildlife/media.js
+          test -s _site/day05-wildlife/fonts/jost-latin-400-normal.woff2
+          test -s _site/day05-wildlife/fonts/ibm-plex-mono-latin-400-normal.woff2
           test -s _site/day05-dale-head/panorama.js
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
@@ -252,7 +256,7 @@ jobs:
           root = os.environ["PAGE_ROOT"].rstrip("/") + "/day05-wildlife/"
           revision = os.environ["GITHUB_SHA"]
           expected = {
-              "": "20261106-hamsterley-v2",
+              "": "20261106-hamsterley-v3",
               "app.js": "useExample();",
               "style.css": "font-family: var(--serif)",
           }
