@@ -86,6 +86,12 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .gpx { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 8px; padding: 10px; }
 .gpx input[type=file] { font: 13px var(--display); color: var(--muted); max-width: 100%; }
 .status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
+.choices { display: grid; gap: 6px; }
+.choice { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--fg); font-size: 14px; cursor: pointer; }
+.choice:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice input { accent-color: var(--accent); margin: 0; }
+.choice .price { display: block; color: var(--muted); font-size: 13px; }
+.shopnote { font-size: 13px; color: var(--muted); margin: 0; }
 .status.warn { color: var(--warn); }
 .stage { min-width: 0; display: grid; gap: 10px; justify-items: center; position: sticky; top: 16px; }
 .sheet { max-width: 100%; box-shadow: 0 10px 40px var(--sheet-shadow); background: #fff; position: relative; }
@@ -159,8 +165,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 
     <fieldset>
       <legend>Words</legend>
-      <label for="title">Title<input type="text" id="title" value=""></label>
-      <label for="subtitle">Subtitle<input type="text" id="subtitle" value=""></label>
+      <label for="title">Title<input type="text" id="title" value="" maxlength="60"></label>
+      <label for="subtitle">Subtitle<input type="text" id="subtitle" value="" maxlength="140"></label>
       <label class="check"><input type="checkbox" id="details" checked> Small print line (heights, scale, view)</label>
     </fieldset>
 
@@ -175,20 +181,19 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>Download</legend>
-      <div class="status" id="status" role="status"></div>
-      <label for="dpi">Image resolution
-        <select id="dpi">
-          <option value="web">Web (2400 px long edge)</option>
-          <option value="150">Print, 150 dpi</option>
-          <option value="300" selected>Print, 300 dpi</option>
-        </select>
-      </label>
-      <div class="row">
-        <button type="button" class="primary" id="png" disabled>PNG image</button>
-        <button type="button" id="svg" disabled>SVG for print</button>
+    <div class="status" id="status" role="status"></div>
+
+    <fieldset id="shop" hidden>
+      <legend>Order</legend>
+      <div class="choices" role="radiogroup" aria-label="What to order">
+        <label class="choice" id="choicePrint"><input type="radio" name="product" value="print" id="prodPrint" checked>
+          <span><strong>Printed and posted</strong><span class="price" id="printPrice"></span></span></label>
+        <label class="choice" id="choiceDigital"><input type="radio" name="product" value="digital" id="prodDigital">
+          <span><strong>Digital file by email</strong><span class="price" id="digitalPrice"></span></span></label>
       </div>
+      <p class="shopnote" id="shopPrice"></p>
+      <button type="button" class="primary" id="order" disabled>Order this print</button>
+      <div class="status" id="orderStatus" role="status"></div>
     </fieldset>
   </form>
 
@@ -205,12 +210,15 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 <script src="lib/terrain.js"></script>
 <script src="lib/draw.js"></script>
 <script src="lib/render.js"></script>
+<script src="lib/polyline.js"></script>
 <script>
 "use strict";
 const T = PeaksTerrain, D = PeaksDraw, RN = PeaksRender;
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 if (params.get("tiles")) T.setTileUrl(params.get("tiles"));
+const RENDER = params.get("render") === "1";   // the print job: fail rather than print without names
+if (RENDER) T.strict = true;
 
 const PAPERS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841], "50x70": [500, 700], square: [300, 300] };
 const PANOS = { "pano60": [600, 200, "Panorama 60 × 20 cm"], "pano90": [900, 300, "Panorama 90 × 30 cm"], "pano120": [1200, 400, "Panorama 120 × 40 cm"] };
@@ -333,6 +341,8 @@ function parseGPX(text, name) {
   return { name: (nm && nm.textContent.trim()) || name.replace(/\.gpx$/i, "").replace(/[_-]+/g, " "), date: t ? new Date(t.textContent) : null, raw };
 }
 
+const ROUTE_CHARS = 480 * 40;   // what api/_recipe.js accepts
+
 function prepareRoute(r) {
   let pts = r.raw;
   // distances along the route
@@ -346,9 +356,10 @@ function prepareRoute(r) {
     const keep = dist.map((d, i) => d >= 250 && d <= total - 250 ? i : -1).filter(i => i >= 0);
     pts = keep.map(i => pts[i]);
   }
-  // thin to at most ~4000 points
-  const step = Math.max(1, Math.floor(pts.length / 4000));
-  pts = pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
+  // The route as it will be ordered: thinned to fit in the order, rounded to about a metre.
+  const fitted = Polyline.fit(pts, ROUTE_CHARS);
+  pts = Polyline.decode(fitted.encoded);
+  r.encoded = fitted.encoded;
   let s = 90, n = -90, w = 180, e = -180;
   for (const [la, lo] of pts) { s = Math.min(s, la); n = Math.max(n, la); w = Math.min(w, lo); e = Math.max(e, lo); }
   return Object.assign(r, { pts, bbox: { lat: (s + n) / 2, lon: (w + e) / 2 } });
@@ -465,11 +476,12 @@ async function refresh() {
     state.composed = { items, pw, ph };
     draw();
     setStatus("");
-    $("png").disabled = $("svg").disabled = false;
+    state.error = null;
+    updateShop();
   } catch (e) {
-    if (id === runId) { console.error(e); setStatus(`Could not draw this: ${e.message}`, true); }
+    if (id === runId) { console.error(e); state.error = e; state.composed = null; setStatus(`Could not draw this: ${e.message}`, true); updateShop(); }
   } finally {
-    if (id === runId) $("sheet").classList.remove("busy");
+    if (id === runId) { $("sheet").classList.remove("busy"); updateShop(); }
   }
 }
 function cached(key, fn) { if (!cache.has(key)) cache.set(key, fn()); return cache.get(key); }
@@ -605,13 +617,17 @@ async function loadGPX(file) {
     $("gpxClear").hidden = false; $("trimRow").hidden = false;
     for (const b of $("presets").children) b.setAttribute("aria-pressed", "false");
     if (state.style === "skyline") setStyle("poster"); else { showFor(); schedule(0); }
-    // the panorama stands at the route's highest point, found once the terrain is in
-    const fr = areaFrame(D.layout(...paperMM(), "map", wordsNow("x")).map);
-    const g = await frameGrid(fr);
-    let best = -Infinity;
-    for (const p of r.pts) { const [x, y] = T.toXY(g.lat, g.lon, p[0], p[1]); const z = T.sample(g, x, y); if (z > best) { best = z; r.high = p; } }
+    await findHighPoint(r);
     if (state.style === "panorama") schedule(0);
   } catch (e) { setStatus(e.message, true); }
+}
+
+// The panorama stands at the route's highest point, found once the terrain is in.
+async function findHighPoint(r) {
+  const fr = areaFrame(D.layout(...paperMM(), "map", wordsNow("x")).map);
+  const g = await frameGrid(fr);
+  let best = -Infinity;
+  for (const p of r.pts) { const [x, y] = T.toXY(g.lat, g.lon, p[0], p[1]); const z = T.sample(g, x, y); if (z > best) { best = z; r.high = p; } }
 }
 
 // ---- downloads ---------------------------------------------------------------------------------
@@ -625,21 +641,11 @@ function save(blob, name) {
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-async function exportPNG() {
-  const c = state.composed; if (!c) return;
-  const dpi = $("dpi").value;
-  let ppm = dpi === "web" ? 2400 / Math.max(c.pw, c.ph) : +dpi / 25.4;
-  const max = 120e6;
-  if (c.pw * c.ph * ppm * ppm > max) { ppm = Math.sqrt(max / (c.pw * c.ph)); setStatus(`Capped at ${Math.round(ppm * 25.4)} dpi for this paper size. Use SVG for full quality.`, true); }
-  else setStatus("Making the image…");
-  await new Promise(r => setTimeout(r, 30));
-  try {
-    const canvas = document.createElement("canvas");
-    RN.toCanvas(canvas, c.items, c.pw, c.ph, ppm);
-    const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("too large for this browser")), "image/png"));
-    save(blob, `${fileStem()}.png`);
-    if (!$("status").classList.contains("warn")) setStatus("");
-  } catch (e) { setStatus(`Could not make the image (${e.message}). Try 150 dpi, or the SVG.`, true); }
+async function pngBlob(ppm) {
+  const c = state.composed;
+  const canvas = document.createElement("canvas");
+  RN.toCanvas(canvas, c.items, c.pw, c.ph, ppm);
+  return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("image too large for this browser")), "image/png"));
 }
 let fontCSS = null;
 async function embeddedFonts() {
@@ -655,13 +661,120 @@ async function embeddedFonts() {
   }
   return (fontCSS = parts.join(""));
 }
-async function exportSVG() {
-  const c = state.composed; if (!c) return;
-  setStatus("Making the SVG…");
-  const svg = RN.toSVG(c.items, c.pw, c.ph, await embeddedFonts());
-  save(new Blob([svg], { type: "image/svg+xml" }), `${fileStem()}.svg`);
-  setStatus("");
+async function svgText() {
+  const c = state.composed;
+  return RN.toSVG(c.items, c.pw, c.ph, await embeddedFonts());
 }
+
+// ---- shop (shown only when the page is served with its order API) ----------------------------
+let shop = null;
+const money = p => new Intl.NumberFormat("en-GB", { style: "currency", currency: (shop && shop.currency || "gbp").toUpperCase() }).format(p / 100);
+async function loadShop() {
+  if (location.protocol === "file:" || RENDER) return;
+  try {
+    const r = await fetch("api/config", { cache: "no-store" });
+    if (!r.ok) return;
+    const c = await r.json();
+    if (!c.open) return;
+    shop = c;
+    const canPrint = Object.keys(c.sizes || {}).length > 0 && c.shipping;
+    $("choicePrint").hidden = !canPrint; $("choiceDigital").hidden = !c.digital;
+    $(canPrint ? "prodPrint" : "prodDigital").checked = true;
+    $("shop").hidden = false; updateShop();
+  } catch { /* no order API here: the page still works for looking */ }
+}
+function product() { return $("prodDigital").checked ? "digital" : "print"; }
+function updateShop() {
+  if (!shop) return;
+  const ready = !!state.composed && !$("sheet").classList.contains("busy");
+  const size = shop.sizes[$("paper").value];
+  const post = shop.shipping && shop.shipping.price ? `+ ${money(shop.shipping.price)} delivery` : "free UK delivery";
+  $("printPrice").textContent = size ? `${money(size.price)}, ${post}` : "not in this size";
+  if (shop.digital) $("digitalPrice").textContent = money(shop.digital.price);
+  let sellable = true;
+  if (product() === "digital") {
+    $("shopPrice").textContent = `A high-resolution PNG, sharp printed up to A2, and a PDF that scales to any size. ` +
+      `Emailed to you, usually within 15 minutes; the download links work for ${shop.digital.linkDays} days.`;
+    $("order").textContent = `Buy the digital file · ${money(shop.digital.price)}`;
+  } else if (size) {
+    $("shopPrice").textContent = shop.shipping.price
+      ? `${size.label}: ${money(size.price)} + ${money(shop.shipping.price)} ${shop.shipping.label}.`
+      : `${size.label}: ${money(size.price)}. ${shop.shipping.label}.`;
+    $("order").textContent = "Order this print";
+  } else {
+    $("shopPrice").textContent = state.style === "panorama"
+      ? "Panoramas are sold as digital files for now."
+      : "This paper size isn't for sale as a print. Choose another size, or the digital file.";
+    $("order").textContent = "Order this print"; sellable = false;
+  }
+  $("order").disabled = !sellable || !ready || !$("title").value.trim();
+}
+
+// Everything needed to draw this print again, exactly (see api/_recipe.js).
+function recipe() {
+  const p = state.place || {};
+  return {
+    v: 1, place: !state.route && p.area ? p.area.slug : "", lat: r5(p.lat), lon: r5(p.lon),
+    name: [...(p.name || "Mountain")].slice(0, 60).join(""), region: [...(p.region || "")].slice(0, 40).join("").trim(),
+    style: state.style, theme: state.theme, labels: $("labels").checked ? 1 : 0, details: $("details").checked ? 1 : 0,
+    title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), paper: $("paper").value, orient: $("orient").value,
+    width: +$("width").value, detail: +$("detail").value, rows: +$("rows").value, seen: $("seenFrom").value || "S",
+    dist: +$("dist").value, facing: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value,
+    route: state.route ? state.route.pts.length : 0,
+  };
+}
+async function order() {
+  const btn = $("order"), st = $("orderStatus");
+  btn.disabled = true; st.classList.remove("warn"); st.textContent = "Opening the payment page…";
+  try {
+    const r = await fetch("api/checkout", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipe: recipe(), route: state.route ? state.route.encoded : undefined, product: product() }) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.url) throw new Error(data.error || "The payment page couldn't be opened.");
+    location.href = data.url;
+  } catch (e) {
+    st.textContent = e.message; st.classList.add("warn"); btn.disabled = false;
+  }
+}
+
+// ---- the print job: draw an order's recipe again and hand over the files ----------------------
+async function applyRecipe(rc, encodedRoute) {
+  $("trim").checked = false;   // a route in an order is already as the customer chose it
+  if (rc.route) {
+    const r = { name: rc.name, date: null, raw: Polyline.decode(encodedRoute || "") };
+    if (r.raw.length !== rc.route) throw new Error("route doesn't match the recipe");
+    state.route = r; prepareRoute(r); r.high = r.pts[0];
+    state.place = { lat: r.bbox.lat, lon: r.bbox.lon, name: rc.name, region: "" };
+  } else {
+    const a = rc.place && PLACES.areas.find(x => x.slug === rc.place);
+    choosePlace(a ? { lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names }
+                  : { lat: rc.lat, lon: rc.lon, name: rc.name, region: rc.region });
+  }
+  state.style = rc.style; state.theme = rc.theme;
+  for (const b of $("styles").children) b.setAttribute("aria-pressed", String(b.dataset.style === rc.style));
+  if (rc.style !== "panorama") state.paperStd = rc.paper;
+  $("orient").value = rc.orient;
+  showFor();
+  if (rc.seen && [...$("seenFrom").options].some(o => o.value === rc.seen)) $("seenFrom").value = rc.seen;
+  for (const k of ["width", "detail", "rows", "dist", "facing", "fov", "reach"]) $(k).value = rc[k];
+  $("labels").checked = !!rc.labels; $("details").checked = !!rc.details;
+  $("title").value = rc.title; $("subtitle").value = rc.subtitle; $("paper").value = rc.paper;
+  showFor(); syncOutputs();
+  if (state.route) await findHighPoint(state.route);
+  clearTimeout(timer);
+  await refresh();
+  if (state.error || !state.composed) throw state.error || new Error("nothing drawn");
+}
+
+window.PeaksApp = {
+  ready: null,
+  recipe, apply: applyRecipe,
+  size: () => [state.composed.pw, state.composed.ph],
+  // Saves the drawn sheet as a download: "png" at ppm pixels per millimetre, or "svg".
+  async file(kind, ppm, name) {
+    save(kind === "svg" ? new Blob([await svgText()], { type: "image/svg+xml" }) : await pngBlob(ppm), name || `${fileStem()}.${kind}`);
+  },
+};
 
 // ---- start -----------------------------------------------------------------------------------
 function build() {
@@ -694,14 +807,18 @@ function build() {
   $("gpxFile").addEventListener("change", e => e.target.files[0] && loadGPX(e.target.files[0]));
   $("trim").addEventListener("change", () => { if (state.route) { prepareRoute(state.route); schedule(0); } });
   $("gpxClear").onclick = () => { const a = PLACES.areas[0]; choosePlace({ lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names }); };
-  $("png").onclick = exportPNG; $("svg").onclick = exportSVG;
+  $("order").onclick = order;
+  for (const id of ["prodPrint", "prodDigital"]) $(id).addEventListener("change", updateShop);
+  $("title").addEventListener("input", updateShop);
   let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(draw, 120); });
 }
 
-(async () => {
+PeaksApp.ready = (async () => {
   PLACES = await (await fetch("places.json")).json();
   build();
   await Promise.all(["500 12px Jost", "700 12px Jost", "400 12px 'IBM Plex Mono'"].map(f => document.fonts.load(f).catch(() => null)));
+  if (RENDER) return;   // the print job applies its own recipe
+  loadShop();
   const start = PLACES.areas.find(a => a.slug === (params.get("place") || "helvellyn")) || PLACES.areas[0];
   if (params.get("style") && STYLES[params.get("style")]) state.style = params.get("style");
   for (const b of $("styles").children) b.setAttribute("aria-pressed", String(b.dataset.style === state.style));

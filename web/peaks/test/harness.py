@@ -120,7 +120,7 @@ def attach(page):
 
 
 def wait_drawn(page, timeout=600000):
-    page.wait_for_function("() => !document.getElementById('png').disabled && !document.getElementById('sheet').classList.contains('busy') && document.getElementById('status').textContent === ''", timeout=timeout)
+    page.wait_for_function("() => typeof state !== 'undefined' && state.composed && !document.getElementById('sheet').classList.contains('busy') && document.getElementById('status').textContent === ''", timeout=timeout)
 
 
 def errors_of(page):
@@ -190,12 +190,11 @@ def suite(out: Path, offline: bool = True):
         # downloads
         style("poster")
         page.wait_for_timeout(300); wait_drawn(page)
-        page.select_option("#dpi", "150")
         with page.expect_download(timeout=180000) as d:
-            page.click("#png")
+            page.evaluate("PeaksApp.file('png', 150 / 25.4)")
         png = out / d.value.suggested_filename; d.value.save_as(png)
         with page.expect_download(timeout=180000) as d:
-            page.click("#svg")
+            page.evaluate("PeaksApp.file('svg')")
         svg = out / d.value.suggested_filename; d.value.save_as(svg)
         print("downloads:", png.name, png.stat().st_size // 1024, "KB;", svg.name, svg.stat().st_size // 1024, "KB")
         print("errors:", errs)

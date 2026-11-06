@@ -216,7 +216,10 @@
         if (r.ok) { els = (await r.json()).elements; break; }
       } catch (e) { /* try the next server */ }
     }
-    if (!els) return [];
+    if (!els) {
+      if (root.PeaksTerrain.strict) throw new Error("summit names unavailable (Overpass)");
+      return [];
+    }
     const out = els.map(e => {
       const name = latin(e.tags.name) ? e.tags.name : e.tags["name:en"];
       const ele = parseFloat(String(e.tags.ele || "").replace(/[^\d.\-]/g, ""));
