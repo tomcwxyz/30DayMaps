@@ -1,4 +1,26 @@
-/* Day 5 / Sight — editorial field notes, not a product dashboard. */
+/* Day 5 / Sight — editorial field notes, not a product dashboard.
+   The existing repository's OFL-licensed fonts are served locally, not via a CDN. */
+@font-face {
+  font-family: "Jost";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/jost-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Jost";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("./fonts/jost-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
 :root {
   --page: #f2eee5;
   --paper: #fcfaf5;
@@ -9,8 +31,8 @@
   --leaf: #e9ece3;
   --accent: #996044;
   --serif: "Iowan Old Style", Baskerville, "Palatino Linotype", Georgia, serif;
-  --sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --label: "Courier New", Courier, monospace;
+  --sans: "Jost", "Segoe UI", Arial, sans-serif;
+  --label: "IBM Plex Mono", "Courier New", monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
