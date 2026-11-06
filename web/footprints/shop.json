@@ -3,14 +3,14 @@
   "currency": "gbp",
   "countries": ["GB"],
   "sizes": {
-    "A4": {"label": "A4 print, unframed", "price": null, "prodigi_sku": null},
-    "A3": {"label": "A3 print, unframed", "price": null, "prodigi_sku": null},
-    "A2": {"label": "A2 print, unframed", "price": null, "prodigi_sku": null},
-    "A1": {"label": "A1 print, unframed", "price": null, "prodigi_sku": null},
-    "50x70": {"label": "50 × 70 cm print, unframed", "price": null, "prodigi_sku": null},
-    "square": {"label": "30 × 30 cm print, unframed", "price": null, "prodigi_sku": null}
+    "A4": {"label": "A4 print, unframed, matte art paper", "price": 2200, "prodigi_sku": "GLOBAL-FAP-A4"},
+    "A3": {"label": "A3 print, unframed, matte art paper", "price": 2600, "prodigi_sku": "GLOBAL-FAP-A3"},
+    "A2": {"label": "A2 print, unframed, matte art paper", "price": 3000, "prodigi_sku": "GLOBAL-FAP-A2"},
+    "A1": {"label": "A1 print, unframed, matte art paper", "price": 3500, "prodigi_sku": "GLOBAL-FAP-A1"},
+    "50x70": {"label": "50 × 70 cm print, unframed, matte art paper", "price": 3200, "prodigi_sku": "GLOBAL-FAP-20X28"},
+    "square": {"label": "30 × 30 cm print, unframed, matte art paper", "price": 2200, "prodigi_sku": "GLOBAL-FAP-12X12"}
   },
-  "shipping": {"label": "UK delivery", "price": null},
+  "shipping": {"label": "Free UK delivery", "price": 0},
   "digital": {"label": "Digital file by email", "price": 500, "link_days": 30},
   "fulfilment": {"provider": "prodigi", "shipping_method": "Standard"},
   "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged.",
