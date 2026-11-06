@@ -395,3 +395,25 @@ def test_first_names_are_used_only_when_sensible():
     assert fulfil.first_name("") == "" and fulfil.first_name(None) == "" and fulfil.first_name("123") == ""
     subject, text, html = fulfil.received_email("Home <b>", "A3 print", "", {"email": {"signoff": "Sam"}})
     assert text.startswith("Hello,") and "\nSam\n" in text and "<b>" not in html
+
+
+def test_owner_gets_a_preview_to_approve(monkeypatch, capsys):
+    _mail_env(monkeypatch)
+    monkeypatch.setenv("SHOP_OWNER_EMAIL", "owner@example.org")
+    monkeypatch.setenv("GITHUB_SERVER_URL", "https://github.com")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "o/r")
+    monkeypatch.setenv("GITHUB_RUN_ID", "42")
+    sent = []
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session()),
+                     ("POST", "api.resend.com/emails", 200, lambda kw: sent.append(kw) or {"id": "e"}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk_test_x", uploader=up, renderer=fake_render, shop=SHOP)
+    owner = [m for m in sent if m["json"]["to"] == ["owner@example.org"]]
+    assert len(owner) == 1
+    body = owner[0]["json"]
+    assert body["subject"].startswith("Approve this print?")
+    assert '<img src="https://blob.example/orders/pi_3Abcdefgh12345678-preview.png' in body["html"]
+    assert "https://github.com/o/r/actions/runs/42" in body["html"]
+    assert "dashboard.stripe.com/test/payments/pi_3Abcdefgh12345678" in body["text"]
+    assert not any(p in capsys.readouterr().out for p in PERSONAL)   # nothing personal in the public log

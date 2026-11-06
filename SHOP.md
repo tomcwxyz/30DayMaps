@@ -13,6 +13,8 @@ Customers design a print on the web page and choose a **printed copy** or a **di
 
 **Digital files.** The same workflow renders a PNG (at least 7,016 pixels on the long side, so sharp printed up to A2, whatever paper size was chosen) and a vector PDF, stores both in Vercel Blob and emails the customer links through Resend. The links go to the shop's `/api/download`, which checks they're genuine and in date (signed with `DOWNLOAD_SECRET`) and then hands out a short-lived link to the file. They work for `digital.link_days` (30 by default); the daily check deletes the files after that. Digital orders skip approval because the file only goes to the buyer. Checkout shows `digital_note`, which says the file is sent straight away and the 14-day cancellation right ends once it's sent. UK law requires the buyer's express agreement to that, so check the wording suits you.
 
+**Approval email.** Each print order also emails you (`SHOP_OWNER_EMAIL`, or `SHOP_REPLY_TO` if that's unset) an "Approve this print?" message with the preview image, the customer's words and the size, and a button to the GitHub run. It only goes to you; nothing personal appears in the public GitHub logs. Rejecting a run stops the order there: refund the customer in Stripe and reply to them.
+
 **Customer emails.** Print buyers get an "Order received" email when the order starts and an "On its way" email with the tracking link when Prodigi ships it (sent by the daily check, so up to a day after dispatch). Both go through Resend from `SHOP_EMAIL_FROM`; a failed email is noted in the run log but never holds up the order. Turn on Stripe's own receipts too, for the payment itself.
 
 Stripe is the record: each payment's metadata shows `print_status` and any `print_error`.
