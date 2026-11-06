@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Peaks Print Maker</title>
+<meta name="description" content="Contour, ridgeline, skyline and panorama prints of real mountains, or of your own route from a GPX file. Drawn from open elevation data.">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root {
+  --bg: #EEEDE7;
+  --panel: #F8F7F2;
+  --fg: #1F2321;
+  --muted: #646A66;
+  --line: #D3D2CA;
+  --accent: #2F5D50;
+  --accent-fg: #FFFFFF;
+  --sheet-shadow: rgba(25, 30, 28, .2);
+  --warn: #9A5B1E;
+  --display: "Jost", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131917; --panel: #1A211E; --fg: #E7E9E3; --muted: #9AA39D; --line: #2E3833;
+    --accent: #79B39F; --accent-fg: #0F1714; --sheet-shadow: rgba(0,0,0,.55); --warn: #E0A260;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131917; --panel: #1A211E; --fg: #E7E9E3; --muted: #9AA39D; --line: #2E3833;
+  --accent: #79B39F; --accent-fg: #0F1714; --sheet-shadow: rgba(0,0,0,.55); --warn: #E0A260;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--display);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+.app { display: grid; grid-template-columns: minmax(290px, 370px) 1fr; gap: 24px; max-width: 1440px; margin: 0 auto; align-items: start; }
+@media (max-width: 860px) { .app { grid-template-columns: 1fr; } .stage { position: static !important; order: -1; } }
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font-weight: 700; font-size: 26px; letter-spacing: .14em; text-transform: uppercase; margin: 0; }
+.lede { color: var(--muted); margin: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 20px; min-width: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+legend { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; padding: 0; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+label.check { display: flex; align-items: center; gap: 8px; color: var(--fg); font-size: 14px; }
+label.check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+input[type=text], input[type=search], select {
+  font: 15px/1.3 var(--display); color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; min-width: 0;
+}
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.search { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+button {
+  font: 500 14px/1 var(--display); border-radius: 6px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-height: 40px;
+}
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.results { display: grid; gap: 4px; }
+.results button { text-align: left; line-height: 1.3; padding: 8px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 6px 10px; font-size: 13px; min-height: 34px; }
+.chips button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.seg button { padding: 8px 6px; font-size: 14px; display: grid; justify-items: center; gap: 4px; }
+.seg svg { width: 34px; height: 22px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; padding: 0; position: relative; border: 2px solid var(--line); overflow: hidden; }
+.swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.swatch span { position: absolute; inset: 0; }
+.range { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.range output { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; min-width: 4.8em; text-align: right; color: var(--fg); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.4; }
+.gpx { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 8px; padding: 10px; }
+.gpx input[type=file] { font: 13px var(--display); color: var(--muted); max-width: 100%; }
+.status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
+.status.warn { color: var(--warn); }
+.stage { min-width: 0; display: grid; gap: 10px; justify-items: center; position: sticky; top: 16px; }
+.sheet { max-width: 100%; box-shadow: 0 10px 40px var(--sheet-shadow); background: #fff; position: relative; }
+.sheet canvas { display: block; width: 100%; height: auto; }
+.sheet.busy::after { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.35); }
+.meta { font: 12px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.credit { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
+.credit a { color: inherit; }
+@media (prefers-reduced-motion: no-preference) { button { transition: background .15s, border-color .15s; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Peaks</h1>
+    <p class="lede">Prints of real mountains, or of your own route, drawn from open elevation data.</p>
+  </header>
+
+  <form class="panel" id="controls" autocomplete="off" onsubmit="return false">
+    <fieldset>
+      <legend>Mountain</legend>
+      <div class="chips" id="presets" aria-label="Ready-made mountains"></div>
+      <div class="search">
+        <input type="search" id="q" placeholder="Search a peak, range or place" aria-label="Search for a place">
+        <button type="button" id="find">Find</button>
+      </div>
+      <div class="results" id="results" aria-live="polite"></div>
+      <div class="gpx">
+        <label for="gpxFile">Or draw your own route (GPX from a watch or app)
+          <input type="file" id="gpxFile" accept=".gpx,application/gpx+xml,application/xml,text/xml">
+        </label>
+        <label class="check" id="trimRow" hidden><input type="checkbox" id="trim"> Hide the first and last 250 m</label>
+        <p class="hint" id="gpxHint">Stays on your device: the file is read here, never uploaded.</p>
+        <button type="button" id="gpxClear" hidden>Back to mountains</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Style</legend>
+      <div class="seg" id="styles" role="group" aria-label="Print style"></div>
+    </fieldset>
+
+    <fieldset id="viewSet">
+      <legend>View</legend>
+      <label for="width" id="widthRow">Ground shown across the map
+        <span class="range"><input type="range" id="width" min="2" max="50" step="0.5" value="8"><output id="widthOut" for="width">8 km</output></span>
+      </label>
+      <label for="detail" id="detailRow">Contour lines
+        <span class="range"><input type="range" id="detail" min="30" max="160" step="5" value="90"><output id="detailOut" for="detail">fine</output></span>
+      </label>
+      <label for="rows" id="rowsRow">Ridgelines
+        <span class="range"><input type="range" id="rows" min="24" max="140" step="2" value="64"><output id="rowsOut" for="rows">64</output></span>
+      </label>
+      <label for="seenFrom" id="seenRow">Skyline seen from
+        <select id="seenFrom"></select>
+      </label>
+      <label for="dist" id="distRow">Distance away
+        <span class="range"><input type="range" id="dist" min="3" max="40" step="0.5" value="10"><output id="distOut" for="dist">10 km</output></span>
+      </label>
+      <label for="facing" id="facingRow">Facing
+        <span class="range"><input type="range" id="facing" min="0" max="359" step="1" value="0"><output id="facingOut" for="facing">N 0°</output></span>
+      </label>
+      <label for="fov" id="fovRow">How wide
+        <span class="range"><input type="range" id="fov" min="60" max="360" step="5" value="160"><output id="fovOut" for="fov">160°</output></span>
+      </label>
+      <label for="reach" id="reachRow">How far to look
+        <span class="range"><input type="range" id="reach" min="10" max="60" step="1" value="35"><output id="reachOut" for="reach">35 km</output></span>
+      </label>
+      <label class="check" id="labelsRow"><input type="checkbox" id="labels" checked> Names and heights</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Words</legend>
+      <label for="title">Title<input type="text" id="title" value=""></label>
+      <label for="subtitle">Subtitle<input type="text" id="subtitle" value=""></label>
+      <label class="check"><input type="checkbox" id="details" checked> Small print line (heights, scale, view)</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Colours and sheet</legend>
+      <div class="swatches" id="themes" role="group" aria-label="Colours"></div>
+      <div class="row">
+        <label for="paper">Paper<select id="paper"></select></label>
+        <label for="orient">Orientation
+          <select id="orient"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Download</legend>
+      <div class="status" id="status" role="status"></div>
+      <label for="dpi">Image resolution
+        <select id="dpi">
+          <option value="web">Web (2400 px long edge)</option>
+          <option value="150">Print, 150 dpi</option>
+          <option value="300" selected>Print, 300 dpi</option>
+        </select>
+      </label>
+      <div class="row">
+        <button type="button" class="primary" id="png" disabled>PNG image</button>
+        <button type="button" id="svg" disabled>SVG for print</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <section class="stage" aria-label="Preview">
+    <div class="sheet" id="sheet"><canvas id="preview" width="600" height="848"></canvas></div>
+    <div class="meta" id="meta"></div>
+  </section>
+
+  <p class="credit">Elevation from <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen/Tilezen Terrain Tiles</a> on AWS Open Data (SRTM, EU-DEM, UK Environment Agency LiDAR and others); summit names © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors via Overpass; search by Nominatim. Skylines allow for the curve of the earth and normal refraction. The credit line on each print is required by the data licences.</p>
+</div>
+
+<script src="lib/vendor/d3-array.min.js"></script>
+<script src="lib/vendor/d3-contour.min.js"></script>
+<script src="lib/terrain.js"></script>
+<script src="lib/draw.js"></script>
+<script src="lib/render.js"></script>
+<script>
+"use strict";
+const T = PeaksTerrain, D = PeaksDraw, RN = PeaksRender;
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+if (params.get("tiles")) T.setTileUrl(params.get("tiles"));
+
+const PAPERS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841], "50x70": [500, 700], square: [300, 300] };
+const PANOS = { "pano60": [600, 200, "Panorama 60 × 20 cm"], "pano90": [900, 300, "Panorama 90 × 30 cm"], "pano120": [1200, 400, "Panorama 120 × 40 cm"] };
+const PAPER_NAMES = { A4: "A4", A3: "A3", A2: "A2", A1: "A1", "50x70": "50 × 70 cm", square: "Square 30 cm" };
+const STYLES = {
+  poster:     { label: "Poster", icon: '<rect x="7" y="1" width="20" height="13" fill="none" stroke="currentColor"/><path d="M8 7c4-4 6 2 9-1s5 1 9-2M8 11c4-3 7 1 10-1s4 0 8-2" fill="none" stroke="currentColor" stroke-width=".8"/><path d="M7 21l6-4 3 2 5-4 6 6z" fill="currentColor"/>' },
+  contours:   { label: "Contours", icon: '<path d="M4 15c5-9 11-11 15-8s7 9 11 7M8 17c4-6 9-7 11-5s5 6 8 5M12 19c3-3 6-3 8-2" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+  ridgelines: { label: "Ridgelines", icon: '<path d="M2 8h8l3-5 3 5h16M2 12h6l5-6 4 4 3-2 3 4h7M2 16h9l4-3 3 3 4-1 3 1h6M2 20h30" fill="none" stroke="currentColor" stroke-width="1.2"/>' },
+  skyline:    { label: "Skyline", icon: '<path d="M2 21V14l5-4 4 3 5-8 5 6 4-3 7 6v7z" fill="currentColor" opacity=".45"/><path d="M2 21v-4l6-3 6 3 6-4 6 3 6-2v7z" fill="currentColor"/>' },
+  panorama:   { label: "Panorama", icon: '<path d="M1 18l4-5 3 2 4-6 3 4 3-3 4 5 3-4 3 3 4 4z" fill="currentColor"/><path d="M1 21h32" stroke="currentColor"/>' },
+};
+const DIRS = [["S", "the south", 180], ["SW", "the south-west", 225], ["W", "the west", 270], ["NW", "the north-west", 315],
+              ["N", "the north", 0], ["NE", "the north-east", 45], ["E", "the east", 90], ["SE", "the south-east", 135]];
+const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+
+let PLACES = { areas: [], views: [] };
+const state = {
+  place: null,          // { lat, lon, name, region, widthKm, area?, names? }
+  route: null,          // { name, date, raw: [[lat, lon, ele]] }
+  style: "poster", theme: "paper", paperStd: "A3",
+  composed: null,       // last { items, pw, ph }
+  wordsFor: null,       // place key the title/subtitle defaults were set for
+};
+
+// ---- caches -------------------------------------------------------------------------------
+const cache = new Map();
+function memo(key, fn) { if (!cache.has(key)) { const p = Promise.resolve().then(fn); p.catch(() => cache.delete(key)); cache.set(key, p); } return cache.get(key); }
+const r5 = v => Math.round(v * 1e5) / 1e5;
+
+function getGrid(lat, lon, halfW, halfH, res, what) {
+  const key = `g:${r5(lat)},${r5(lon)},${Math.round(halfW)},${Math.round(halfH)},${Math.round(res)}`;
+  return memo(key, () => T.grid({ lat, lon, halfW, halfH, res, onProgress: (a, b) => setStatus(`Fetching ${what}: ${a} of ${b} tiles`) }).then(g => Object.assign(g, { key })));
+}
+function getNames(g, bundled) {
+  if (bundled && bundled.length) return Promise.resolve(bundled);
+  return memo(`n:${g.key}`, () => { setStatus("Finding summit names…"); return T.summits(g.lat, g.lon, g.halfW, g.halfH); });
+}
+
+// ---- sheet and frames ----------------------------------------------------------------------
+function paperMM() {
+  if (state.style === "panorama") { const p = PANOS[$("paper").value] || PANOS.pano90; return [p[0], p[1]]; }
+  const [w, h] = PAPERS[$("paper").value] || PAPERS.A3;
+  return $("orient").value === "landscape" ? [Math.max(w, h), Math.min(w, h)] : [w, h];
+}
+
+const kindOf = style => style === "panorama" ? "panorama" : style === "skyline" ? "skyline" : "map";
+
+// Ground frame (metres around its own centre) for a map box.
+function areaFrame(box) {
+  const aspect = box.w / box.h;
+  if (state.route) {
+    const R = routeLocal(state.route.bbox.lat, state.route.bbox.lon);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const [x, y] of R) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    let W = Math.max(x1 - x0, (y1 - y0) * aspect) * 1.28;
+    W = Math.max(W, 2500);
+    const [lat, lon] = T.toLL(state.route.bbox.lat, state.route.bbox.lon, cx, cy);
+    return { lat, lon, x0: -W / 2, x1: W / 2, y0: -W / aspect / 2, y1: W / aspect / 2 };
+  }
+  const p = state.place, a = p.area, W = parseFloat($("width").value) * 1000;
+  let lat = p.lat, lon = p.lon;
+  if (a && a.frame && Math.abs(W - a.width_km * 1000 / (a.frame.zoom || 1)) < 1) [lat, lon] = T.toLL(p.lat, p.lon, (a.frame.dx_km || 0) * 1000, (a.frame.dy_km || 0) * 1000);
+  return { lat, lon, x0: -W / 2, x1: W / 2, y0: -W / aspect / 2, y1: W / aspect / 2 };
+}
+
+function frameGrid(fr) {
+  const W = fr.x1 - fr.x0, H = fr.y1 - fr.y0;
+  const halfW = W / 2 * 1.06, halfH = Math.max(H, W * 1.45) / 2 * 1.06;
+  return getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000), "elevation");
+}
+
+// The viewpoint for the skyline style and the poster's lower strip.
+function skylineView(fr) {
+  const sel = $("seenFrom").value, p = state.place;
+  if (sel.startsWith("view:")) {
+    const v = PLACES.views.find(x => x.slug === sel.slice(5));
+    return { lat: v.lat, lon: v.lon, az: v.azimuth, fov: v.fov, reach: v.reach_km * 1000, lift: v.lift_m, near: (v.near_km ?? 0.4) * 1000,
+             floor: v.poster_floor, label: v.subtitle, crop: p.area && p.area.poster_view === v.slug ? p.area.poster_crop : null, names: v.names };
+  }
+  const [code, words, bearing] = DIRS.find(d => d[0] === sel) || DIRS[0];
+  const W = fr ? fr.x1 - fr.x0 : parseFloat($("width").value) * 1000;
+  const dist = parseFloat($("dist").value) * 1000;
+  const b = bearing * Math.PI / 180;
+  const c = fr ? [fr.lat, fr.lon] : [p.lat, p.lon];
+  const [lat, lon] = T.toLL(c[0], c[1], dist * Math.sin(b), dist * Math.cos(b));
+  return { lat, lon, az: (bearing + 180) % 360, fov: Math.max(24, Math.min(110, 2 * Math.atan(0.62 * W / dist) * 180 / Math.PI)),
+           reach: dist + W * 0.9, lift: 2, near: Math.min(2500, dist * 0.12), label: `from ${words}, ${D.fmtKm(dist)} away` };
+}
+
+function panoramaView() {
+  let lat = state.place ? state.place.lat : 0, lon = state.place ? state.place.lon : 0, label = "from the summit";
+  let names = null;
+  if (state.route) { const hp = state.route.high; lat = hp[0]; lon = hp[1]; label = "from the high point of the route"; }
+  else {
+    const pv = PLACES.views.find(v => v.panorama && Math.hypot(...T.toXY(lat, lon, v.lat, v.lon)) < 1500);
+    if (pv && pv.names && pv.names.length) names = pv.names;
+    if (!state.place.area) label = `from ${state.place.name}`;
+  }
+  return { lat, lon, az: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value * 1000, lift: 2, near: 1200, label, names };
+}
+
+function viewGrid(v) {
+  const res = Math.max(20, v.reach / 900);
+  return getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
+}
+
+// ---- routes ---------------------------------------------------------------------------------
+function parseGPX(text, name) {
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) throw new Error("That file is not valid GPX.");
+  let nodes = [...doc.getElementsByTagName("trkpt")];
+  if (!nodes.length) nodes = [...doc.getElementsByTagName("rtept")];
+  if (nodes.length < 2) throw new Error("No track points found in that file.");
+  const raw = nodes.map(n => [parseFloat(n.getAttribute("lat")), parseFloat(n.getAttribute("lon"))]).filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+  const t = doc.getElementsByTagName("time")[0];
+  const nm = doc.querySelector("trk > name, rte > name, metadata > name");
+  return { name: (nm && nm.textContent.trim()) || name.replace(/\.gpx$/i, "").replace(/[_-]+/g, " "), date: t ? new Date(t.textContent) : null, raw };
+}
+
+function prepareRoute(r) {
+  let pts = r.raw;
+  // distances along the route
+  const dist = [0];
+  for (let i = 1; i < pts.length; i++) {
+    const [x, y] = T.toXY(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1]);
+    dist.push(dist[i - 1] + Math.hypot(x, y));
+  }
+  if ($("trim").checked && dist[dist.length - 1] > 1500) {
+    const total = dist[dist.length - 1];
+    const keep = dist.map((d, i) => d >= 250 && d <= total - 250 ? i : -1).filter(i => i >= 0);
+    pts = keep.map(i => pts[i]);
+  }
+  // thin to at most ~4000 points
+  const step = Math.max(1, Math.floor(pts.length / 4000));
+  pts = pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
+  let s = 90, n = -90, w = 180, e = -180;
+  for (const [la, lo] of pts) { s = Math.min(s, la); n = Math.max(n, la); w = Math.min(w, lo); e = Math.max(e, lo); }
+  return Object.assign(r, { pts, bbox: { lat: (s + n) / 2, lon: (w + e) / 2 } });
+}
+
+function routeLocal(lat0, lon0) { return state.route.pts.map(([la, lo]) => T.toXY(lat0, lon0, la, lo)); }
+
+// Route in grid metres, with an elevation profile taken from the elevation model.
+function routeOnGrid(g) {
+  const xy = routeLocal(g.lat, g.lon);
+  const pts = [], prof = [];
+  let d = 0;
+  xy.forEach(([x, y], i) => {
+    if (i) d += Math.hypot(x - xy[i - 1][0], y - xy[i - 1][1]);
+    pts.push([x, y]); prof.push([d, T.sample(g, x, y)]);
+  });
+  // smooth the profile over ~60 m and count the climbing with a 3 m dead band
+  const sm = prof.map(([dd], i) => {
+    let s = 0, k = 0;
+    for (let j = i; j >= 0 && dd - prof[j][0] <= 30; j--) { s += prof[j][1]; k++; }
+    for (let j = i + 1; j < prof.length && prof[j][0] - dd <= 30; j++) { s += prof[j][1]; k++; }
+    return [dd, s / k];
+  });
+  let up = 0, ref = sm[0][1];
+  for (const [, e] of sm) { if (e > ref + 3) { up += e - ref; ref = e; } else if (e < ref - 3) ref = e; }
+  const hi = sm.reduce((a, b) => b[1] > a[1] ? b : a, sm[0]);
+  return { pts, profile: sm, length: d, ascent: up, high: hi[1] };
+}
+
+// ---- composing the sheet ---------------------------------------------------------------------
+function wordsNow(details) {
+  return { title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), details: $("details").checked ? details : "" };
+}
+
+let runId = 0;
+async function refresh() {
+  const id = ++runId;
+  if (!state.place && !state.route) return;
+  $("sheet").classList.add("busy");
+  try {
+    const [pw, ph] = paperMM();
+    const th = D.THEMES[state.theme];
+    const style = state.style, kind = kindOf(style);
+    const labels = $("labels").checked;
+    // A first layout to find the map box (the caption height depends only on which words exist).
+    const L = D.layout(pw, ph, kind, wordsNow("x"));
+    const u = L.u;
+    const items = [{ t: "rect", x: 0, y: 0, w: pw, h: ph, fill: th.page }];
+    let details = "", creditText = T.CREDIT;
+    const names = state.place && state.place.names;
+
+    if (style === "contours" || style === "ridgelines" || style === "poster") {
+      const box = style === "poster" ? { ...L.map, h: L.map.h * 0.72 } : L.map;
+      const fr = areaFrame(box);
+      const g = await frameGrid(fr);
+      if (id !== runId) return;
+      const route = state.route ? routeOnGrid(g) : null;
+      if (style === "ridgelines") {
+        const rows = D.drawRidgelines(items, { g, frame: fr, box, th, u, rows: +$("rows").value });
+        details = `${rows} west–east profiles   ·   ${D.fmtKm(fr.x1 - fr.x0)} across   ·   north at the back`;
+      } else {
+        const nm = labels ? await getNames(g, state.route ? null : names) : [];
+        if (id !== runId) return;
+        setStatus("Drawing contours…");
+        await new Promise(r => setTimeout(r, 0));
+        const a = state.place && state.place.area;
+        const gkey = `c:${g.key}:${fr.x0}:${fr.y0}:${$("detail").value}:${a && a.smooth_m || 14}`;
+        if (!cache.has(gkey)) cache.set(gkey, D.contourGeometry(g, fr, { lines: +$("detail").value, smooth: a && a.smooth_m || 14 }));
+        const geo = cache.get(gkey);
+        D.drawContours(items, { g, geo, frame: fr, box, th, u, labels, names: nm, filled: state.theme === "bands", route });
+        const top = state.place && state.place.area ? state.place.area.summit_m : Math.round(geo.hi);
+        details = route ? `${D.fmtKm(route.length)}   ·   ${Math.round(route.ascent).toLocaleString("en-GB")} m of climbing   ·   high point ${Math.round(route.high)} m`
+                        : `${top} m   ·   ${state.place.region ? state.place.region + "   ·   " : ""}contours every ${geo.step} m`;
+        if (style === "poster") {
+          const strip = { x: L.map.x, y: L.map.y + L.map.h * 0.76, w: L.map.w, h: L.map.h * 0.24 };
+          if (route) {
+            D.drawProfile(items, { route, box: { ...strip, h: strip.h * 0.84 }, th, u, labels });
+            details += "   ·   profile in km";
+          } else {
+            const v = skylineView(fr);
+            const vg = await viewGrid(v);
+            if (id !== runId) return;
+            setStatus("Drawing the skyline…");
+            const vn = labels ? await getNames(vg, v.names) : [];
+            const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
+            const ink = th.panel !== th.page ? th.panel : th.line;
+            sd.v.floor = v.floor;
+            D.drawSkyline(items, { sd, box: strip, th, u, labels: false, labelRoom: 0.08, crop: v.crop, colours: [th.page, th.page, D.mix(th.page, ink, 0.2), ink], sky: false });
+            details += `   ·   skyline ${v.label}`;
+          }
+        }
+      }
+      if (!state.route || style !== "ridgelines") creditText += "  ·  summits © OpenStreetMap contributors";
+    } else {
+      const v = style === "panorama" ? panoramaView() : skylineView(null);
+      const vg = await viewGrid(v);
+      if (id !== runId) return;
+      const vn = labels ? await getNames(vg, v.names) : [];
+      if (id !== runId) return;
+      setStatus(style === "panorama" ? "Drawing the panorama…" : "Drawing the skyline…");
+      await new Promise(r => setTimeout(r, 0));
+      const cols = Math.min(style === "panorama" ? 3600 : 2600, Math.round(L.map.w * 2.5));
+      const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${cols}`, () => D.skyline(vg, v, vn, cols));
+      D.drawSkyline(items, { sd, box: L.map, th, u, labels, compass: style === "panorama" });
+      const facing = COMPASS[Math.round(((v.az % 360) + 360) % 360 / 45) % 8];
+      details = style === "panorama" ? `${v.label}   ·   facing ${facing}   ·   ${v.fov}° wide   ·   to ${D.fmtKm(v.reach)}`
+                                     : `${v.label}   ·   eye ${Math.round(sd.eye)} m   ·   ${Math.round(v.fov)}° wide`;
+      creditText += "  ·  summits © OpenStreetMap contributors  ·  earth curvature and refraction applied";
+    }
+    if (id !== runId) return;
+    const W = wordsNow(details);
+    D.caption(D.layout(pw, ph, kind, W), items, th, W);
+    D.credit(L, items, th, creditText);
+    state.composed = { items, pw, ph };
+    draw();
+    setStatus("");
+    $("png").disabled = $("svg").disabled = false;
+  } catch (e) {
+    if (id === runId) { console.error(e); setStatus(`Could not draw this: ${e.message}`, true); }
+  } finally {
+    if (id === runId) $("sheet").classList.remove("busy");
+  }
+}
+function cached(key, fn) { if (!cache.has(key)) cache.set(key, fn()); return cache.get(key); }
+
+function draw() {
+  const c = state.composed;
+  if (!c) return;
+  const stage = $("sheet").parentElement.getBoundingClientRect();
+  const maxW = Math.min(stage.width, 980), maxH = Math.max(320, innerHeight * 0.86);
+  const cssW = Math.min(maxW, maxH * c.pw / c.ph);
+  $("sheet").style.width = `${cssW}px`;
+  RN.toCanvas($("preview"), c.items, c.pw, c.ph, cssW * Math.min(2, devicePixelRatio || 1) / c.pw);
+  $("meta").textContent = `${paperName()} · ${c.pw} × ${c.ph} mm`;
+}
+function paperName() { return state.style === "panorama" ? PANOS[$("paper").value][2] : `${PAPER_NAMES[$("paper").value]} ${$("orient").value}`; }
+
+let timer = 0;
+function schedule(ms = 220) { clearTimeout(timer); timer = setTimeout(refresh, ms); }
+function setStatus(text, warn) { const s = $("status"); s.textContent = text; s.classList.toggle("warn", !!warn); }
+
+// ---- controls ---------------------------------------------------------------------------------
+function showFor() {
+  const s = state.style, route = !!state.route, area = s !== "skyline" && s !== "panorama";
+  $("widthRow").hidden = !area || route;
+  $("detailRow").hidden = !(s === "contours" || s === "poster");
+  $("rowsRow").hidden = s !== "ridgelines";
+  $("seenRow").hidden = $("distRow").hidden = !(s === "skyline" || (s === "poster" && !route));
+  if (!$("seenRow").hidden) $("distRow").hidden = $("seenFrom").value.startsWith("view:");
+  $("facingRow").hidden = $("fovRow").hidden = $("reachRow").hidden = s !== "panorama";
+  $("labelsRow").hidden = s === "ridgelines";
+  for (const b of $("styles").children) b.disabled = route && b.dataset.style === "skyline";
+  // paper list
+  const pano = s === "panorama", sel = $("paper"), want = pano ? Object.keys(PANOS) : Object.keys(PAPERS);
+  if ([...sel.options].map(o => o.value).join() !== want.join()) {
+    sel.innerHTML = want.map(k => `<option value="${k}">${pano ? PANOS[k][2] : PAPER_NAMES[k]}</option>`).join("");
+    sel.value = pano ? "pano90" : state.paperStd;
+  }
+  $("orient").disabled = pano;
+}
+
+function setStyle(s) {
+  if (state.route && s === "skyline") return;
+  const was = state.style;
+  state.style = s;
+  for (const b of $("styles").children) b.setAttribute("aria-pressed", String(b.dataset.style === s));
+  if (s === "skyline" && was !== "skyline") $("orient").value = "landscape";
+  if ((was === "skyline" || was === "panorama") && s !== "skyline" && s !== "panorama") $("orient").value = "portrait";
+  showFor(); schedule(0);
+}
+
+function seenOptions() {
+  const p = state.place, a = p && p.area;
+  const opts = [];
+  if (a && a.poster_view) {
+    const v = PLACES.views.find(x => x.slug === a.poster_view);
+    if (v) opts.push([`view:${v.slug}`, `The classic view: ${v.subtitle.replace(/, looking.*/, "")}`]);
+  }
+  for (const [code, words] of DIRS) opts.push([code, `From ${words}`]);
+  $("seenFrom").innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+}
+
+function choosePlace(p, { keepStyle = true } = {}) {
+  state.route = null;
+  $("gpxClear").hidden = true; $("trimRow").hidden = true; $("gpxFile").value = "";
+  state.place = p;
+  const a = p.area;
+  const w = a ? a.width_km / ((a.frame && a.frame.zoom) || 1) : p.widthKm || 8;
+  $("width").value = Math.max(2, Math.min(50, Math.round(w * 2) / 2));
+  $("detail").value = w > 16 ? 60 : 90;
+  $("dist").value = Math.max(4, Math.min(40, Math.round(w * 1.4)));
+  const pv = PLACES.views.find(v => v.panorama && Math.hypot(...T.toXY(p.lat, p.lon, v.lat, v.lon)) < 1500);
+  $("facing").value = pv ? pv.azimuth : 0; $("fov").value = pv ? pv.fov : 160; $("reach").value = pv ? pv.reach_km : 35;
+  seenOptions();
+  $("title").value = a ? a.title : p.name;
+  $("subtitle").value = D.ll(p.lat, p.lon);
+  for (const b of $("presets").children) b.setAttribute("aria-pressed", String(!!a && b.dataset.slug === a.slug));
+  syncOutputs(); showFor(); schedule(0);
+}
+
+function syncOutputs() {
+  $("widthOut").textContent = `${(+$("width").value).toFixed(1).replace(/\.0$/, "")} km`;
+  const d = +$("detail").value;
+  $("detailOut").textContent = d < 60 ? "open" : d < 100 ? "fine" : "dense";
+  $("rowsOut").textContent = $("rows").value;
+  $("distOut").textContent = `${(+$("dist").value).toFixed(1).replace(/\.0$/, "")} km`;
+  const f = +$("facing").value;
+  $("facingOut").textContent = `${COMPASS[Math.round(f / 45) % 8]} ${f}°`;
+  $("fovOut").textContent = `${$("fov").value}°`;
+  $("reachOut").textContent = `${$("reach").value} km`;
+}
+
+async function search() {
+  const q = $("q").value.trim();
+  if (!q) return;
+  $("results").innerHTML = "<p class='hint'>Searching…</p>";
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "en-GB" } });
+    const list = await r.json();
+    $("results").innerHTML = "";
+    if (!list.length) { $("results").innerHTML = "<p class='hint'>Nothing found. Try the name of a hill, a valley or a town.</p>"; return; }
+    for (const it of list) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = it.display_name;
+      b.onclick = () => {
+        $("results").innerHTML = "";
+        const name = it.name || it.display_name.split(",")[0];
+        const bb = (it.boundingbox || []).map(Number);
+        const span = bb.length === 4 ? Math.hypot(...T.toXY(bb[0], bb[2], bb[1], bb[3])) / 1000 : 0;
+        const peak = it.type === "peak" || it.category === "natural";
+        choosePlace({ lat: +it.lat, lon: +it.lon, name, region: it.display_name.split(",").slice(1, 3).join(",").trim(),
+                      widthKm: peak ? 8 : Math.max(6, Math.min(40, span * 1.2)) });
+      };
+      $("results").append(b);
+    }
+  } catch (e) { $("results").innerHTML = "<p class='hint'>Search is not available just now.</p>"; }
+}
+
+async function loadGPX(file) {
+  try {
+    const r = parseGPX(await file.text(), file.name);
+    state.route = r;
+    prepareRoute(r);
+    r.high = r.pts[0];   // replaced by the true high point once the terrain is in
+    state.place = { lat: r.bbox.lat, lon: r.bbox.lon, name: r.name, region: "" };
+    $("title").value = r.name;
+    $("subtitle").value = r.date && !isNaN(r.date) ? r.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : D.ll(r.bbox.lat, r.bbox.lon);
+    $("gpxClear").hidden = false; $("trimRow").hidden = false;
+    for (const b of $("presets").children) b.setAttribute("aria-pressed", "false");
+    if (state.style === "skyline") setStyle("poster"); else { showFor(); schedule(0); }
+    // the panorama stands at the route's highest point, found once the terrain is in
+    const fr = areaFrame(D.layout(...paperMM(), "map", wordsNow("x")).map);
+    const g = await frameGrid(fr);
+    let best = -Infinity;
+    for (const p of r.pts) { const [x, y] = T.toXY(g.lat, g.lon, p[0], p[1]); const z = T.sample(g, x, y); if (z > best) { best = z; r.high = p; } }
+    if (state.style === "panorama") schedule(0);
+  } catch (e) { setStatus(e.message, true); }
+}
+
+// ---- downloads ---------------------------------------------------------------------------------
+function fileStem() {
+  const t = ($("title").value || "peaks").toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") || "peaks";
+  return `${t}-${state.style}-${$("paper").value}`;
+}
+function save(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function exportPNG() {
+  const c = state.composed; if (!c) return;
+  const dpi = $("dpi").value;
+  let ppm = dpi === "web" ? 2400 / Math.max(c.pw, c.ph) : +dpi / 25.4;
+  const max = 120e6;
+  if (c.pw * c.ph * ppm * ppm > max) { ppm = Math.sqrt(max / (c.pw * c.ph)); setStatus(`Capped at ${Math.round(ppm * 25.4)} dpi for this paper size. Use SVG for full quality.`, true); }
+  else setStatus("Making the image…");
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const canvas = document.createElement("canvas");
+    RN.toCanvas(canvas, c.items, c.pw, c.ph, ppm);
+    const blob = await new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("too large for this browser")), "image/png"));
+    save(blob, `${fileStem()}.png`);
+    if (!$("status").classList.contains("warn")) setStatus("");
+  } catch (e) { setStatus(`Could not make the image (${e.message}). Try 150 dpi, or the SVG.`, true); }
+}
+let fontCSS = null;
+async function embeddedFonts() {
+  if (fontCSS) return fontCSS;
+  const css = await (await fetch("fonts/fonts.css")).text();
+  const parts = [];
+  for (const rule of css.match(/@font-face\{[^}]+\}/g) || []) {
+    const url = rule.match(/url\(([^)]+)\)/)[1];
+    const buf = await (await fetch(new URL(url, new URL("fonts/fonts.css", location.href)))).arrayBuffer();
+    let bin = ""; const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    parts.push(rule.replace(url, `data:font/woff2;base64,${btoa(bin)}`));
+  }
+  return (fontCSS = parts.join(""));
+}
+async function exportSVG() {
+  const c = state.composed; if (!c) return;
+  setStatus("Making the SVG…");
+  const svg = RN.toSVG(c.items, c.pw, c.ph, await embeddedFonts());
+  save(new Blob([svg], { type: "image/svg+xml" }), `${fileStem()}.svg`);
+  setStatus("");
+}
+
+// ---- start -----------------------------------------------------------------------------------
+function build() {
+  $("styles").innerHTML = Object.entries(STYLES).map(([k, s]) =>
+    `<button type="button" data-style="${k}" aria-pressed="${k === state.style}"><svg viewBox="0 0 34 22" aria-hidden="true">${s.icon}</svg>${s.label}</button>`).join("");
+  $("styles").onclick = e => { const b = e.target.closest("button"); if (b) setStyle(b.dataset.style); };
+  $("themes").innerHTML = Object.entries(D.THEMES).map(([k, t]) => {
+    const bg = t.fills ? `conic-gradient(${t.fills.slice(0, 5).join(",")})` : `linear-gradient(135deg, ${t.panel} 0 55%, ${t.line} 55% 62%, ${t.page} 62%)`;
+    return `<button type="button" class="swatch" data-theme="${k}" aria-pressed="${k === state.theme}" aria-label="${t.label}" title="${t.label}"><span style="background:${bg}"></span></button>`;
+  }).join("");
+  $("themes").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.theme = b.dataset.theme;
+    for (const x of $("themes").children) x.setAttribute("aria-pressed", String(x === b));
+    schedule(0);
+  };
+  $("presets").innerHTML = PLACES.areas.map(a => `<button type="button" data-slug="${a.slug}" aria-pressed="false">${a.name}</button>`).join("");
+  $("presets").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const a = PLACES.areas.find(x => x.slug === b.dataset.slug);
+    choosePlace({ lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names });
+  };
+  for (const id of ["width", "detail", "rows", "dist", "facing", "fov", "reach"]) $(id).addEventListener("input", () => { syncOutputs(); schedule(350); });
+  for (const id of ["labels", "details", "orient"]) $(id).addEventListener("change", () => schedule(0));
+  $("paper").addEventListener("change", () => { if (state.style !== "panorama") state.paperStd = $("paper").value; schedule(0); });
+  $("seenFrom").addEventListener("change", () => { showFor(); schedule(0); });
+  for (const id of ["title", "subtitle"]) $(id).addEventListener("input", () => schedule(120));
+  $("find").onclick = search;
+  $("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); search(); } });
+  $("gpxFile").addEventListener("change", e => e.target.files[0] && loadGPX(e.target.files[0]));
+  $("trim").addEventListener("change", () => { if (state.route) { prepareRoute(state.route); schedule(0); } });
+  $("gpxClear").onclick = () => { const a = PLACES.areas[0]; choosePlace({ lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names }); };
+  $("png").onclick = exportPNG; $("svg").onclick = exportSVG;
+  let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(draw, 120); });
+}
+
+(async () => {
+  PLACES = await (await fetch("places.json")).json();
+  build();
+  await Promise.all(["500 12px Jost", "700 12px Jost", "400 12px 'IBM Plex Mono'"].map(f => document.fonts.load(f).catch(() => null)));
+  const start = PLACES.areas.find(a => a.slug === (params.get("place") || "helvellyn")) || PLACES.areas[0];
+  if (params.get("style") && STYLES[params.get("style")]) state.style = params.get("style");
+  for (const b of $("styles").children) b.setAttribute("aria-pressed", String(b.dataset.style === state.style));
+  if (state.style === "skyline") $("orient").value = "landscape";
+  choosePlace({ lat: start.lat, lon: start.lon, name: start.title, region: start.region, area: start, names: start.names });
+})();
+</script>
+</body>
+</html>

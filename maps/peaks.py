@@ -599,6 +599,25 @@ def _save(fig, path: Path, dpi=110) -> Path:
 STYLES = {"contours": contours, "ridgelines": ridgelines, "skyline": skyline, "poster": poster}
 
 
+WEB_PLACES = Path("web/peaks/places.json")
+
+
+def web_places(path: Path = WEB_PLACES) -> Path:
+    """The ready-made mountains for the web print maker, with their named summits bundled
+    (so the common places need no Overpass call)."""
+    def summits(slug, limit=160):
+        ns = sorted(names(slug), key=lambda n: -(n["ele"] or 0))[:limit]
+        return [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "ele": n["ele"]} for n in ns]
+    areas = []
+    for a in PLACES["areas"]:
+        view, crop = POSTERS.get(a["slug"], (None, None))
+        areas.append({**a, "names": summits(a["slug"]), "poster_view": view, "poster_crop": crop})
+    views = [{**v, "names": summits(v["slug"])} for v in PLACES["views"]]
+    path.write_text(json.dumps({"areas": areas, "views": views}, ensure_ascii=False, separators=(",", ":")))
+    print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views)")
+    return path
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -606,7 +625,11 @@ def main():
     f.add_argument("--force", action="store_true", help="refetch files that already exist")
     r = sub.add_parser("render"); r.add_argument("slugs", nargs="*"); r.add_argument("--all", action="store_true")
     r.add_argument("--style", choices=list(STYLES)); r.add_argument("--theme")
+    sub.add_parser("web", help="write web/peaks/places.json for the print maker")
     a = ap.parse_args()
+    if a.cmd == "web":
+        web_places()
+        return
     every = list(AREAS) + list(VIEWS)
     if a.cmd == "fetch":
         for s in (every if a.all else a.slugs):

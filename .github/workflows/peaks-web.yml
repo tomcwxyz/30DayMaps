@@ -1,0 +1,35 @@
+name: Peaks web check
+# Runs the Peaks print maker in Chromium against the real elevation tiles, Overpass and
+# Nominatim, and commits screenshots of every style to peaks/web-shots on the same branch.
+on:
+  push:
+    paths: ["web/peaks/**", ".github/workflows/peaks-web.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: peaks-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.ref_name }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e ".[sight]" playwright && python -m playwright install --with-deps chromium
+      - name: Screenshots with live data
+        run: python web/peaks/test/harness.py live peaks/web-shots
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add peaks/web-shots
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Peaks: web screenshots with live data"
+          git pull --rebase --autostash -q && git push

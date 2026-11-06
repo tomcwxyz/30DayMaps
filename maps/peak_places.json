@@ -246,7 +246,8 @@
    "azimuth": 248,
    "fov": 70,
    "reach_km": 18,
-   "lift_m": 2
+   "lift_m": 2,
+   "near_km": 1.4
   }
  ]
 }
