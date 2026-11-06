@@ -8,18 +8,18 @@
   <title>What’s outside your window? · Day 5 / Sight</title>
   <link rel="preconnect" href="https://api.gbif.org">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./style.css?v=20261106-field-notes-1">
+  <link rel="stylesheet" href="./style.css?v=20261106-hamsterley-v2">
   <script defer src="./vendor/leaflet.js"></script>
   <script defer src="./geo.js"></script>
   <script defer src="./media.js"></script>
-  <script defer src="./app.js?v=20261106-field-notes-1"></script>
+  <script defer src="./app.js?v=20261106-hamsterley-v2"></script>
 </head>
 <body>
   <div class="page">
     <header class="masthead">
       <div class="topline"><span>30 Day Map Challenge · 2026</span><span>05 — Sight</span></div>
       <div class="masthead-content">
-        <div><p class="eyebrow">A seasonal field guide</p>
+        <div><p class="eyebrow">Field notes · Hamsterley Forest edition</p>
           <h1>What’s outside your window?</h1>
           <p class="intro">Look a little closer at the places around us. Explore what people have recorded, month by month — an invitation to notice, not a prediction of what you’ll see.</p>
         </div>
@@ -31,7 +31,7 @@
         <form id="place-form" class="place-field">
           <label for="place">Where are you looking?</label>
           <div class="search-line"><input id="place" name="place" value="" autocomplete="off" placeholder="Search for a place or postcode"><button type="submit">Find place</button></div>
-          <p id="location-status" class="hint location-status" role="status" aria-live="polite">Checking your location… If unavailable, we’ll begin in Hamsterley Forest.</p>
+          <p id="location-status" class="hint location-status" role="status" aria-live="polite">Starting in Hamsterley Forest. Search for a place or use your location.</p>
         </form>
         <div class="radius-field"><label for="radius">How far?</label><select id="radius"><option value="1">1 km</option><option value="3">3 km</option><option value="5" selected>5 km</option><option value="10">10 km</option></select><p class="hint">Around the selected location.</p></div>
         <div class="location-field"><label for="locate">Location</label><button id="locate" class="light-button" type="button">Use my location</button><p class="hint">Or choose anywhere on the map.</p></div>
@@ -53,7 +53,7 @@
       <nav class="taxa" aria-label="Wildlife group"><button class="active" type="button" data-taxon="birds" aria-pressed="true">Birds</button><button type="button" data-taxon="mammals" aria-pressed="false">Mammals</button><button type="button" data-taxon="butterflies" aria-pressed="false">Butterflies &amp; moths</button><button type="button" data-taxon="plants" aria-pressed="false">Plants</button></nav>
       <div class="content">
         <aside id="field-guide" class="field-guide" aria-label="Seasonal field guide">
-          <div class="guide-head"><p class="eyebrow">Seen around here</p><h2 id="guide-title">Birds in November</h2><p id="guide-subtitle">Finding your location…</p>
+          <div class="guide-head"><p class="eyebrow">Seen around here</p><h2 id="guide-title">Birds in November</h2><p id="guide-subtitle">Starting in Hamsterley Forest…</p>
           <a class="map-jump" href="#map">See the map of observations</a></div>
           <div id="status" role="status" aria-live="polite">Looking up published wildlife records…</div>
           <div class="totals"><div><strong id="record-total">—</strong><span>Published records matching your search</span></div><div><strong id="species-total">—</strong><span>Species listed in the field guide</span></div></div>
