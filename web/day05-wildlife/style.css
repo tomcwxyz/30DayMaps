@@ -13,20 +13,14 @@
   --label: "Courier New", Courier, monospace;
 }
 * { box-sizing: border-box; }
-html, body {
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
   background: var(--page);
   color: var(--ink);
   font-family: var(--sans);
   font-size: 15px;
   line-height: 1.58;
-}
-html { scroll-behavior: smooth; }
-body {
-  background: var(--page);
-  color: var(--ink);
-  font-family: "Trebuchet MS", "Helvetica Neue", Arial, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
 }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
