@@ -338,6 +338,43 @@ def shipped_email(title: str, tracking: str, name: str = "", shop: dict | None =
     return subject, text, html
 
 
+def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, stripe_url: str,
+                   ) -> tuple[str, str, str]:
+    """For the shop owner only: what's about to be printed, with a link to approve it."""
+    title = recipe.get("title") or "(no title)"
+    rows = [("Title", title), ("Subtitle", recipe.get("subtitle") or "–"), ("Small line", recipe.get("kicker") or "–"),
+            ("Place", recipe.get("name") or "–"),
+            ("Sheet", f"{paper}, {recipe.get('orient', 'portrait')}, {recipe.get('theme', 'paper')} colours, "
+                      f"{recipe.get('width_km', '?')} km across")]
+    subject = f"Approve this print? {title}, {recipe.get('paper', '')}"[:150]
+    text = ("A print order is waiting for your approval.\n\n" + "\n".join(f"{k}: {v}" for k, v in rows)
+            + f"\n\nPreview (link works for 7 days):\n{preview_url}\n\n"
+            + (f"Approve or reject it on GitHub (Review deployments):\n{run_url}\n\n" if run_url else "")
+            + (f"The payment in Stripe:\n{stripe_url}\n" if stripe_url else ""))
+    table = "".join(f'<tr><td style="color:#666;padding:2px 12px 2px 0;vertical-align:top">{_esc(k)}</td>'
+                    f"<td style=\"padding:2px 0\"><strong>{_esc(v)}</strong></td></tr>" for k, v in rows)
+    html = ("<p>A print order is waiting for your approval.</p>"
+            f'<p><a href="{_esc(preview_url)}"><img src="{_esc(preview_url)}" alt="Preview of the print" '
+            'style="max-width:420px;width:100%;border:1px solid #ddd"></a></p>'
+            f"<table>{table}</table>"
+            + (f'<p style="margin-top:18px"><a href="{_esc(run_url)}" style="background:#2e6b5e;color:#fff;'
+               'padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold">Approve or reject on GitHub</a></p>'
+               '<p style="color:#666">On the run, press <em>Review deployments</em>, tick print-orders, then approve or reject.</p>'
+               if run_url else "")
+            + (f'<p><a href="{_esc(stripe_url)}">See the payment in Stripe</a></p>' if stripe_url else "")
+            + '<p style="color:#666">The preview link works for 7 days.</p>')
+    return subject, text, html
+
+
+def approval_links(pi_id: str, key: str) -> tuple[str, str]:
+    """The GitHub run this is happening in, and the payment in the Stripe dashboard."""
+    server, repo, run = (os.environ.get(k) for k in ("GITHUB_SERVER_URL", "GITHUB_REPOSITORY", "GITHUB_RUN_ID"))
+    run_url = f"{server}/{repo}/actions/runs/{run}" if server and repo and run else ""
+    test = "_test_" in (key or "")
+    stripe_url = f"https://dashboard.stripe.com/{'test/' if test else ''}payments/{pi_id}"
+    return run_url, stripe_url
+
+
 def notify(http, key: str, pid: str, to: str | None, flag: str, message: tuple[str, str, str]) -> bool:
     """Send an order update once, noting it on the payment. A failed update never holds up the order."""
     if not to:
@@ -399,6 +436,12 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     stripe_set_metadata(http, key, order.pi_id, {
         "print_status": "awaiting approval", "print_file": print_path, "print_preview": preview_url, "print_error": ""})
     print(f"{ref(order.pi_id)}: print rendered and stored; preview link saved on the payment in Stripe")
+    owner = os.environ.get("SHOP_OWNER_EMAIL") or os.environ.get("SHOP_REPLY_TO")
+    if owner and not order.metadata.get("email_owner"):
+        recipe = json.loads(order.recipe)
+        if notify(http, key, order.pi_id, owner, "email_owner",
+                  approval_email(recipe, _paper_label(recipe, shop), preview_url, *approval_links(order.pi_id, key))):
+            print(f"{ref(order.pi_id)}: preview emailed to the shop owner for approval")
     return "submit"
 
 
