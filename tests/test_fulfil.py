@@ -330,3 +330,59 @@ def test_digital_without_download_setup_stops_clearly(monkeypatch):
     monkeypatch.delenv("DOWNLOAD_SECRET", raising=False)
     with pytest.raises(fulfil.FulfilError, match="DOWNLOAD_SECRET"):
         fulfil.download_link("digital/x.png", 30)
+
+
+# --- Customer updates for prints ---------------------------------------------
+
+def _mail_env(monkeypatch):
+    monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    monkeypatch.setenv("SHOP_EMAIL_FROM", "Footprints <prints@example.org>")
+
+
+def test_print_order_gets_a_confirmation_email_once(monkeypatch, capsys):
+    _mail_env(monkeypatch)
+    sent = []
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session()),
+                     ("POST", "api.resend.com/emails", 200, lambda kw: sent.append(kw) or {"id": "e"}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up,
+                          renderer=fake_render, shop=SHOP) == "submit"
+    assert len(sent) == 1 and sent[0]["json"]["to"] == ["jo@example.com"]
+    assert sent[0]["json"]["subject"].startswith("Order received")
+    assert sent[0]["headers"]["Idempotency-Key"] == "email_received-pi_3Abcdefgh12345678"
+    flags = [c[2]["data"] for c in http.calls if c[0] == "POST" and "payment_intents" in c[1]]
+    assert any("metadata[email_received]" in f for f in flags)
+    assert not any(p in capsys.readouterr().out for p in PERSONAL)
+
+    # a re-run (e.g. after approval was retried) doesn't email again
+    sent.clear()
+    http2 = FakeHTTP([("GET", "/checkout/sessions/", 200, session({"email_received": "x", "print_file": "orders/f.png"}))])
+    fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http2, key="sk", uploader=up, renderer=fake_render, shop=SHOP)
+    assert sent == []
+
+
+def test_a_failed_confirmation_never_holds_up_the_print(monkeypatch):
+    _mail_env(monkeypatch)
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, session()),
+                     ("POST", "api.resend.com/emails", 500, {}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up,
+                          renderer=fake_render, shop=SHOP) == "submit"
+
+
+def test_shipping_sends_the_tracking_link_once(monkeypatch):
+    _mail_env(monkeypatch)
+    sent = []
+    shipped = session({"prodigi_order": "ord_1", "print_file": "orders/pi_3Abcdefgh12345678-print.png"})
+    shipped["customer_details"] = {"email": "jo@example.com"}
+    http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [shipped], "has_more": False}),
+                     ("GET", "/orders/ord_1", 200, {"order": {"status": {"stage": "Complete", "issues": []},
+                      "shipments": [{"status": "Shipped", "tracking": {"url": "https://track.example/1", "number": "1"}}]}}),
+                     ("POST", "api.resend.com/emails", 200, lambda kw: sent.append(kw) or {"id": "e"}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    fulfil.status(http=http, key="sk", prodigi_key="pk", uploader=up, shop=SHOP, now=1_000_000 + 3600)
+    assert len(sent) == 1 and "https://track.example/1" in sent[0]["json"]["text"]
+    assert sent[0]["json"]["subject"].startswith("On its way")

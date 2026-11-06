@@ -13,6 +13,8 @@ Customers design a print on the web page and choose a **printed copy** or a **di
 
 **Digital files.** The same workflow renders a PNG (at least 7,016 pixels on the long side, so sharp printed up to A2, whatever paper size was chosen) and a vector PDF, stores both in Vercel Blob and emails the customer links through Resend. The links go to the shop's `/api/download`, which checks they're genuine and in date (signed with `DOWNLOAD_SECRET`) and then hands out a short-lived link to the file. They work for `digital.link_days` (30 by default); the daily check deletes the files after that. Digital orders skip approval because the file only goes to the buyer. Checkout shows `digital_note`, which says the file is sent straight away and the 14-day cancellation right ends once it's sent. UK law requires the buyer's express agreement to that, so check the wording suits you.
 
+**Customer emails.** Print buyers get an "Order received" email when the order starts and an "On its way" email with the tracking link when Prodigi ships it (sent by the daily check, so up to a day after dispatch). Both go through Resend from `SHOP_EMAIL_FROM`; a failed email is noted in the run log but never holds up the order. Turn on Stripe's own receipts too, for the payment itself.
+
 Stripe is the record: each payment's metadata shows `print_status` and any `print_error`.
 
 **Privacy.** This repository is public, so its Actions logs are public too. The workflows print no names, addresses, emails or map titles, and upload no files to GitHub. Detail stays in Stripe. Print files sit in a private Vercel Blob store that can only be read through signed, time-limited links, and are deleted after shipping.
