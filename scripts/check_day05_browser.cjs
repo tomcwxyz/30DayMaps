@@ -143,9 +143,8 @@ async function checkWildlife(browser) {
   pass("Wildlife mobile map rendered");
   await mobile.close();
 
-  // A new visitor who allows location sharing must begin in their real area,
-  // not the Hamsterley Forest example. The test uses simulated browser coordinates,
-  // never the user's actual location.
+  // Even a visitor who previously allowed location access must start at Hamsterley.
+  // Only a deliberate click may change the location. Test coordinates are simulated.
   const localContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true,
@@ -153,11 +152,25 @@ async function checkWildlife(browser) {
     permissions: ["geolocation"]
   });
   const localPage = await localContext.newPage();
-  const locationQuery = localPage.waitForRequest(
+  const defaultQuery = localPage.waitForRequest(
     request => request.url().includes("api.gbif.org/v1/occurrence/search?"),
     { timeout: 30000 }
   );
   await localPage.goto(link("day05-wildlife/"), { waitUntil: "domcontentloaded", timeout: 45000 });
+  await localPage.waitForFunction(() =>
+    (document.querySelector("#guide-subtitle")?.textContent || "").includes("Hamsterley Forest"),
+    null, { timeout: 20000 }
+  );
+  const defaultGeometry = new URL((await defaultQuery).url()).searchParams.get("geometry");
+  assert.ok(defaultGeometry?.includes("-1.859"), "First search must use Hamsterley Forest, even with browser permission");
+  pass("Wildlife default independent of geolocation", "Hamsterley Forest queried on first load");
+
+  const locationQuery = localPage.waitForRequest(
+    request => request.url().includes("api.gbif.org/v1/occurrence/search?") &&
+      new URL(request.url()).searchParams.get("geometry")?.includes("-3.188"),
+    { timeout: 30000 }
+  );
+  await localPage.locator("#locate").click();
   await localPage.waitForFunction(() =>
     (document.querySelector("#guide-subtitle")?.textContent || "").includes("your approximate location"),
     null, { timeout: 20000 }
@@ -170,9 +183,9 @@ async function checkWildlife(browser) {
   const centreLng = points.reduce((sum,p) => sum + p[0],0) / points.length;
   const centreLat = points.reduce((sum,p) => sum + p[1],0) / points.length;
   assert.ok(Math.abs(centreLng - (-3.188)) < .01 && Math.abs(centreLat - 55.953) < .01,
-    "The first data request did not use the permitted visitor location");
+    "The opt-in location request did not use the permitted visitor location");
   assert.doesNotMatch((await localPage.locator("#guide-subtitle").textContent()) || "", /Hamsterley Forest/i);
-  pass("Wildlife location first", "Permitted browser location used for the very first GBIF query");
+  pass("Wildlife location opt-in", "Explicit button click used permitted browser location");
   await localPage.screenshot({ path: path.join(folder, "wildlife-location-first-mobile.png"), fullPage: true });
   await localContext.close();
 }
