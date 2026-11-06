@@ -12,9 +12,10 @@
   };
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
-  // Only use the example town if the browser location is unavailable or refused.
-  // It must never be described as the visitor's location.
-  const EXAMPLE = { lat: 54.617, lng: -1.578, place: "Newton Aycliffe (example)" };
+  // Default example: Hamsterley Forest visitor-centre area (Forestry England OS grid NZ092312).
+  // Use this only when the visitor's browser location is unavailable or refused.
+  // Never describe the example as the visitor's location.
+  const EXAMPLE = { lat: 54.676, lng: -1.859, place: "Hamsterley Forest (example)" };
   const state = {
     lat: null, lng: null, place: "",
     locationResolved: false, locationToken: 0,
@@ -531,7 +532,7 @@
 
   function useExample(reason) {
     moveTo(EXAMPLE.lat, EXAMPLE.lng, EXAMPLE.place,
-      reason + " Showing Newton Aycliffe as an example; search or click the map to change it.",
+      reason + " Showing Hamsterley Forest as an example; search or click the map to change it.",
       true);
   }
 
