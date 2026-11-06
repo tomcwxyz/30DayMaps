@@ -239,3 +239,37 @@ jobs:
       - name: Deploy static map experiences
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify the published wildlife page is the current build
+        env:
+          PAGE_ROOT: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          python - <<'PY'
+          import os
+          import time
+          from urllib.request import Request, urlopen
+
+          root = os.environ["PAGE_ROOT"].rstrip("/") + "/day05-wildlife/"
+          revision = os.environ["GITHUB_SHA"]
+          expected = {
+              "": "20261106-hamsterley-v2",
+              "app.js": "useExample();",
+              "style.css": "font-family: var(--serif)",
+          }
+          for attempt in range(1, 13):
+              try:
+                  for filename, marker in expected.items():
+                      url = root + filename + "?build=" + revision
+                      request = Request(url, headers={"Cache-Control": "no-cache"})
+                      with urlopen(request, timeout=20) as response:
+                          body = response.read().decode("utf-8")
+                      if marker not in body:
+                          raise ValueError(f"{filename or 'index.html'} is still an old version")
+                  print(f"Verified published Day 5 assets for {revision}: {root}")
+                  break
+              except Exception as error:
+                  if attempt == 12:
+                      raise RuntimeError(f"GitHub Pages has not served the current Day 5 build: {error}")
+                  print(f"Waiting for latest GitHub Pages assets (attempt {attempt}): {error}")
+                  time.sleep(10)
+          PY
