@@ -424,7 +424,7 @@
   ]
  },
  "utmb": {
-  "name": "UTMB (approximate)",
+  "name": "UTMB",
   "points": [
    [
     "Chamonix",
@@ -588,10 +588,11 @@
     6.8694,
     "via"
    ]
-  ]
+  ],
+  "note": "Checkpoints joined along OpenStreetMap paths: close to the course, not the official line."
  },
  "lakeland-100": {
-  "name": "Lakeland 100 (approximate)",
+  "name": "Lakeland 100",
   "points": [
    [
     "Coniston",
@@ -797,6 +798,7 @@
     -3.075,
     "via"
    ]
-  ]
+  ],
+  "note": "Checkpoints joined along OpenStreetMap paths: close to the course, not the official line."
  }
 }
