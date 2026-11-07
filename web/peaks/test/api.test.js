@@ -133,3 +133,9 @@ test("a loop that ends where it starts keeps its shape when thinned", () => {
   const f = P.fit(loop, 19200);
   assert.ok(f.points.length > 20);
 });
+
+test("a ready-made round is kept only with its route", () => {
+  assert.strictEqual(validateRecipe({ ...base, route: 120, round: "bob-graham-round" }).round, "bob-graham-round");
+  assert.strictEqual(validateRecipe({ ...base, round: "bob-graham-round" }).round, "");
+  assert.strictEqual(validateRecipe({ ...base, route: 120, round: "<script>" }).round, "");
+});

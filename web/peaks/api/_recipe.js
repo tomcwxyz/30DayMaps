@@ -57,7 +57,9 @@ function validateRecipe(input) {
     fov: num(input.fov, 60, 360, "Width of view", 5),
     reach: num(input.reach, 10, 60, "Distance to look", 1),
     route: Math.round(num(input.route || 0, 0, ROUTE_MAX_POINTS, "Route")),
+    round: /^[a-z0-9-]{1,40}$/.test(String(input.round || "")) ? String(input.round) : "",   // a ready-made route, for its credit
   };
+  if (!r.route) r.round = "";
   if (!r.title) throw new Error("Add a title");
   if (!THEMES.includes(r.theme)) throw new Error("Unknown colours");
   if (style === "panorama" ? !PANOS.includes(r.paper) : !PAPERS.includes(r.paper)) throw new Error("Unknown paper size");

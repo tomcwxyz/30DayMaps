@@ -1,0 +1,802 @@
+{
+ "bob-graham-round": {
+  "name": "Bob Graham Round",
+  "points": [
+   [
+    "Keswick Moot Hall",
+    54.60139,
+    -3.13527,
+    "via"
+   ],
+   [
+    "Skiddaw",
+    54.6512,
+    -3.1478,
+    "peak"
+   ],
+   [
+    "Great Calva",
+    54.6728,
+    -3.0985,
+    "peak"
+   ],
+   [
+    "Blencathra",
+    54.64,
+    -3.05,
+    "peak"
+   ],
+   [
+    "Threlkeld",
+    54.6185,
+    -3.047,
+    "via"
+   ],
+   [
+    "Clough Head",
+    54.5904,
+    -3.0336,
+    "peak"
+   ],
+   [
+    "Great Dodd",
+    54.5712,
+    -3.0215,
+    "peak"
+   ],
+   [
+    "Watson's Dodd",
+    54.564,
+    -3.031,
+    "peak"
+   ],
+   [
+    "Stybarrow Dodd",
+    54.556,
+    -3.0186,
+    "peak"
+   ],
+   [
+    "Raise",
+    54.5466,
+    -3.0167,
+    "peak"
+   ],
+   [
+    "White Side",
+    54.5395,
+    -3.0226,
+    "peak"
+   ],
+   [
+    "Lower Man",
+    54.532,
+    -3.02,
+    "peak"
+   ],
+   [
+    "Helvellyn",
+    54.527,
+    -3.0164,
+    "peak"
+   ],
+   [
+    "Nethermost Pike",
+    54.518,
+    -3.015,
+    "peak"
+   ],
+   [
+    "Dollywaggon Pike",
+    54.5085,
+    -3.013,
+    "peak"
+   ],
+   [
+    "Fairfield",
+    54.497,
+    -2.993,
+    "peak"
+   ],
+   [
+    "Seat Sandal",
+    54.495,
+    -3.019,
+    "peak"
+   ],
+   [
+    "Dunmail Raise",
+    54.4977,
+    -3.0328,
+    "via"
+   ],
+   [
+    "Steel Fell",
+    54.488,
+    -3.048,
+    "peak"
+   ],
+   [
+    "Calf Crag",
+    54.488,
+    -3.07,
+    "peak"
+   ],
+   [
+    "High Raise",
+    54.4767,
+    -3.101,
+    "peak"
+   ],
+   [
+    "Sergeant Man",
+    54.471,
+    -3.092,
+    "peak"
+   ],
+   [
+    "Thunacar Knott",
+    54.4635,
+    -3.101,
+    "peak"
+   ],
+   [
+    "Harrison Stickle",
+    54.4568,
+    -3.1053,
+    "peak"
+   ],
+   [
+    "Pike of Stickle",
+    54.4567,
+    -3.1235,
+    "peak"
+   ],
+   [
+    "Rossett Pike",
+    54.45,
+    -3.15,
+    "peak"
+   ],
+   [
+    "Bowfell",
+    54.4473,
+    -3.1658,
+    "peak"
+   ],
+   [
+    "Esk Pike",
+    54.4555,
+    -3.1774,
+    "peak"
+   ],
+   [
+    "Great End",
+    54.4632,
+    -3.1937,
+    "peak"
+   ],
+   [
+    "Ill Crag",
+    54.456,
+    -3.204,
+    "peak"
+   ],
+   [
+    "Broad Crag",
+    54.457,
+    -3.208,
+    "peak"
+   ],
+   [
+    "Scafell Pike",
+    54.4542,
+    -3.2116,
+    "peak"
+   ],
+   [
+    "Scafell",
+    54.448,
+    -3.225,
+    "peak"
+   ],
+   [
+    "Wasdale Head",
+    54.463,
+    -3.256,
+    "via"
+   ],
+   [
+    "Yewbarrow",
+    54.4685,
+    -3.273,
+    "peak"
+   ],
+   [
+    "Red Pike",
+    54.481,
+    -3.278,
+    "peak"
+   ],
+   [
+    "Steeple",
+    54.489,
+    -3.297,
+    "peak"
+   ],
+   [
+    "Pillar",
+    54.497,
+    -3.281,
+    "peak"
+   ],
+   [
+    "Kirk Fell",
+    54.481,
+    -3.241,
+    "peak"
+   ],
+   [
+    "Great Gable",
+    54.4818,
+    -3.2192,
+    "peak"
+   ],
+   [
+    "Green Gable",
+    54.489,
+    -3.213,
+    "peak"
+   ],
+   [
+    "Brandreth",
+    54.498,
+    -3.209,
+    "peak"
+   ],
+   [
+    "Grey Knotts",
+    54.505,
+    -3.201,
+    "peak"
+   ],
+   [
+    "Honister Pass",
+    54.5106,
+    -3.1983,
+    "via"
+   ],
+   [
+    "Dale Head",
+    54.527,
+    -3.203,
+    "peak"
+   ],
+   [
+    "Hindscarth",
+    54.537,
+    -3.215,
+    "peak"
+   ],
+   [
+    "Robinson",
+    54.5396,
+    -3.2368,
+    "peak"
+   ],
+   [
+    "Newlands Church",
+    54.5622,
+    -3.196,
+    "via"
+   ],
+   [
+    "Portinscale",
+    54.598,
+    -3.158,
+    "via"
+   ],
+   [
+    "Keswick Moot Hall",
+    54.60139,
+    -3.13527,
+    "via"
+   ]
+  ]
+ },
+ "tea-round": {
+  "name": "Abraham's Tea Round",
+  "points": [
+   [
+    "George Fisher, Keswick",
+    54.6006,
+    -3.1369,
+    "via"
+   ],
+   [
+    "Catbells",
+    54.5675,
+    -3.17,
+    "peak"
+   ],
+   [
+    "Robinson",
+    54.5396,
+    -3.2368,
+    "peak"
+   ],
+   [
+    "Buttermere",
+    54.541,
+    -3.277,
+    "via"
+   ],
+   [
+    "High Stile",
+    54.522,
+    -3.283,
+    "peak"
+   ],
+   [
+    "Red Pike",
+    54.529,
+    -3.295,
+    "peak"
+   ],
+   [
+    "Buttermere",
+    54.541,
+    -3.277,
+    "via"
+   ],
+   [
+    "Whiteless Pike",
+    54.563,
+    -3.26,
+    "peak"
+   ],
+   [
+    "Wandope",
+    54.565,
+    -3.25,
+    "peak"
+   ],
+   [
+    "Hobcarton Crag",
+    54.584,
+    -3.233,
+    "peak"
+   ],
+   [
+    "Grisedale Pike",
+    54.588,
+    -3.244,
+    "peak"
+   ],
+   [
+    "Crag Hill",
+    54.57199,
+    -3.25012,
+    "peak"
+   ],
+   [
+    "Sail",
+    54.57153,
+    -3.24191,
+    "peak"
+   ],
+   [
+    "Scar Crags",
+    54.57475,
+    -3.22607,
+    "via"
+   ],
+   [
+    "Causey Pike",
+    54.57698,
+    -3.21036,
+    "peak"
+   ],
+   [
+    "Rowling End",
+    54.572,
+    -3.185,
+    "peak"
+   ],
+   [
+    "Barrow",
+    54.59,
+    -3.188,
+    "peak"
+   ],
+   [
+    "Braithwaite",
+    54.602,
+    -3.192,
+    "via"
+   ],
+   [
+    "George Fisher, Keswick",
+    54.6006,
+    -3.1369,
+    "via"
+   ]
+  ]
+ },
+ "utmb": {
+  "name": "UTMB (approximate)",
+  "points": [
+   [
+    "Chamonix",
+    45.9237,
+    6.8694,
+    "via"
+   ],
+   [
+    "Les Houches",
+    45.8905,
+    6.799,
+    "via"
+   ],
+   [
+    "Col de Voza",
+    45.88,
+    6.759,
+    "via"
+   ],
+   [
+    "Saint-Gervais",
+    45.892,
+    6.712,
+    "via"
+   ],
+   [
+    "Les Contamines",
+    45.821,
+    6.727,
+    "via"
+   ],
+   [
+    "Notre-Dame de la Gorge",
+    45.793,
+    6.721,
+    "via"
+   ],
+   [
+    "Col du Bonhomme",
+    45.723,
+    6.715,
+    "via"
+   ],
+   [
+    "Croix du Bonhomme",
+    45.718,
+    6.722,
+    "via"
+   ],
+   [
+    "Les Chapieux",
+    45.696,
+    6.738,
+    "via"
+   ],
+   [
+    "Col de la Seigne",
+    45.7505,
+    6.808,
+    "via"
+   ],
+   [
+    "Lac Combal",
+    45.779,
+    6.86,
+    "via"
+   ],
+   [
+    "Col Checrouit",
+    45.788,
+    6.915,
+    "via"
+   ],
+   [
+    "Courmayeur",
+    45.792,
+    6.972,
+    "via"
+   ],
+   [
+    "Refuge Bertone",
+    45.809,
+    6.98,
+    "via"
+   ],
+   [
+    "Refuge Bonatti",
+    45.841,
+    7.029,
+    "via"
+   ],
+   [
+    "Arnouvaz",
+    45.86,
+    7.048,
+    "via"
+   ],
+   [
+    "Grand Col Ferret",
+    45.881,
+    7.061,
+    "via"
+   ],
+   [
+    "La Fouly",
+    45.933,
+    7.095,
+    "via"
+   ],
+   [
+    "Praz-de-Fort",
+    45.985,
+    7.105,
+    "via"
+   ],
+   [
+    "Champex-Lac",
+    46.031,
+    7.117,
+    "via"
+   ],
+   [
+    "Bovine",
+    46.056,
+    7.073,
+    "via"
+   ],
+   [
+    "Col de la Forclaz",
+    46.059,
+    7.001,
+    "via"
+   ],
+   [
+    "Trient",
+    46.056,
+    6.995,
+    "via"
+   ],
+   [
+    "Vallorcine",
+    46.032,
+    6.933,
+    "via"
+   ],
+   [
+    "Col des Montets",
+    46.001,
+    6.923,
+    "via"
+   ],
+   [
+    "La Flégère",
+    45.96,
+    6.889,
+    "via"
+   ],
+   [
+    "Chamonix",
+    45.9237,
+    6.8694,
+    "via"
+   ]
+  ]
+ },
+ "lakeland-100": {
+  "name": "Lakeland 100 (approximate)",
+  "points": [
+   [
+    "Coniston",
+    54.369,
+    -3.075,
+    "via"
+   ],
+   [
+    "Walna Scar Road",
+    54.36,
+    -3.122,
+    "via"
+   ],
+   [
+    "Seathwaite",
+    54.354,
+    -3.189,
+    "via"
+   ],
+   [
+    "Boot",
+    54.396,
+    -3.274,
+    "via"
+   ],
+   [
+    "Burnmoor Tarn",
+    54.425,
+    -3.26,
+    "via"
+   ],
+   [
+    "Wasdale Head",
+    54.466,
+    -3.285,
+    "via"
+   ],
+   [
+    "Black Sail Pass",
+    54.479,
+    -3.264,
+    "via"
+   ],
+   [
+    "Black Sail Hut",
+    54.495,
+    -3.259,
+    "via"
+   ],
+   [
+    "Scarth Gap",
+    54.505,
+    -3.255,
+    "via"
+   ],
+   [
+    "Buttermere",
+    54.541,
+    -3.277,
+    "via"
+   ],
+   [
+    "Sail Pass",
+    54.564,
+    -3.229,
+    "via"
+   ],
+   [
+    "Braithwaite",
+    54.602,
+    -3.192,
+    "via"
+   ],
+   [
+    "Keswick",
+    54.601,
+    -3.135,
+    "via"
+   ],
+   [
+    "Blencathra Centre",
+    54.612,
+    -3.074,
+    "via"
+   ],
+   [
+    "Old Coach Road",
+    54.597,
+    -2.99,
+    "via"
+   ],
+   [
+    "Dockray",
+    54.59,
+    -2.949,
+    "via"
+   ],
+   [
+    "Aira Force",
+    54.576,
+    -2.93,
+    "via"
+   ],
+   [
+    "Dalemain",
+    54.634,
+    -2.837,
+    "via"
+   ],
+   [
+    "Pooley Bridge",
+    54.613,
+    -2.818,
+    "via"
+   ],
+   [
+    "Howtown",
+    54.575,
+    -2.855,
+    "via"
+   ],
+   [
+    "High Kop",
+    54.544,
+    -2.838,
+    "via"
+   ],
+   [
+    "Mardale Head",
+    54.482,
+    -2.812,
+    "via"
+   ],
+   [
+    "Gatesgarth Pass",
+    54.465,
+    -2.81,
+    "via"
+   ],
+   [
+    "Kentmere",
+    54.43,
+    -2.84,
+    "via"
+   ],
+   [
+    "Garburn Pass",
+    54.417,
+    -2.866,
+    "via"
+   ],
+   [
+    "Troutbeck",
+    54.417,
+    -2.909,
+    "via"
+   ],
+   [
+    "Ambleside",
+    54.432,
+    -2.963,
+    "via"
+   ],
+   [
+    "Skelwith Bridge",
+    54.42,
+    -3.011,
+    "via"
+   ],
+   [
+    "Elterwater",
+    54.43,
+    -3.035,
+    "via"
+   ],
+   [
+    "Chapel Stile",
+    54.437,
+    -3.053,
+    "via"
+   ],
+   [
+    "Old Dungeon Ghyll",
+    54.448,
+    -3.086,
+    "via"
+   ],
+   [
+    "Blea Tarn",
+    54.429,
+    -3.09,
+    "via"
+   ],
+   [
+    "Tilberthwaite",
+    54.399,
+    -3.068,
+    "via"
+   ],
+   [
+    "Coniston",
+    54.369,
+    -3.075,
+    "via"
+   ]
+  ]
+ }
+}

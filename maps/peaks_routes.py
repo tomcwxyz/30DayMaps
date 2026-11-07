@@ -1,7 +1,7 @@
 """Build ready-made routes for Peaks: snap named summits to OpenStreetMap, then route
 each leg along real paths with BRouter (hiking-mountain profile), and write a GPX.
 
-    python -m maps.peaks_routes SPEC.json OUTDIR
+    python -m maps.peaks_routes maps/peak_routes.json web/peaks/routes [SLUG ...]
 
 SPEC: {slug: {"name": ..., "points": [[name, lat, lon, kind], ...]}} where kind is "peak"
 (snap to the OSM summit of that name within 1.5 km) or "via" (use as given).
