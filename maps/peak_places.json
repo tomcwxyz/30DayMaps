@@ -396,8 +396,9 @@
      "sky": true
     }
    ],
-   "max_exag": 3.5,
-   "poster_centre": 4
+   "max_exag": 5,
+   "poster_centre": 4,
+   "poster_floor": "skyline"
   }
  ]
 }
