@@ -282,18 +282,6 @@
    "near_km": 1.4
   },
   {
-   "slug": "blencathra-from-castlerigg",
-   "title": "Blencathra",
-   "subtitle": "from Castlerigg Stone Circle, looking north-east",
-   "lat": 54.60257,
-   "lon": -3.09904,
-   "azimuth": 40,
-   "fov": 50,
-   "reach_km": 14,
-   "lift_m": 2,
-   "near_km": 1.0
-  },
-  {
    "slug": "inaccessible-pinnacle-summit",
    "title": "From the In Pin",
    "subtitle": "the view from the top of the Inaccessible Pinnacle",
@@ -304,6 +292,30 @@
    "reach_km": 45,
    "lift_m": 2,
    "panorama": true
+  },
+  {
+   "slug": "blencathra-from-clough-head",
+   "title": "Blencathra",
+   "subtitle": "from Clough Head, looking north",
+   "lat": 54.59326,
+   "lon": -3.03379,
+   "azimuth": 354,
+   "fov": 56,
+   "reach_km": 12,
+   "lift_m": 2,
+   "near_km": 1.5
+  },
+  {
+   "slug": "inaccessible-pinnacle-from-glen-brittle",
+   "title": "Sgùrr Dearg",
+   "subtitle": "from Glen Brittle, looking east",
+   "lat": 57.2197,
+   "lon": -6.29366,
+   "azimuth": 104,
+   "fov": 64,
+   "reach_km": 12,
+   "lift_m": 2,
+   "near_km": 0.8
   }
  ]
 }
