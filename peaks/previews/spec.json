@@ -1,9 +1,36 @@
 [
  {
-  "name": "blen-dump",
+  "name": "sharpedge-skyline-paper",
   "place": "blencathra",
-  "style": "contours",
+  "style": "skyline",
   "theme": "paper",
-  "dump": true
+  "seen": "view:sharp-edge-from-bannerdale-crags",
+  "title": "Sharp Edge",
+  "subtitle": "Blencathra"
+ },
+ {
+  "name": "sharpedge-skyline-moss",
+  "place": "blencathra",
+  "style": "skyline",
+  "theme": "moss",
+  "seen": "view:sharp-edge-from-bannerdale-crags",
+  "title": "Sharp Edge",
+  "subtitle": "Blencathra"
+ },
+ {
+  "name": "sharpedge-skyline-night",
+  "place": "blencathra",
+  "style": "skyline",
+  "theme": "night",
+  "seen": "view:sharp-edge-from-bannerdale-crags",
+  "title": "Sharp Edge",
+  "subtitle": "Blencathra"
+ },
+ {
+  "name": "sharpedge-poster-paper",
+  "place": "blencathra",
+  "style": "poster",
+  "theme": "paper",
+  "seen": "view:sharp-edge-from-bannerdale-crags"
  }
 ]

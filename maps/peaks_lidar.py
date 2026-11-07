@@ -2,15 +2,11 @@
 National Grid metres, for close views of ridges the 30 m worldwide data cannot show.
 
     python -m maps.peaks_lidar caps OUT.xml
-<<<<<<< HEAD
-    python -m maps.peaks_lidar fetch E0 N0 E1 N1 OUT.npz [--chunk 2000]
-=======
     python -m maps.peaks_lidar fetch E0 N0 E1 N1 OUT.npz
     python -m maps.peaks_lidar pack LIDAR.npz LAT LON HALF_W HALF_H RES OUT.png
 
 pack resamples onto the print maker's own local grid (north up, metres from LAT, LON, the same
 flat-earth sums as lib/terrain.js) and writes a Terrarium-encoded PNG the page reads like a tile.
->>>>>>> feat/peaks-shop
 
 The npz holds dem (rows north to south, metres, nan where no data), res, e0, n1 (top-left corner).
 """
@@ -82,11 +78,6 @@ def fetch(e0, n0, e1, n1, out, step=2000):
     print("saved", out, dem.shape, np.nanmax(dem), "nan", int(np.isnan(dem).sum()))
 
 
-<<<<<<< HEAD
-if __name__ == "__main__":
-    if sys.argv[1] == "caps":
-        open(sys.argv[2], "w").write(caps())
-=======
 R = 6371008.8
 
 
@@ -118,7 +109,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == "pack":
         a = sys.argv[2:]
         pack(a[0], *map(float, a[1:6]), a[6])
->>>>>>> feat/peaks-shop
     else:
         e0, n0, e1, n1 = map(float, sys.argv[2:6])
         fetch(e0, n0, e1, n1, sys.argv[6])
