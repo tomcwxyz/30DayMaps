@@ -312,7 +312,7 @@ function skylineView(fr) {
   if (sel.startsWith("view:")) {
     const v = PLACES.views.find(x => x.slug === sel.slice(5));
     return { lat: v.lat, lon: v.lon, az: v.azimuth, fov: v.fov, reach: v.reach_km * 1000, lift: v.lift_m, near: (v.near_km ?? 0.4) * 1000,
-             floor: v.poster_floor, label: v.subtitle, hires: v.hires, crop: p.area && p.area.poster_view === v.slug ? p.area.poster_crop : null, names: v.names };
+             floor: v.poster_floor, label: v.subtitle, hires: v.hires, maxExag: v.max_exag, stripAt: v.poster_centre, crop: p.area && p.area.poster_view === v.slug ? p.area.poster_crop : null, names: v.names };
   }
   const [code, words, bearing] = DIRS.find(d => d[0] === sel) || DIRS[0];
   const W = fr ? fr.x1 - fr.x0 : parseFloat($("width").value) * 1000;
@@ -469,7 +469,7 @@ async function refresh() {
             const vn = labels ? await getNames(vg, v.names) : [];
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
             const ink = th.panel !== th.page ? th.panel : th.line;
-            sd.v.floor = v.floor;
+            sd.v.floor = v.floor; sd.v.stripAt = v.stripAt;
             D.drawSkyline(items, { sd, box: strip, th, u, labels: false, labelRoom: 0.08, exag: 1.6, colours: [th.page, th.page, D.mix(th.page, ink, 0.2), ink], sky: false });
             details += `   ·   skyline ${v.label}`;
           }
