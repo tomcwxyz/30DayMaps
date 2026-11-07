@@ -1,48 +1,14 @@
 [
  {
-  "name": "bgr-poster-paper",
-  "gpx": "peaks/previews/routes/bob-graham-round.gpx",
-  "style": "poster",
-  "theme": "paper",
-  "title": "Bob Graham Round",
-  "subtitle": "42 Lakeland fells in 24 hours"
- },
- {
-  "name": "bgr-contours-navy",
-  "gpx": "peaks/previews/routes/bob-graham-round.gpx",
+  "name": "round-bgr-contours-white",
+  "round": "bob-graham-round",
   "style": "contours",
-  "theme": "navy",
-  "title": "Bob Graham Round"
+  "theme": "white"
  },
  {
-  "name": "tea-poster-moss",
-  "gpx": "peaks/previews/routes/tea-round.gpx",
+  "name": "round-tea-poster-paper",
+  "round": "tea-round",
   "style": "poster",
-  "theme": "moss",
-  "title": "The Tea Round",
-  "subtitle": "Abraham's Tea Round, from George Fisher"
- },
- {
-  "name": "utmb-poster-paper",
-  "gpx": "peaks/previews/routes/utmb.gpx",
-  "style": "poster",
-  "theme": "paper",
-  "title": "UTMB",
-  "subtitle": "Ultra-Trail du Mont-Blanc"
- },
- {
-  "name": "utmb-contours-night",
-  "gpx": "peaks/previews/routes/utmb.gpx",
-  "style": "contours",
-  "theme": "night",
-  "title": "UTMB"
- },
- {
-  "name": "l100-poster-paper",
-  "gpx": "peaks/previews/routes/lakeland-100.gpx",
-  "style": "poster",
-  "theme": "paper",
-  "title": "Lakeland 100",
-  "subtitle": "The Ultra Tour of the Lake District"
+  "theme": "paper"
  }
 ]
