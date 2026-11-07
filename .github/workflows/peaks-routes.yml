@@ -1,0 +1,28 @@
+name: Peaks routes
+# Builds ready-made routes (peaks/previews/routes.json) on the previews branch.
+on:
+  push:
+    branches: ["previews/**"]
+    paths: ["peaks/previews/routes.json", "maps/peaks_routes.py", ".github/workflows/peaks-routes.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.ref_name }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests
+      - run: python -m maps.peaks_routes peaks/previews/routes.json peaks/previews/routes
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f peaks/previews/routes
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Peaks routes"
+          git pull --rebase --autostash -q && git push
