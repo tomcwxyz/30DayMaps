@@ -297,7 +297,7 @@ function skylineView(fr) {
   if (sel.startsWith("view:")) {
     const v = PLACES.views.find(x => x.slug === sel.slice(5));
     return { lat: v.lat, lon: v.lon, az: v.azimuth, fov: v.fov, reach: v.reach_km * 1000, lift: v.lift_m, near: (v.near_km ?? 0.4) * 1000,
-             floor: v.poster_floor, label: v.subtitle, crop: p.area && p.area.poster_view === v.slug ? p.area.poster_crop : null, names: v.names };
+             floor: v.poster_floor, label: v.subtitle, hires: v.hires, crop: p.area && p.area.poster_view === v.slug ? p.area.poster_crop : null, names: v.names };
   }
   const [code, words, bearing] = DIRS.find(d => d[0] === sel) || DIRS[0];
   const W = fr ? fr.x1 - fr.x0 : parseFloat($("width").value) * 1000;
@@ -327,7 +327,11 @@ function panoramaView() {
 
 function viewGrid(v) {
   const res = Math.max(20, v.reach / 900);
-  return getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
+  const g = getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
+  if (!v.hires) return g;
+  // ready-made close views carry a LiDAR patch, so a ridge like Sharp Edge keeps its edge
+  const f = memo(`h:${v.hires.src}`, () => { setStatus("Fetching LiDAR…"); return T.hires(v.hires); });
+  return Promise.all([g, f]).then(([g, f]) => T.withFine(Object.assign({}, g), f));
 }
 
 // ---- routes ---------------------------------------------------------------------------------
@@ -540,6 +544,10 @@ function seenOptions() {
   if (a && a.poster_view) {
     const v = PLACES.views.find(x => x.slug === a.poster_view);
     if (v) opts.push([`view:${v.slug}`, `The classic view: ${v.subtitle.replace(/, looking.*/, "")}`]);
+  }
+  for (const slug of (a && a.views) || []) {
+    const v = PLACES.views.find(x => x.slug === slug);
+    if (v) opts.push([`view:${v.slug}`, `${v.title}, ${v.subtitle.replace(/, looking.*/, "")}`]);
   }
   for (const [code, words] of DIRS) opts.push([code, `From ${words}`]);
   $("seenFrom").innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");

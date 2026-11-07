@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge).",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline.",
  "areas": [
   {
    "slug": "helvellyn",
@@ -31,6 +31,9 @@
      "lat": 54.63355,
      "lon": -3.05185
     }
+   ],
+   "views": [
+    "sharp-edge-from-bannerdale-crags"
    ]
   },
   {
@@ -316,6 +319,33 @@
    "reach_km": 12,
    "lift_m": 2,
    "near_km": 0.8
+  },
+  {
+   "slug": "sharp-edge-from-bannerdale-crags",
+   "title": "Sharp Edge",
+   "subtitle": "from Bannerdale Crags, looking south-west",
+   "lat": 54.65196,
+   "lon": -3.03171,
+   "azimuth": 233,
+   "fov": 40,
+   "reach_km": 15,
+   "lift_m": 2,
+   "near_km": 0.08,
+   "hires": {
+    "src": "hires/blencathra.png",
+    "lat": 54.64076,
+    "lon": -3.04971,
+    "res": 3
+   },
+   "labels": [
+    {
+     "name": "Sharp Edge",
+     "lat": 54.64546,
+     "lon": -3.04596,
+     "kind": "ridge",
+     "sky": true
+    }
+   ]
   }
  ]
 }

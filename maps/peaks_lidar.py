@@ -2,7 +2,15 @@
 National Grid metres, for close views of ridges the 30 m worldwide data cannot show.
 
     python -m maps.peaks_lidar caps OUT.xml
+<<<<<<< HEAD
     python -m maps.peaks_lidar fetch E0 N0 E1 N1 OUT.npz [--chunk 2000]
+=======
+    python -m maps.peaks_lidar fetch E0 N0 E1 N1 OUT.npz
+    python -m maps.peaks_lidar pack LIDAR.npz LAT LON HALF_W HALF_H RES OUT.png
+
+pack resamples onto the print maker's own local grid (north up, metres from LAT, LON, the same
+flat-earth sums as lib/terrain.js) and writes a Terrarium-encoded PNG the page reads like a tile.
+>>>>>>> feat/peaks-shop
 
 The npz holds dem (rows north to south, metres, nan where no data), res, e0, n1 (top-left corner).
 """
@@ -74,9 +82,43 @@ def fetch(e0, n0, e1, n1, out, step=2000):
     print("saved", out, dem.shape, np.nanmax(dem), "nan", int(np.isnan(dem).sum()))
 
 
+<<<<<<< HEAD
 if __name__ == "__main__":
     if sys.argv[1] == "caps":
         open(sys.argv[2], "w").write(caps())
+=======
+R = 6371008.8
+
+
+def pack(src, lat, lon, half_w, half_h, res, out):
+    from PIL import Image
+    from pyproj import Transformer
+    from scipy.ndimage import map_coordinates
+    d = np.load(src)
+    dem, r0, e0, n1 = d["dem"], float(d["res"]), float(d["e0"]), float(d["n1"])
+    w, h = int(round(2 * half_w / res)), int(round(2 * half_h / res))
+    x = -half_w + (np.arange(w) + 0.5) * res
+    y = half_h - (np.arange(h) + 0.5) * res
+    X, Y = np.meshgrid(x, y)
+    la = lat + np.degrees(Y / R)
+    lo = lon + np.degrees(X / (R * np.cos(np.radians(la))))
+    E, N = Transformer.from_crs(4326, 27700, always_xy=True).transform(lo, la)
+    z = map_coordinates(np.nan_to_num(dem, nan=-1), [(n1 - N) / r0 - 0.5, (E - e0) / r0 - 0.5], order=1, mode="nearest")
+    if (z < 0).any():
+        raise SystemExit(f"{int((z < 0).sum())} cells outside the LiDAR box")
+    v = (np.round((z + 32768) * 8) * 32).astype(np.uint32)   # eighth-metre steps: plenty, and they compress
+    rgb = np.stack([(v >> 16) & 255, (v >> 8) & 255, v & 255], -1).astype(np.uint8)
+    Image.fromarray(rgb, "RGB").save(out, optimize=True)
+    print("packed", out, (w, h), round(float(z.min()), 1), round(float(z.max()), 1))
+
+
+if __name__ == "__main__":
+    if sys.argv[1] == "caps":
+        open(sys.argv[2], "w").write(caps())
+    elif sys.argv[1] == "pack":
+        a = sys.argv[2:]
+        pack(a[0], *map(float, a[1:6]), a[6])
+>>>>>>> feat/peaks-shop
     else:
         e0, n0, e1, n1 = map(float, sys.argv[2:6])
         fetch(e0, n0, e1, n1, sys.argv[6])
