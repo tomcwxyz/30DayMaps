@@ -1,4 +1,2 @@
-inpin-panorama-paper: ok (3543, 1181) | Panorama 90 × 30 cm · 900 × 300 mm | small print: 624 m / 488 m / 879 m
 cuillin-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 320 m / 435 m / 948 m
-blencathra-skyline-moss: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 805 m / 852 m / 868 m
 page errors: []
