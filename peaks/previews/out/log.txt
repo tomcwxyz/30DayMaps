@@ -1,3 +1,3 @@
-round-bgr-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
-round-tea-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 100 / 100 / 100
-page errors: ['Failed to load resource: the server responded with a status of 429 ()', 'Failed to load resource: the server responded with a status of 504 (Gateway Timeout)']
+pick-utmb-poster-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 4807 m / 4208 m / 3901 m
+pick-l100-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
+page errors: []
