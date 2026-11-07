@@ -1,14 +1,14 @@
 [
  {
-  "name": "round-bgr-contours-white",
-  "round": "bob-graham-round",
-  "style": "contours",
-  "theme": "white"
+  "name": "pick-utmb-poster-navy",
+  "round": "utmb",
+  "style": "poster",
+  "theme": "navy"
  },
  {
-  "name": "round-tea-poster-paper",
-  "round": "tea-round",
-  "style": "poster",
-  "theme": "paper"
+  "name": "pick-l100-contours-white",
+  "round": "lakeland-100",
+  "style": "contours",
+  "theme": "white"
  }
 ]
