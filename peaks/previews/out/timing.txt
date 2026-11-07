@@ -1,20 +1,20 @@
-helvellyn                    poster        0.1s  | elevation 0  names 0  contour lines 0  contour drawing 87  view elevation 0  skyline rays 0  layout 1  paint 111
-helvellyn                    contours      1.5s  | elevation 0  names 0  contour lines 1439  layout 111  paint 135
-helvellyn                    skyline       0.1s  | view elevation 0  names 0  skyline rays 264  layout 3  paint 5
-helvellyn                    panorama      0.8s  | view elevation 684  names 0  skyline rays 256  layout 4  paint 8
-helvellyn                    first load 2.9s, 100 tiles 11051 KB, 0 other requests
-blencathra (LiDAR)           poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 36  view elevation 0  skyline rays 0  layout 1  paint 25
-blencathra (LiDAR)           skyline       0.1s  | view elevation 0  names 0  skyline rays 273  layout 1  paint 3
-blencathra (LiDAR)           first load 2.5s, 58 tiles 6393 KB, 0 other requests
-lake-district 34 km          contours      1.4s  | elevation 0  names 0  contour lines 1013  layout 113  paint 454
-lake-district 34 km          poster        0.4s  | elevation 0  names 0  contour lines 0  contour drawing 189  view elevation 0  skyline rays 0  layout 1  paint 368
-lake-district 34 km          first load 2.6s, 47 tiles 5204 KB, 0 other requests
-cuillin                      poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 57  view elevation 0  skyline rays 0  layout 1  paint 48
-cuillin                      panorama      0.9s  | view elevation 907  names 0  skyline rays 213  layout 5  paint 7
-cuillin                      first load 2.2s, 162 tiles 15157 KB, 0 other requests
-matterhorn                   poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 33  view elevation 0  skyline rays 1  layout 2  paint 40
-matterhorn                   first load 1.9s, 66 tiles 8532 KB, 0 other requests
-bob graham round             poster        0.6s  | elevation 2  names 4  contour lines 0  layout 235  paint 489
-bob graham round             first load 2.7s, 99 tiles 11301 KB, 1 other requests
-utmb                         poster        0.8s  | elevation 3  names 4  contour lines 0  layout 275  paint 621
-utmb                         first load 2.6s, 86 tiles 10837 KB, 1 other requests
+helvellyn                    poster        0.1s  | elevation 0  names 0  contour lines 0  contour drawing 105  view elevation 0  skyline rays 1  layout 1  paint 89
+helvellyn                    contours      1.5s  | elevation 0  names 0  contour lines 1402  layout 130  paint 127
+helvellyn                    skyline       0.1s  | view elevation 0  names 0  skyline rays 270  layout 2  paint 4
+helvellyn                    panorama      1.0s  | view elevation 976  names 0  skyline rays 237  layout 4  paint 2
+helvellyn                    first picture 0.8s, finished 3.1s, 116 tiles 12804 KB, 0 other requests
+blencathra (LiDAR)           poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 44  view elevation 0  skyline rays 0  layout 2  paint 45
+blencathra (LiDAR)           skyline       0.1s  | view elevation 0  names 0  skyline rays 280  layout 2  paint 4
+blencathra (LiDAR)           first picture 0.8s, finished 2.8s, 67 tiles 7489 KB, 0 other requests
+lake-district 34 km          contours      1.6s  | elevation 0  names 0  contour lines 1081  layout 167  paint 450
+lake-district 34 km          poster        0.3s  | elevation 0  names 0  contour lines 0  contour drawing 106  view elevation 0  skyline rays 0  layout 1  paint 358
+lake-district 34 km          first picture 0.9s, finished 3.4s, 67 tiles 7631 KB, 0 other requests
+cuillin                      poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 80  view elevation 0  skyline rays 0  layout 1  paint 46
+cuillin                      panorama      1.2s  | view elevation 1243  names 0  skyline rays 213  layout 6  paint 5
+cuillin                      first picture 1.0s, finished 2.7s, 177 tiles 16981 KB, 0 other requests
+matterhorn                   poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 45  view elevation 0  skyline rays 0  layout 2  paint 38
+matterhorn                   first picture 0.8s, finished 2.4s, 82 tiles 10804 KB, 0 other requests
+bob graham round             poster        0.8s  | elevation 1  names 3  contour lines 0  layout 260  paint 492
+bob graham round             first picture 0.8s, finished 3.0s, 107 tiles 12326 KB, 2 other requests
+utmb                         poster        1.0s  | elevation 1  names 3  contour lines 0  layout 330  paint 624
+utmb                         first picture 0.8s, finished 3.0s, 102 tiles 13018 KB, 2 other requests
