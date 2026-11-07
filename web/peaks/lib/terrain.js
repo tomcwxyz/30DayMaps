@@ -337,13 +337,20 @@
     const w = Math.min(...ll.map(p => p[1])), e = Math.max(...ll.map(p => p[1]));
     const key = [s, w, n, e].map(v => v.toFixed(3)).join(",");
     if (nameCache.has(key)) return nameCache.get(key);
+    // names change rarely: keep each answer between visits too
+    const memoUrl = `https://names.peaks.invalid/v1/${key}`;
+    const store = typeof caches !== "undefined" ? await caches.open("peaks-names-v1").catch(() => null) : null;
+    const kept = store && await store.match(memoUrl).catch(() => null);
+    if (kept) { const out = await kept.json(); nameCache.set(key, out); return out; }
     const q = `[out:json][timeout:40];(node["natural"~"^(peak|hill|volcano)$"]["name"](${key});way["natural"~"^(arete|ridge)$"]["name"](${key}););out center;`;
     let els = null;
+    const strict = root.PeaksTerrain.strict;
     for (const url of OVERPASS) {
       try {
-        const r = await fetch(url, { method: "POST", body: new URLSearchParams({ data: q }) });
+        const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(strict ? 90000 : 15000) : undefined;
+        const r = await fetch(url, { method: "POST", body: new URLSearchParams({ data: q }), signal });
         if (r.ok) { els = (await r.json()).elements; break; }
-      } catch (e) { /* try the next server */ }
+      } catch (e) { /* slow or failing: try the next server */ }
     }
     if (!els) {
       if (root.PeaksTerrain.strict) throw new Error("summit names unavailable (Overpass)");
@@ -357,6 +364,7 @@
       return { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null };
     }).filter(Boolean);
     nameCache.set(key, out);
+    if (store) store.put(memoUrl, new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json" } })).catch(() => {});
     return out;
   }
 
