@@ -202,7 +202,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     <div class="meta" id="meta"></div>
   </section>
 
-  <p class="credit">Elevation from <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen/Tilezen Terrain Tiles</a> on AWS Open Data (SRTM, EU-DEM, UK Environment Agency LiDAR and others); summit names © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors via Overpass; search by Nominatim. Skylines allow for the curve of the earth and normal refraction. The credit line on each print is required by the data licences.</p>
+  <p class="credit">Elevation from <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen/Tilezen Terrain Tiles</a> on AWS Open Data (SRTM, EU-DEM, UK Environment Agency LiDAR and others), with the Environment Agency's 2 m LiDAR (Open Government Licence) for close views of a few places; summit names © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors via Overpass; search by Nominatim. Skylines allow for the curve of the earth and normal refraction. The credit line on each print is required by the data licences.</p>
 </div>
 
 <script src="lib/vendor/d3-array.min.js"></script>
@@ -429,7 +429,7 @@ async function refresh() {
     const L = D.layout(pw, ph, kind, wordsNow("x"));
     const u = L.u;
     const items = [{ t: "rect", x: 0, y: 0, w: pw, h: ph, fill: th.page }];
-    let details = "", creditText = T.CREDIT;
+    let details = "", creditText = T.CREDIT, lidar = false;
     const names = state.place && state.place.names;
 
     if (style === "contours" || style === "ridgelines" || style === "poster") {
@@ -437,6 +437,7 @@ async function refresh() {
       const fr = areaFrame(box);
       const g = await frameGrid(fr);
       if (id !== runId) return;
+      lidar = !!g.fineSrc;
       const route = state.route ? routeOnGrid(g) : null;
       if (style === "ridgelines") {
         const rows = D.drawRidgelines(items, { g, frame: fr, box, th, u, rows: +$("rows").value });
@@ -463,6 +464,7 @@ async function refresh() {
             const v = skylineView(fr);
             const vg = await viewGrid(v);
             if (id !== runId) return;
+            lidar = lidar || !!vg.fine;
             setStatus("Drawing the skyline…");
             const vn = labels ? await getNames(vg, v.names) : [];
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
@@ -478,6 +480,7 @@ async function refresh() {
       const v = style === "panorama" ? panoramaView() : skylineView(null);
       const vg = await viewGrid(v);
       if (id !== runId) return;
+      lidar = !!vg.fine;
       const vn = labels ? await getNames(vg, v.names) : [];
       if (id !== runId) return;
       setStatus(style === "panorama" ? "Drawing the panorama…" : "Drawing the skyline…");
@@ -493,6 +496,7 @@ async function refresh() {
     if (id !== runId) return;
     const W = wordsNow(details);
     D.caption(D.layout(pw, ph, kind, W), items, th, W);
+    if (lidar) creditText += "  ·  LiDAR © Environment Agency, Open Government Licence";
     D.credit(L, items, th, creditText);
     state.composed = { items, pw, ph };
     draw();
