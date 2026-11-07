@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline. 'max_exag' keeps a view near true scale (more foreground instead of taller hills); 'poster_centre' (degrees off the view's middle) centres a poster's strip.",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline. 'max_exag' keeps a view near true scale (more foreground instead of taller hills); 'poster_centre' (degrees off the view's middle) centres a poster's strip. 'routes' are ready-made rounds and races: GPX files in web/peaks/routes, built from maps/peak_routes.json by maps/peaks_routes.py.",
  "areas": [
   {
    "slug": "helvellyn",
@@ -399,6 +399,20 @@
    "max_exag": 5,
    "poster_centre": 4,
    "poster_floor": "skyline"
+  }
+ ],
+ "routes": [
+  {
+   "slug": "bob-graham-round",
+   "name": "Bob Graham Round",
+   "title": "Bob Graham Round",
+   "subtitle": "42 Lakeland fells from Keswick Moot Hall"
+  },
+  {
+   "slug": "tea-round",
+   "name": "The Tea Round",
+   "title": "The Tea Round",
+   "subtitle": "Abraham's Tea Round, from Keswick"
   }
  ]
 }
