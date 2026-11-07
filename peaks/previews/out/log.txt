@@ -1,5 +1,5 @@
 stridingedge-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 950 m / Helvellyn / FROM RED TARN, LOOKING SOUTH-WEST   ·   EYE 721 M   ·   84° WIDE
-stridingedge-skyline-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 950 m / Helvellyn / FROM RED TARN, LOOKING SOUTH-WEST   ·   EYE 721 M   ·   84° WIDE
+stridingedge-skyline-moss: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 950 m / Helvellyn / FROM RED TARN, LOOKING SOUTH-WEST   ·   EYE 721 M   ·   84° WIDE
 helvellyn-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 884 m / 883 m
-helvellyn-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 884 m / 883 m
+helvellyn-poster-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 884 m / 883 m
 page errors: []
