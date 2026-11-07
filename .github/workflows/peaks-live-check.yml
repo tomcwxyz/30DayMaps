@@ -1,0 +1,16 @@
+name: Peaks live check
+on:
+  push:
+    branches: ["previews/**"]
+    paths: ["peaks/previews/live/**", ".github/workflows/peaks-live-check.yml"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.ref_name }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e ".[sight]" playwright && python -m playwright install --with-deps chromium
+      - run: python peaks/previews/live/check.py
