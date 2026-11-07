@@ -64,3 +64,28 @@ test("a baked grid decodes to the heights it was made from (to its half-metre st
     assert.strictEqual(g.halfW, 45);
   } finally { global.fetch = real; }
 });
+
+test("contours match d3-contour's rings on a hilly field", () => {
+  const fs = require("fs"), path = require("path");
+  (0, eval)(fs.readFileSync(path.join(__dirname, "../lib/vendor/d3-array.min.js"), "utf8"));
+  (0, eval)(fs.readFileSync(path.join(__dirname, "../lib/vendor/d3-contour.min.js"), "utf8"));
+  require("../lib/draw.js");
+  const w = 160, h = 120, res = 20, z = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    z[y * w + x] = 300 + 250 * Math.sin(x / 13) * Math.cos(y / 11) + 120 * Math.sin((x + 2 * y) / 7) + 2 * x;
+  const g = { z, w, h, res, halfW: w * res / 2, halfH: h * res / 2, lat: 54, lon: -3 };
+  const fr = { x0: -1400, x1: 1400, y0: -1000, y1: 1000 };
+  const geo = PeaksDraw.contourGeometry(g, fr, { lines: 40, smooth: 1 });
+  // the same blurred, cropped field through d3
+  const pad = 4, c0 = Math.floor((fr.x0 + g.halfW) / res) - pad, c1 = Math.ceil((fr.x1 + g.halfW) / res) + pad;
+  const r0 = Math.floor((g.halfH - fr.y1) / res) - pad, r1 = Math.ceil((g.halfH - fr.y0) / res) + pad;
+  const sw = c1 - c0, sh = r1 - r0, bl = T.blur(z, w, h, 1.2), zz = new Float64Array(sw * sh);
+  for (let r = 0; r < sh; r++) for (let c = 0; c < sw; c++) zz[r * sw + c] = bl[(r0 + r) * w + c0 + c];
+  const ref = globalThis.d3.contours().size([sw, sh]).thresholds(geo.levels.map(l => l.level))(zz);
+  const mine = geo.levels.map(l => l.polys.length), theirs = ref.map(gm => gm.coordinates.reduce((n, p) => n + p.length, 0));
+  assert.deepStrictEqual(mine, theirs);
+  const length = rings => rings.reduce((s, r) => { for (let i = 2; i < r.length; i += 2) s += Math.hypot(r[i] - r[i - 2], r[i + 1] - r[i - 1]); return s; }, 0);
+  const a = length(geo.levels.flatMap(l => l.polys.flat())) / res;
+  const b = ref.reduce((s, gm) => s + gm.coordinates.flat().reduce((t, ring) => { for (let i = 1; i < ring.length; i++) t += Math.hypot(ring[i][0] - ring[i - 1][0], ring[i][1] - ring[i - 1][1]); return t; }, 0), 0);
+  assert.ok(Math.abs(a - b) / b < 0.01, `lengths ${a.toFixed(1)} vs ${b.toFixed(1)}`);
+});

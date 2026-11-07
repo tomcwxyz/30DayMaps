@@ -286,14 +286,18 @@
       const o = r * w;
       for (let c = 0; c < w; c++) {
         let s = 0;
-        for (let j = -rad; j <= rad; j++) s += z[o + Math.min(w - 1, Math.max(0, c + j))] * k[j + rad];
+        if (c >= rad && c < w - rad) for (let j = -rad, i = o + c - rad; j <= rad; j++, i++) s += z[i] * k[j + rad];
+        else for (let j = -rad; j <= rad; j++) s += z[o + Math.min(w - 1, Math.max(0, c + j))] * k[j + rad];
         tmp[o + c] = s;
       }
     }
-    for (let c = 0; c < w; c++) for (let r = 0; r < h; r++) {
-      let s = 0;
-      for (let j = -rad; j <= rad; j++) s += tmp[Math.min(h - 1, Math.max(0, r + j)) * w + c] * k[j + rad];
-      out[r * w + c] = s;
+    // down the columns a row at a time, so memory is read in order
+    for (let r = 0; r < h; r++) {
+      const o = r * w;
+      for (let j = -rad; j <= rad; j++) {
+        const b = Math.min(h - 1, Math.max(0, r + j)) * w, kj = k[j + rad];
+        for (let c = 0; c < w; c++) out[o + c] += tmp[b + c] * kj;
+      }
     }
     return out;
   }
