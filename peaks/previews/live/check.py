@@ -25,3 +25,4 @@ with sync_playwright() as pw:
     page.click('#rounds button[data-slug="tea-round"]'); t=time.time(); settle(page,"tea round",t)
     t=time.time(); page.click('#presets button[data-slug="helvellyn"]'); settle(page,"  -> helvellyn",t)
     b.close()
+# rerun Sat Nov  7 23:31:07 GMT 2026
