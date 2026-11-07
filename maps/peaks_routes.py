@@ -112,7 +112,7 @@ def build(slug, spec, out: Path):
 if __name__ == "__main__":
     spec = json.loads(Path(sys.argv[1]).read_text())
     out = Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
-    only = sys.argv[3:]
+    only = sys.argv[3:] or [s for s in spec if not (out / f"{s}.gpx").exists() or spec[s].get("rebuild")]
     for slug, s in spec.items():
         if not only or slug in only:
             build(slug, s, out)
