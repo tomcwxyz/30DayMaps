@@ -1,9 +1,34 @@
 [
  {
+  "name": "blencathra-poster-paper",
+  "place": "blencathra",
+  "style": "poster",
+  "theme": "paper"
+ },
+ {
+  "name": "inpin-poster-navy",
+  "place": "inaccessible-pinnacle",
+  "style": "poster",
+  "theme": "navy"
+ },
+ {
   "name": "inpin-panorama-paper",
   "place": "inaccessible-pinnacle",
   "style": "panorama",
+  "theme": "paper"
+ },
+ {
+  "name": "lakeland50-poster-paper",
+  "gpx": "peaks/previews/lakeland-50.gpx",
+  "style": "poster",
   "theme": "paper",
-  "dump": true
+  "title": "Lakeland 50",
+  "subtitle": "Dalemain to Coniston"
+ },
+ {
+  "name": "cuillin-skyline-paper",
+  "place": "cuillin",
+  "style": "skyline",
+  "theme": "paper"
  }
 ]
