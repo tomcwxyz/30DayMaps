@@ -1,5 +1,5 @@
-sharpedge-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 543 M   ·   46° WIDE
-sharpedge-skyline-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 543 M   ·   46° WIDE
-blencathra-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
-blencathra-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+stridingedge-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 950 m / Helvellyn / FROM RED TARN, LOOKING SOUTH-WEST   ·   EYE 721 M   ·   84° WIDE
+stridingedge-skyline-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 950 m / Helvellyn / FROM RED TARN, LOOKING SOUTH-WEST   ·   EYE 721 M   ·   84° WIDE
+helvellyn-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 884 m / 883 m
+helvellyn-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 884 m / 883 m
 page errors: []
