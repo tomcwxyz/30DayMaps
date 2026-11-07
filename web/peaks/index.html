@@ -310,9 +310,11 @@ function skylineView(fr) {
 }
 
 function panoramaView() {
-  const top = state.place && state.place.top;
-  let lat = top ? top.lat : state.place.lat, lon = top ? top.lon : state.place.lon;
-  let label = top && top.name !== state.place.name ? `from ${top.name}` : "from the summit";
+  // Stand where a ready-made panorama says, else on the highest named top near a ready-made range.
+  const preset = !state.route && PLACES.views.find(v => v.panorama && Math.hypot(...T.toXY(state.place.lat, state.place.lon, v.lat, v.lon)) < 1500);
+  const top = preset ? null : state.place && state.place.top;
+  let lat = preset ? preset.lat : top ? top.lat : state.place.lat, lon = preset ? preset.lon : top ? top.lon : state.place.lon;
+  let label = preset ? `from ${state.place.name}` : top && top.name !== state.place.name ? `from ${top.name}` : "from the summit";
   let names = null;
   if (state.route) { const hp = state.route.high; lat = hp[0]; lon = hp[1]; label = "from the high point of the route"; }
   else {

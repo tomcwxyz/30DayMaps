@@ -135,6 +135,17 @@
       const m = (z[i - w - 1] + z[i - w] + z[i - w + 1] + z[i - 1] + z[i + 1] + z[i + w - 1] + z[i + w] + z[i + w + 1]) / 8;
       if (Math.abs(z[i] - m) > 220) bad[i] = 1;
     }
+    // Needles a few cells wide: far above everything two cells away.
+    for (let r = 2; r < h - 2; r++) for (let c = 2; c < w - 2; c++) {
+      const i = r * w + c;
+      let m = -Infinity;
+      for (let k = -2; k <= 2; k++) {
+        m = Math.max(m, z[i - 2 * w + k], z[i + 2 * w + k]);
+        if (k > -2 && k < 2) m = Math.max(m, z[i + k * w - 2], z[i + k * w + 2]);
+      }
+      if (z[i] - m > 150) for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) bad[i + dr * w + dc] = 1;
+    }
+    flatBlocks(z, w, h, bad);
     // Fill from the edge of each bad patch inwards.
     let left = bad.reduce((a, b) => a + b, 0);
     for (let pass = 0; left && pass < 400; pass++) {
@@ -154,6 +165,45 @@
       left -= next.length / 2;
     }
     for (let i = 0; i < z.length; i++) if (z[i] < 0) z[i] = 0;
+  }
+
+  // Terrarium sometimes has blocks of a single height standing out of the sea (or out of
+  // lower ground) with cliff edges, from a coarse source tile. Lakes and tarns are flat too,
+  // but sit below their surroundings, so only patches that stand well above nearly all of
+  // their edge are marked bad (with a two-cell margin for the blurred rim).
+  function flatBlocks(z, w, h, bad) {
+    const seen = new Uint8Array(w * h), stack = [], comp = [];
+    const isFlat = i => {
+      const v = z[i];
+      return v > 3 && Math.abs(v - z[i - 1]) < 0.5 && Math.abs(v - z[i + 1]) < 0.5 && Math.abs(v - z[i - w]) < 0.5 && Math.abs(v - z[i + w]) < 0.5;
+    };
+    for (let r = 3; r < h - 3; r++) for (let c = 3; c < w - 3; c++) {
+      const start = r * w + c;
+      if (seen[start] || !isFlat(start)) continue;
+      comp.length = 0; stack.push(start); seen[start] = 1;
+      while (stack.length) {
+        const i = stack.pop(); comp.push(i);
+        const rr = (i / w) | 0, cc = i - rr * w;
+        for (const j of [i - 1, i + 1, i - w, i + w]) {
+          const jr = (j / w) | 0, jc = j - jr * w;
+          if (jr < 3 || jr >= h - 3 || jc < 3 || jc >= w - 3 || seen[j] || Math.abs(jr - rr) + Math.abs(jc - cc) !== 1) continue;
+          if (isFlat(j)) { seen[j] = 1; stack.push(j); }
+        }
+      }
+      if (comp.length < 12) continue;
+      const inComp = new Set(comp);
+      let edges = 0, above = 0;
+      for (const i of comp) for (const d of [-1, 1, -w, w]) {
+        if (inComp.has(i + d)) continue;
+        edges++;
+        if (z[i] - z[i + 3 * d] > 30) above++;
+      }
+      if (edges && above / edges >= 0.8)
+        for (const i of comp) for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+          const j = i + dr * w + dc;
+          if (j >= 0 && j < z.length && z[j] > 3) bad[j] = 1;
+        }
+    }
   }
 
   // Separable Gaussian blur, sigma in cells. Returns a new array.
@@ -232,7 +282,7 @@
   }
 
   root.PeaksTerrain = {
-    grid, blur, sample, localMax, summits, toXY, toLL, CREDIT, R,
+    grid, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); },
   };
 })(typeof window !== "undefined" ? window : globalThis);

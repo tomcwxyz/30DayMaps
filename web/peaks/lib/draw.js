@@ -194,7 +194,7 @@
   function ridgeLabels(items, names, g, frame, M, box, th, u, avoid) {
     const out = [], size = 2.2 * u, edge = 12 * u;
     for (const p of names || []) {
-      if (p.kind !== "ridge") continue;
+      if (p.kind !== "ridge" || out.length >= 5) continue;
       const [gx, gy] = T.toXY(g.lat, g.lon, p.lat, p.lon);
       const x = M.x(gx), y = M.y(gy);
       if (x < box.x + edge || x > box.x + box.w - edge || y < box.y + edge || y > box.y + box.h - edge) continue;
@@ -227,7 +227,7 @@
     if (labels) {
       const peaks = pickSummits(names, g, frame, Math.round(6 * Math.sqrt(box.w * box.h) / 260), 0.14);
       avoid = avoid.concat(summitMarks(items, peaks, M, box, th, u));
-      avoid = avoid.concat(ridgeLabels(items, names, g, frame, M, box, th, u, avoid));
+      if (frame.x1 - frame.x0 <= 12000) avoid = avoid.concat(ridgeLabels(items, names, g, frame, M, box, th, u, avoid));
       for (const l of contourLabels(geo, M, box, u, avoid))
         items.push({ t: "text", x: l.x, y: l.y, s: `${Math.round(l.level)}`, size: 1.95 * u, family: MONO, weight: 400, fill: th.line,
                      align: "center", base: "middle", rot: l.rot, halo: { color: filled && th.fills ? th.page : th.panel, width: 0.9 * u } });
@@ -357,7 +357,7 @@
     const Y = a => box.y + box.h - (a - yLo) / (yHi - yLo) * box.h;
     if (sky) items.push({ t: "grad", x: box.x, y: box.y, w: box.w, h: box.h, top: skyTop, bottom: skyBottom });
     items.push({ t: "clip", x: box.x, y: box.y, w: box.w, h: box.h });
-    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: mix(far, near, 0.45) });
+    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: mix(skyBottom, far, 0.55) });   // sea: paler than any land
     const n = L.length, cols = offs.length;
     for (let i = n - 1; i >= 0; i--) {
       const t = (n - 1 - i) / Math.max(1, n - 1);
