@@ -1,1 +1,14 @@
-[]
+[
+ {
+  "name": "perf-helvellyn-contours-white",
+  "place": "helvellyn",
+  "style": "contours",
+  "theme": "white"
+ },
+ {
+  "name": "perf-matterhorn-poster-paper",
+  "place": "matterhorn",
+  "style": "poster",
+  "theme": "paper"
+ }
+]
