@@ -124,3 +124,12 @@ test("download links are checked the same way as footprints", async () => {
   assert.strictEqual(out.statusCode, 403);
   assert.match(out.body, /Peaks download/);
 });
+
+test("a loop that ends where it starts keeps its shape when thinned", () => {
+  const loop = [];
+  for (let i = 0; i <= 400; i++) { const a = i / 400 * 2 * Math.PI; loop.push([54.5 + 0.05 * Math.sin(a), -3.1 + 0.08 * (1 - Math.cos(a))]); }
+  const s = P.simplify(loop, 5);
+  assert.ok(s.length > 20, `kept ${s.length} points`);
+  const f = P.fit(loop, 19200);
+  assert.ok(f.points.length > 20);
+});
