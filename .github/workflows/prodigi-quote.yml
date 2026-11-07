@@ -1,0 +1,51 @@
+name: Prodigi quote (temporary)
+# Asks Prodigi which panoramic fine art sizes exist and what they cost to print and post
+# to the UK. Prints only product codes, sizes and prices. Delete this branch afterwards.
+on:
+  push:
+    branches: [chore/prodigi-quote]
+permissions:
+  contents: read
+jobs:
+  quote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quote
+        env:
+          PRODIGI_API_KEY: ${{ secrets.PRODIGI_API_KEY }}
+          PRODIGI_ENV: ${{ vars.PRODIGI_ENV || 'sandbox' }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.error
+          base = {"sandbox": "https://api.sandbox.prodigi.com/v4.0", "live": "https://api.prodigi.com/v4.0"}[os.environ["PRODIGI_ENV"]]
+          key = os.environ["PRODIGI_API_KEY"]
+          print("Prodigi environment:", os.environ["PRODIGI_ENV"], "| key set:", bool(key))
+          def call(method, path, body=None):
+              req = urllib.request.Request(base + path, method=method, headers={"X-API-Key": key, "Content-Type": "application/json"},
+                                           data=json.dumps(body).encode() if body else None)
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as r:
+                      return r.status, json.load(r)
+              except urllib.error.HTTPError as e:
+                  try: return e.code, json.load(e)
+                  except Exception: return e.code, {}
+          skus = ["GLOBAL-FAP-8X24", "GLOBAL-FAP-20X60", "GLOBAL-FAP-10X30", "GLOBAL-FAP-12X36", "GLOBAL-FAP-6X18",
+                  "GLOBAL-FAP-8X20", "GLOBAL-FAP-A3", "GLOBAL-FAP-A2"]
+          for sku in skus:
+              st, p = call("GET", f"/products/{sku}")
+              prod = p.get("product") or {}
+              if st != 200 or not prod:
+                  print(f"{sku}: not available ({st} {p.get('outcome', '')})"); continue
+              dims = prod.get("productDimensions") or {}
+              desc = prod.get("description", "")
+              st, q = call("POST", "/quotes", {"shippingMethod": "Standard", "destinationCountryCode": "GB", "currencyCode": "GBP",
+                  "items": [{"sku": sku, "copies": 1, "attributes": {}, "assets": [{"printArea": "default"}]}]})
+              quotes = q.get("quotes") or []
+              if st != 200 or not quotes:
+                  print(f"{sku}: {desc} {dims} | no quote ({st} {q.get('outcome', '')} {json.dumps(q.get('failures', ''))[:300]})"); continue
+              for qq in quotes:
+                  c = qq.get("costSummary") or {}
+                  item, ship = (c.get("items") or {}), (c.get("shipping") or {})
+                  print(f"{sku}: {desc} | {dims.get('width')}x{dims.get('height')} {dims.get('units')} | {qq.get('shipmentMethod')}: "
+                        f"print {item.get('amount')} + post {ship.get('amount')} {item.get('currency')}")
+          PY
