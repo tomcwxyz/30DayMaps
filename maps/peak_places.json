@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline.",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline. 'max_exag' keeps a view near true scale (more foreground instead of taller hills); 'poster_centre' (degrees off the view's middle) centres a poster's strip.",
  "areas": [
   {
    "slug": "helvellyn",
@@ -9,7 +9,18 @@
    "lat": 54.527,
    "lon": -3.0164,
    "width_km": 7,
-   "summit_m": 950
+   "summit_m": 950,
+   "hires": {
+    "src": "hires/helvellyn.png",
+    "lat": 54.52879,
+    "lon": -3.00589,
+    "halfW": 2950,
+    "halfH": 2950,
+    "res": 3
+   },
+   "views": [
+    "helvellyn-from-place-fell"
+   ]
   },
   {
    "slug": "blencathra",
@@ -356,6 +367,38 @@
      "sky": true
     }
    ]
+  },
+  {
+   "slug": "striding-edge-from-red-tarn",
+   "title": "Striding Edge",
+   "subtitle": "from Red Tarn, looking south-west",
+   "lat": 54.53105,
+   "lon": -3.0044,
+   "azimuth": 205,
+   "fov": 84,
+   "reach_km": 15,
+   "lift_m": 2,
+   "near_km": 0.08,
+   "hires": {
+    "src": "hires/helvellyn.png",
+    "lat": 54.52879,
+    "lon": -3.00589,
+    "halfW": 2950,
+    "halfH": 2950,
+    "res": 3
+   },
+   "labels": [
+    {
+     "name": "Striding Edge",
+     "lat": 54.52555,
+     "lon": -3.0089,
+     "kind": "ridge",
+     "sky": true
+    }
+   ],
+   "max_exag": 5,
+   "poster_centre": 4,
+   "poster_floor": "skyline"
   }
  ]
 }

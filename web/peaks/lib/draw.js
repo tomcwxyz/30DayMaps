@@ -349,6 +349,10 @@
       const far = sd.layers[sd.layers.length - 1];
       let hiC = 0, vmax = -90;
       for (let c = 0; c <= x1; c++) if (far[c] > vmax) { vmax = far[c]; hiC = c; }
+      if (sd.v.stripAt != null) {   // a view can say where its strip should centre (degrees off its middle)
+        let best = Infinity;
+        for (let c = 0; c <= x1; c++) { const d = Math.abs(sd.offs[c] - sd.v.stripAt); if (d < best) { best = d; hiC = c; } }
+      }
       const sorted = Array.from(far).sort((p, q) => p - q), v5 = sorted[Math.floor(sorted.length * 0.05)];
       const vspan = (vmax - v5) * 1.45 || 1;
       const n = Math.round(exag * vspan * box.w / box.h / (sd.offs[1] - sd.offs[0]));
@@ -366,7 +370,13 @@
     if (sd.sea != null) bottom = Math.min(bottom, sd.sea - (top - sd.sea) * 0.08);
     const room = labelRoom != null ? labelRoom : (labels ? 0.3 : 0.1);
     const span = top - bottom || 1;
-    const yLo = bottom - span * 0.02, yHi = top + span * room;
+    let yLo = bottom - span * 0.02;
+    const yHi = top + span * room;
+    if (!exag && sd.v.maxExag) {
+      // true-to-scale views: show more foreground rather than stretch heights past maxExag
+      const fov = offs[offs.length - 1] - offs[0], need = fov * box.h / box.w / sd.v.maxExag;
+      if (yHi - yLo < need) yLo = yHi - need;
+    }
     const X = o => box.x + (o - offs[0]) / (offs[offs.length - 1] - offs[0]) * box.w;
     const Y = a => box.y + box.h - (a - yLo) / (yHi - yLo) * box.h;
     if (sky) items.push({ t: "grad", x: box.x, y: box.y, w: box.w, h: box.h, top: skyTop, bottom: skyBottom });
