@@ -12,6 +12,16 @@
    "summit_m": 950
   },
   {
+   "slug": "blencathra",
+   "name": "Blencathra",
+   "title": "Blencathra",
+   "region": "Lake District",
+   "lat": 54.639,
+   "lon": -3.0458,
+   "width_km": 4.5,
+   "summit_m": 868
+  },
+  {
    "slug": "scafell",
    "name": "The Scafells",
    "title": "Scafell Pike",
@@ -66,6 +76,16 @@
     "dy_km": 2.0,
     "dx_km": -0.5
    }
+  },
+  {
+   "slug": "inaccessible-pinnacle",
+   "name": "In Pin",
+   "title": "Inaccessible Pinnacle",
+   "region": "Sgùrr Dearg, Black Cuillin",
+   "lat": 57.2127,
+   "lon": -6.2348,
+   "width_km": 3,
+   "summit_m": 986
   },
   {
    "slug": "yr-wyddfa",
@@ -248,6 +268,30 @@
    "reach_km": 18,
    "lift_m": 2,
    "near_km": 1.4
+  },
+  {
+   "slug": "blencathra-from-castlerigg",
+   "title": "Blencathra",
+   "subtitle": "from Castlerigg Stone Circle, looking north-east",
+   "lat": 54.60257,
+   "lon": -3.09904,
+   "azimuth": 40,
+   "fov": 50,
+   "reach_km": 14,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "inaccessible-pinnacle-summit",
+   "title": "From the In Pin",
+   "subtitle": "the view from the top of the Inaccessible Pinnacle",
+   "lat": 57.2127,
+   "lon": -6.2348,
+   "azimuth": 90,
+   "fov": 360,
+   "reach_km": 45,
+   "lift_m": 2,
+   "panorama": true
   }
  ]
 }

@@ -120,7 +120,8 @@ OVERPASS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.sy
 
 
 def fetch_names(slug: str) -> Path:
-    """Named summits (OpenStreetMap natural=peak/hill) inside the DEM, in local metres."""
+    """Named summits (OpenStreetMap natural=peak/hill) and ridges (natural=arete/ridge, at their
+    middle) inside the DEM, in local metres. Ridges carry kind "ridge"."""
     import time
     import requests
     from pyproj import Transformer
@@ -130,7 +131,8 @@ def fetch_names(slug: str) -> Path:
     xs, ys = to_ll.transform([-d["half_w"], d["half_w"], -d["half_w"], d["half_w"]],
                              [-d["half_h"], -d["half_h"], d["half_h"], d["half_h"]])
     bbox = f"{min(ys)},{min(xs)},{max(ys)},{max(xs)}"
-    q = f'[out:json][timeout:60];(node["natural"~"^(peak|hill|volcano)$"]["name"]({bbox}););out;'
+    q = (f'[out:json][timeout:60];(node["natural"~"^(peak|hill|volcano)$"]["name"]({bbox});'
+         f'way["natural"~"^(arete|ridge)$"]["name"]({bbox}););out center;')
     for attempt in range(6):
         url = OVERPASS[attempt % 2]
         try:
@@ -147,6 +149,9 @@ def fetch_names(slug: str) -> Path:
     to_xy = Transformer.from_crs("EPSG:4326", crs, always_xy=True)
     out = []
     for e in els:
+        kind = "ridge" if e["type"] == "way" else "peak"
+        if kind == "ridge":
+            e = dict(e, lat=e["center"]["lat"], lon=e["center"]["lon"])
         x, y = to_xy.transform(e["lon"], e["lat"])
         ele = e["tags"].get("ele", "").replace("m", "").strip()
         try:
@@ -154,10 +159,10 @@ def fetch_names(slug: str) -> Path:
         except ValueError:
             ele = None
         out.append({"name": e["tags"]["name"], "name_en": e["tags"].get("name:en"), "lat": e["lat"], "lon": e["lon"],
-                    "x": round(x, 1), "y": round(y, 1), "ele": ele, "osm": e["id"]})
+                    "x": round(x, 1), "y": round(y, 1), "ele": ele, "osm": e["id"], "kind": kind})
     path = DEM_DIR / f"{slug}.names.json"
     path.write_text(json.dumps(out, ensure_ascii=False, indent=0))
-    print(f"{slug}: {len(out)} named summits -> {path}")
+    print(f"{slug}: {sum(n['kind'] == 'peak' for n in out)} named summits, {sum(n['kind'] == 'ridge' for n in out)} ridges -> {path}")
     time.sleep(3)
     return path
 
@@ -166,11 +171,14 @@ def _latin(t: str | None) -> bool:
     return bool(t) and all(ord(c) < 0x250 or c in "’‘·" for c in t)
 
 
-def names(slug: str) -> list[dict]:
-    """Named summits, keeping a Latin-script name (English if the local one isn't) so labels print."""
+def names(slug: str, kind: str = "peak") -> list[dict]:
+    """Named summits (or ridges, kind="ridge"), keeping a Latin-script name (English if the local
+    one isn't) so labels print."""
     p = DEM_DIR / f"{slug}.names.json"
     out = []
     for n in (json.loads(p.read_text()) if p.exists() else []):
+        if n.get("kind", "peak") != kind:
+            continue
         name = n["name"] if _latin(n["name"]) else n.get("name_en")
         if _latin(name):
             out.append(dict(n, name=name, name_en=None))
@@ -560,6 +568,7 @@ POSTERS = {  # contour place -> (skyline that shows it, half-width of the strip 
     "cuillin": ("cuillin-from-elgol", None), "matterhorn": ("matterhorn-from-riffelsee", 10),
     "ben-nevis": ("ben-nevis-from-corpach", 24), "helvellyn": ("helvellyn-from-place-fell", 26),
     "cheviot": ("cheviot-from-simonside", None), "lake-district": ("lakes-from-orrest-head", None),
+    "blencathra": ("blencathra-from-castlerigg", None),
 }
 
 
@@ -607,7 +616,9 @@ def web_places(path: Path = WEB_PLACES) -> Path:
     (so the common places need no Overpass call)."""
     def summits(slug, limit=160):
         ns = sorted(names(slug), key=lambda n: -(n["ele"] or 0))[:limit]
-        return [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "ele": n["ele"]} for n in ns]
+        out = [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "ele": n["ele"]} for n in ns]
+        return out + [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "kind": "ridge"}
+                      for n in names(slug, "ridge")]
     areas = []
     for a in PLACES["areas"]:
         view, crop = POSTERS.get(a["slug"], (None, None))

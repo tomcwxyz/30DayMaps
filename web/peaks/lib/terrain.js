@@ -208,7 +208,7 @@
     const w = Math.min(...ll.map(p => p[1])), e = Math.max(...ll.map(p => p[1]));
     const key = [s, w, n, e].map(v => v.toFixed(3)).join(",");
     if (nameCache.has(key)) return nameCache.get(key);
-    const q = `[out:json][timeout:40];node["natural"~"^(peak|hill|volcano)$"]["name"](${key});out;`;
+    const q = `[out:json][timeout:40];(node["natural"~"^(peak|hill|volcano)$"]["name"](${key});way["natural"~"^(arete|ridge)$"]["name"](${key}););out center;`;
     let els = null;
     for (const url of OVERPASS) {
       try {
@@ -222,8 +222,10 @@
     }
     const out = els.map(e => {
       const name = latin(e.tags.name) ? e.tags.name : e.tags["name:en"];
+      if (!name || !latin(name)) return null;
+      if (e.type === "way") return e.center ? { name, lat: e.center.lat, lon: e.center.lon, kind: "ridge" } : null;
       const ele = parseFloat(String(e.tags.ele || "").replace(/[^\d.\-]/g, ""));
-      return name && latin(name) ? { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null } : null;
+      return { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null };
     }).filter(Boolean);
     nameCache.set(key, out);
     return out;

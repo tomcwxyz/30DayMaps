@@ -160,6 +160,7 @@
     const mx = (frame.x1 - frame.x0) * 0.05, my = (frame.y1 - frame.y0) * 0.05;
     const cand = [];
     for (const p of names || []) {
+      if (p.kind === "ridge") continue;
       const [x, y] = T.toXY(g.lat, g.lon, p.lat, p.lon);
       if (x < frame.x0 + mx || x > frame.x1 - mx || y < frame.y0 + my || y > frame.y1 - my) continue;
       const h = p.ele || T.localMax(g, x, y, 80);
@@ -189,6 +190,23 @@
     return out;
   }
 
+  // Named ridges (Sharp Edge, Striding Edge…) in spaced capitals at their middle, as OS maps do.
+  function ridgeLabels(items, names, g, frame, M, box, th, u, avoid) {
+    const out = [], size = 2.2 * u, edge = 12 * u;
+    for (const p of names || []) {
+      if (p.kind !== "ridge") continue;
+      const [gx, gy] = T.toXY(g.lat, g.lon, p.lat, p.lon);
+      const x = M.x(gx), y = M.y(gy);
+      if (x < box.x + edge || x > box.x + box.w - edge || y < box.y + edge || y > box.y + box.h - edge) continue;
+      const half = p.name.length * size * 0.42;
+      if (avoid.concat(out).some(([ax, ay, r]) => Math.abs(ax - x) < half + (r || 6 * u) * 0.5 && Math.abs(ay - y) < (r || 6 * u) * 0.5 + size)) continue;
+      items.push({ t: "text", x, y, s: p.name.toUpperCase(), size, family: SANS, weight: 500, fill: th.line, align: "center", base: "middle",
+                   spacing: 0.22, halo: { color: th.panel, width: 0.9 * u } });
+      out.push([x, y, half * 2]);
+    }
+    return out;
+  }
+
   function drawContours(items, { g, geo, frame, box, th, u, labels, names, filled, route }) {
     const M = mapping(frame, box);
     items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: th.panel });
@@ -209,6 +227,7 @@
     if (labels) {
       const peaks = pickSummits(names, g, frame, Math.round(6 * Math.sqrt(box.w * box.h) / 260), 0.14);
       avoid = avoid.concat(summitMarks(items, peaks, M, box, th, u));
+      avoid = avoid.concat(ridgeLabels(items, names, g, frame, M, box, th, u, avoid));
       for (const l of contourLabels(geo, M, box, u, avoid))
         items.push({ t: "text", x: l.x, y: l.y, s: `${Math.round(l.level)}`, size: 1.95 * u, family: MONO, weight: 400, fill: th.line,
                      align: "center", base: "middle", rot: l.rot, halo: { color: filled && th.fills ? th.page : th.panel, width: 0.9 * u } });
@@ -286,6 +305,7 @@
     // named summits that stand on the horizon
     const seen = [];
     for (const n of names || []) {
+      if (n.kind === "ridge") continue;
       const [x, y] = T.toXY(g.lat, g.lon, n.lat, n.lon);
       const dd = Math.hypot(x, y);
       if (dd < near + 300 || dd > reach) continue;
