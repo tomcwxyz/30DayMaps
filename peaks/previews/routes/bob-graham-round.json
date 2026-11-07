@@ -1,0 +1,260 @@
+{
+ "name": "Bob Graham Round",
+ "km": 108.4,
+ "ascent_m": 8564,
+ "points": 5712,
+ "summits": [
+  {
+   "name": "Skiddaw",
+   "lat": 54.651385,
+   "lon": -3.1477708,
+   "ele": "930.4"
+  },
+  {
+   "name": "Great Calva",
+   "lat": 54.6707331,
+   "lon": -3.1011144,
+   "ele": "691"
+  },
+  {
+   "name": "Blencathra",
+   "lat": 54.6399757,
+   "lon": -3.0497219,
+   "ele": "867.8"
+  },
+  {
+   "name": "Clough Head",
+   "lat": 54.5936482,
+   "lon": -3.0323643,
+   "ele": "726"
+  },
+  {
+   "name": "Great Dodd",
+   "lat": 54.5757235,
+   "lon": -3.019387,
+   "ele": "857"
+  },
+  {
+   "name": "Watson's Dodd",
+   "lat": 54.5669182,
+   "lon": -3.0289595,
+   "ele": "789"
+  },
+  {
+   "name": "Stybarrow Dodd",
+   "lat": 54.5611097,
+   "lon": -3.0174454,
+   "ele": "843.7"
+  },
+  {
+   "name": "Raise",
+   "lat": 54.5477088,
+   "lon": -3.017462,
+   "ele": "882.7"
+  },
+  {
+   "name": "White Side",
+   "lat": 54.5409187,
+   "lon": -3.0250508,
+   "ele": "863.2"
+  },
+  {
+   "name": "Lower Man",
+   "lat": 54.5308731,
+   "lon": -3.0253446,
+   "ele": "924.5"
+  },
+  {
+   "name": "Helvellyn",
+   "lat": 54.5269697,
+   "lon": -3.017539,
+   "ele": "949.8"
+  },
+  {
+   "name": "Nethermost Pike",
+   "lat": 54.5189849,
+   "lon": -3.0154288,
+   "ele": "891.3"
+  },
+  {
+   "name": "Dollywaggon Pike",
+   "lat": 54.5086439,
+   "lon": -3.0111391,
+   "ele": "858.5"
+  },
+  {
+   "name": "Fairfield",
+   "lat": 54.497052,
+   "lon": -2.9916305,
+   "ele": "873.3"
+  },
+  {
+   "name": "Seat Sandal",
+   "lat": 54.4948515,
+   "lon": -3.014,
+   "ele": "736.8"
+  },
+  {
+   "name": "Steel Fell",
+   "lat": 54.4911577,
+   "lon": -3.0521587,
+   "ele": "553"
+  },
+  {
+   "name": "Calf Crag",
+   "lat": 54.4842215,
+   "lon": -3.0794729,
+   "ele": "537"
+  },
+  {
+   "name": "High Raise",
+   "lat": 54.4759668,
+   "lon": -3.1112509,
+   "ele": "762.5"
+  },
+  {
+   "name": "Sergeant Man",
+   "lat": 54.4703342,
+   "lon": -3.1025793,
+   "ele": "736"
+  },
+  {
+   "name": "Thunacar Knott",
+   "lat": 54.4621993,
+   "lon": -3.1126479,
+   "ele": "723"
+  },
+  {
+   "name": "Harrison Stickle",
+   "lat": 54.4568895,
+   "lon": -3.1094815,
+   "ele": "735.3"
+  },
+  {
+   "name": "Pike of Stickle",
+   "lat": 54.4563974,
+   "lon": -3.1213779,
+   "ele": "708.4"
+  },
+  {
+   "name": "Rossett Pike",
+   "lat": 54.457936,
+   "lon": -3.15979,
+   "ele": "651"
+  },
+  {
+   "name": "Bowfell",
+   "lat": 54.4478262,
+   "lon": -3.1662407,
+   "ele": "902.9"
+  },
+  {
+   "name": "Esk Pike",
+   "lat": 54.4571897,
+   "lon": -3.1792174,
+   "ele": "885"
+  },
+  {
+   "name": "Great End",
+   "lat": 54.4649543,
+   "lon": -3.1945226,
+   "ele": "909.5"
+  },
+  {
+   "name": "Ill Crag",
+   "lat": 54.4555763,
+   "lon": -3.1996964,
+   "ele": "930.9"
+  },
+  {
+   "name": "Broad Crag",
+   "lat": 54.4573777,
+   "lon": -3.2069127,
+   "ele": "935.3"
+  },
+  {
+   "name": "Scafell Pike",
+   "lat": 54.4542586,
+   "lon": -3.2116535,
+   "ele": "978.07"
+  },
+  {
+   "name": "Scafell",
+   "lat": 54.4475105,
+   "lon": -3.2247353,
+   "ele": "963.9"
+  },
+  {
+   "name": "Yewbarrow",
+   "lat": 54.471358,
+   "lon": -3.2733096,
+   "ele": "616.6"
+  },
+  {
+   "name": "Red Pike",
+   "lat": 54.4839164,
+   "lon": -3.2898712,
+   "ele": "826"
+  },
+  {
+   "name": "Steeple",
+   "lat": 54.4933804,
+   "lon": -3.3021937,
+   "ele": "819"
+  },
+  {
+   "name": "Pillar",
+   "lat": 54.4974813,
+   "lon": -3.2811806,
+   "ele": "892.4"
+  },
+  {
+   "name": "Kirk Fell",
+   "lat": 54.4833232,
+   "lon": -3.2440742,
+   "ele": "802"
+  },
+  {
+   "name": "Great Gable",
+   "lat": 54.4820747,
+   "lon": -3.219207,
+   "ele": "898.8"
+  },
+  {
+   "name": "Green Gable",
+   "lat": 54.4857081,
+   "lon": -3.2137787,
+   "ele": "801"
+  },
+  {
+   "name": "Brandreth",
+   "lat": 54.4964736,
+   "lon": -3.2142864,
+   "ele": "715"
+  },
+  {
+   "name": "Grey Knotts",
+   "lat": 54.5023489,
+   "lon": -3.2101978,
+   "ele": "697"
+  },
+  {
+   "name": "Dale Head",
+   "lat": 54.5272335,
+   "lon": -3.2023585,
+   "ele": "754"
+  },
+  {
+   "name": "Hindscarth",
+   "lat": 54.5378598,
+   "lon": -3.2137462,
+   "ele": "727"
+  },
+  {
+   "name": "Robinson",
+   "lat": 54.5408013,
+   "lon": -3.2351356,
+   "ele": "737.6"
+  }
+ ]
+}

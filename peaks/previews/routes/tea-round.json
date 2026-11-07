@@ -1,0 +1,86 @@
+{
+ "name": "Abraham's Tea Round",
+ "km": 54.5,
+ "ascent_m": 3955,
+ "points": 2788,
+ "summits": [
+  {
+   "name": "Catbells",
+   "lat": 54.5683522,
+   "lon": -3.1706606,
+   "ele": "451"
+  },
+  {
+   "name": "Robinson",
+   "lat": 54.5408013,
+   "lon": -3.2351356,
+   "ele": "737.6"
+  },
+  {
+   "name": "High Stile",
+   "lat": 54.5218123,
+   "lon": -3.2836845,
+   "ele": "806.5"
+  },
+  {
+   "name": "Red Pike",
+   "lat": 54.5274265,
+   "lon": -3.2985939,
+   "ele": "755.3"
+  },
+  {
+   "name": "Whiteless Pike",
+   "lat": 54.5593572,
+   "lon": -3.2693495,
+   "ele": "660"
+  },
+  {
+   "name": "Wandope",
+   "lat": 54.5663127,
+   "lon": -3.2570591,
+   "ele": "773.9"
+  },
+  {
+   "name": "Hobcarton Crag",
+   "lat": 54.5871888,
+   "lon": -3.2488803,
+   "ele": "737.6"
+  },
+  {
+   "name": "Grisedale Pike",
+   "lat": 54.5917739,
+   "lon": -3.2420464,
+   "ele": "790.3"
+  },
+  {
+   "name": "Crag Hill",
+   "lat": 54.5717787,
+   "lon": -3.2502032,
+   "ele": "839.2"
+  },
+  {
+   "name": "Sail",
+   "lat": 54.565,
+   "lon": -3.221,
+   "ele": null
+  },
+  {
+   "name": "Causey Pike",
+   "lat": 54.5655,
+   "lon": -3.1958,
+   "ele": null
+  },
+  {
+   "name": "Rowling End",
+   "lat": 54.5755672,
+   "lon": -3.1937738,
+   "ele": "433"
+  },
+  {
+   "name": "Barrow",
+   "lat": 54.585694,
+   "lon": -3.1974644,
+   "ele": "455"
+  }
+ ]
+}
