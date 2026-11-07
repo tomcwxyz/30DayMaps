@@ -288,8 +288,23 @@ function areaFrame(box) {
 function frameGrid(fr) {
   const W = fr.x1 - fr.x0, H = fr.y1 - fr.y0;
   const halfW = W / 2 * 1.06, halfH = Math.max(H, W * 1.45) / 2 * 1.06;
-  return getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000), "elevation");
+  const g = getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000), "elevation");
+  // Close frames over a LiDAR patch use it: real crags and edges instead of 30 m smoothing.
+  const patch = W <= 12000 && hiresPatches().find(h => {
+    const [x, y] = T.toXY(fr.lat, fr.lon, h.lat, h.lon);
+    return Math.abs(x) < halfW + h.halfW && Math.abs(y) < halfH + h.halfH;
+  });
+  if (!patch) return g;
+  return g.then(g => memo(`b:${g.key}:${patch.src}`, () => hiresOf(patch).then(f => Object.assign(T.blendFine(g, f), { key: `${g.key}+${patch.src}` }))));
 }
+
+// LiDAR patches named by the ready-made places, with their extent once known.
+function hiresPatches() {
+  const seen = new Map();
+  for (const x of [...PLACES.areas, ...PLACES.views]) if (x.hires && !seen.has(x.hires.src)) seen.set(x.hires.src, x.hires);
+  return [...seen.values()].filter(h => h.halfW);
+}
+function hiresOf(h) { return memo(`h:${h.src}`, () => { setStatus("Fetching LiDAR…"); return T.hires(h); }); }
 
 // The viewpoint for the skyline style and the poster's lower strip.
 function skylineView(fr) {
@@ -330,7 +345,7 @@ function viewGrid(v) {
   const g = getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
   if (!v.hires) return g;
   // ready-made close views carry a LiDAR patch, so a ridge like Sharp Edge keeps its edge
-  const f = memo(`h:${v.hires.src}`, () => { setStatus("Fetching LiDAR…"); return T.hires(v.hires); });
+  const f = hiresOf(v.hires);
   return Promise.all([g, f]).then(([g, f]) => T.withFine(Object.assign({}, g), f));
 }
 

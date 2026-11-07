@@ -44,6 +44,25 @@
     return { z, w, h, res: meta.res, halfW: w * meta.res / 2, halfH: h * meta.res / 2, lat: meta.lat, lon: meta.lon };
   }
 
+  // A copy of g with a finer patch blended in where it covers (fading in over `feather`
+  // metres from the patch edge, so the two sources meet without a step).
+  function blendFine(g, f, feather = 150) {
+    const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
+    const z = Float32Array.from(g.z), mx = f.halfW - f.res, my = f.halfH - f.res;
+    for (let r = 0; r < g.h; r++) {
+      const fy = g.halfH - (r + 0.5) * g.res - dy;
+      if (fy <= -my || fy >= my) continue;
+      for (let c = 0; c < g.w; c++) {
+        const fx = -g.halfW + (c + 0.5) * g.res - dx;
+        if (fx <= -mx || fx >= mx) continue;
+        const w = Math.min(1, (mx - Math.abs(fx)) / feather, (my - Math.abs(fy)) / feather);
+        const i = r * g.w + c;
+        z[i] += w * (sample(f, fx, fy) - z[i]);
+      }
+    }
+    return Object.assign({}, g, { z, fineSrc: true });
+  }
+
   // Let g sample from a finer patch wherever the patch covers it.
   function withFine(g, f) {
     const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
@@ -306,7 +325,7 @@
   }
 
   root.PeaksTerrain = {
-    grid, hires, withFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
+    grid, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); },
   };
 })(typeof window !== "undefined" ? window : globalThis);
