@@ -1,20 +1,8 @@
 [
  {
-  "name": "inpin-panorama-paper",
-  "place": "inaccessible-pinnacle",
-  "style": "panorama",
-  "theme": "paper"
- },
- {
   "name": "cuillin-skyline-paper",
   "place": "cuillin",
   "style": "skyline",
   "theme": "paper"
- },
- {
-  "name": "blencathra-skyline-moss",
-  "place": "blencathra",
-  "style": "skyline",
-  "theme": "moss"
  }
 ]
