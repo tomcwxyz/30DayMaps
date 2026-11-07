@@ -1,0 +1,30 @@
+name: Peaks previews
+# Renders peaks/previews/spec.json with live data and commits the JPEGs to this branch.
+on:
+  push:
+    branches: ["previews/**"]
+    paths: ["peaks/previews/spec.json", "peaks/previews/*.gpx", ".github/workflows/peaks-previews.yml", "web/peaks/**"]
+permissions:
+  contents: write
+concurrency:
+  group: peaks-previews-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.ref_name }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install -e ".[sight]" playwright && python -m playwright install --with-deps chromium
+      - run: python web/peaks/test/harness.py custom peaks/previews/spec.json peaks/previews/out
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f peaks/previews/out
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Peaks previews"
+          git pull --rebase --autostash -q && git push
