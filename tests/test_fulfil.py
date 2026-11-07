@@ -502,9 +502,10 @@ def test_status_checks_each_order_against_its_own_shop():
     assert result["counts"]["awaiting approval"] == 1 and result["counts"]["digital emailed"] == 1
 
 
-def test_peaks_shop_json_is_valid_and_panoramas_are_digital_only():
+def test_peaks_shop_json_is_valid_and_sells_both_panoramas():
     shop = fulfil.load_shop(fulfil.SHOP_FILES["peaks"])
     assert fulfil.config_problems(shop) == []
     assert shop["site"] == "https://peaks.tomcw.xyz"
-    assert all(shop["sizes"][p]["price"] is None for p in ("pano60", "pano90", "pano120"))
+    assert set(p for p in shop["sizes"] if p.startswith("pano")) == {"pano75", "pano90"}
+    assert fulfil.sku_for(shop, "pano75") == "GLOBAL-FAP-10X30" and fulfil.sku_for(shop, "pano90") == "GLOBAL-FAP-12X36"
     assert shop["sizes"]["A3"]["prodigi_sku"] == fulfil.load_shop()["sizes"]["A3"]["prodigi_sku"]

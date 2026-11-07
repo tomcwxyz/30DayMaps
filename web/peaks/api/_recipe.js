@@ -5,7 +5,7 @@
 const { decode } = require("../lib/polyline.js");
 
 const PAPERS = ["A4", "A3", "A2", "A1", "50x70", "square"];
-const PANOS = ["pano60", "pano90", "pano120"];
+const PANOS = ["pano75", "pano90"];
 const THEMES = ["paper", "white", "navy", "oxblood", "night", "moss", "bands"];
 const STYLES = ["poster", "contours", "ridgelines", "skyline", "panorama"];
 const DIRS = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"];

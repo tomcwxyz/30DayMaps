@@ -1,5 +1,5 @@
 {
-  "_help": "Same rules as web/footprints/shop.json. Prices are in pence; a size with price null is not for sale as a print. Panoramic sheets (pano60, pano90, pano120) are digital only until you choose Prodigi products for them: give each a price and a prodigi_sku of the same 3:1 shape. site is where the order emails and download links point. email.from_name replaces the display name in SHOP_EMAIL_FROM for this shop's emails (same address).",
+  "_help": "Same rules as web/footprints/shop.json. Prices are in pence; a size with price null is not for sale as a print. Panoramas come in two 3:1 sheets that fit standard panoramic frames: pano75 (25 × 75 cm, Prodigi 10 × 30 in) and pano90 (30 × 90 cm, Prodigi 12 × 36 in). site is where the order emails and download links point. email.from_name replaces the display name in SHOP_EMAIL_FROM for this shop's emails (same address).",
   "site": "https://peaks.tomcw.xyz",
   "currency": "gbp",
   "countries": [
@@ -36,20 +36,15 @@
       "price": 2200,
       "prodigi_sku": "GLOBAL-FAP-12X12"
     },
-    "pano60": {
-      "label": "60 × 20 cm panoramic print, unframed, matte art paper",
-      "price": null,
-      "prodigi_sku": null
+    "pano75": {
+      "label": "75 × 25 cm panoramic print, unframed, matte art paper",
+      "price": 2800,
+      "prodigi_sku": "GLOBAL-FAP-10X30"
     },
     "pano90": {
       "label": "90 × 30 cm panoramic print, unframed, matte art paper",
-      "price": null,
-      "prodigi_sku": null
-    },
-    "pano120": {
-      "label": "120 × 40 cm panoramic print, unframed, matte art paper",
-      "price": null,
-      "prodigi_sku": null
+      "price": 3000,
+      "prodigi_sku": "GLOBAL-FAP-12X36"
     }
   },
   "shipping": {

@@ -221,7 +221,7 @@ const RENDER = params.get("render") === "1";   // the print job: fail rather tha
 if (RENDER) T.strict = true;
 
 const PAPERS = { A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841], "50x70": [500, 700], square: [300, 300] };
-const PANOS = { "pano60": [600, 200, "Panorama 60 × 20 cm"], "pano90": [900, 300, "Panorama 90 × 30 cm"], "pano120": [1200, 400, "Panorama 120 × 40 cm"] };
+const PANOS = { "pano75": [750, 250, "Panorama 75 × 25 cm"], "pano90": [900, 300, "Panorama 90 × 30 cm"] };
 const PAPER_NAMES = { A4: "A4", A3: "A3", A2: "A2", A1: "A1", "50x70": "50 × 70 cm", square: "Square 30 cm" };
 const STYLES = {
   poster:     { label: "Poster", icon: '<rect x="7" y="1" width="20" height="13" fill="none" stroke="currentColor"/><path d="M8 7c4-4 6 2 9-1s5 1 9-2M8 11c4-3 7 1 10-1s4 0 8-2" fill="none" stroke="currentColor" stroke-width=".8"/><path d="M7 21l6-4 3 2 5-4 6 6z" fill="currentColor"/>' },

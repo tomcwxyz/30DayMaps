@@ -9,7 +9,7 @@ const path = require("path");
 const shopFile = path.join(os.tmpdir(), `peaks-shop-test-${process.pid}.json`);
 fs.writeFileSync(shopFile, JSON.stringify({
   currency: "gbp", countries: ["GB"],
-  sizes: { A3: { label: "A3 print", price: 2600 }, pano90: { label: "90 × 30 cm", price: null } },
+  sizes: { A3: { label: "A3 print", price: 2600 }, pano90: { label: "90 × 30 cm", price: 3000 }, pano75: { label: "75 × 25 cm", price: null } },
   shipping: { label: "Free UK delivery", price: 0 },
   digital: { label: "Digital file by email", price: 500, link_days: 30 },
 }));
@@ -97,18 +97,23 @@ test("checkout: print order carries recipe, shop and route; prices from shop.jso
   assert.ok(Object.keys(p).filter(k => k.startsWith("metadata[")).length <= 50);
 });
 
-test("checkout: panoramas sell as digital files only (no print price yet)", async () => {
-  stripe();
+test("checkout: a panorama sheet sells as a print when it has a price, else digital only", async () => {
+  const sent = stripe();
   const pano = { ...base, style: "panorama", paper: "pano90" };
   let r = res(); await checkout({ method: "POST", body: { recipe: pano, product: "print" }, headers: {} }, r);
-  assert.strictEqual(r.statusCode, 400);
-  r = res(); await checkout({ method: "POST", body: { recipe: pano, product: "digital" }, headers: {} }, r);
   assert.strictEqual(r.statusCode, 200);
+  assert.strictEqual(sent[0]["line_items[0][price_data][unit_amount]"], "3000");
+  assert.match(sent[0]["line_items[0][price_data][product_data][description]"], /panoramic/);
+  r = res(); await checkout({ method: "POST", body: { recipe: { ...pano, paper: "pano75" }, product: "print" }, headers: {} }, r);
+  assert.strictEqual(r.statusCode, 400);
+  r = res(); await checkout({ method: "POST", body: { recipe: { ...pano, paper: "pano75" }, product: "digital" }, headers: {} }, r);
+  assert.strictEqual(r.statusCode, 200);
+  assert.throws(() => validateRecipe({ ...pano, paper: "pano60" }), /paper/);
 });
 
 test("config lists what's on sale and never the key", () => {
   const r = res(); config({}, r);
-  assert.deepStrictEqual(Object.keys(r.body.sizes), ["A3"]);
+  assert.deepStrictEqual(Object.keys(r.body.sizes), ["A3", "pano90"]);
   assert.ok(!JSON.stringify(r.body).includes("sk_test"));
 });
 
