@@ -1,5 +1,6 @@
-sharpedge-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
-sharpedge-skyline-moss: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
-sharpedge-skyline-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
-sharpedge-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+se-tele-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
+se-tele-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
+se-below-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 544 M   ·   46° WIDE
+se-below-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 544 M   ·   46° WIDE
+se-below-poster: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
 page errors: []
