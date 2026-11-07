@@ -255,11 +255,13 @@ const r5 = v => Math.round(v * 1e5) / 1e5;
 
 function getGrid(lat, lon, halfW, halfH, res, what) {
   const key = `g:${r5(lat)},${r5(lon)},${Math.round(halfW)},${Math.round(halfH)},${Math.round(res)}`;
-  return memo(key, () => T.grid({ lat, lon, halfW, halfH, res, onProgress: (a, b) => setStatus(`Fetching ${what}: ${a} of ${b} tiles`) }).then(g => Object.assign(g, { key })));
+  return memo(key, () => T.grid({ lat, lon, halfW, halfH, res, onProgress: (a, b) => $("sheet").classList.contains("busy") && setStatus(`Fetching ${what}: ${a} of ${b} tiles`) }).then(g => Object.assign(g, { key })));
 }
 function getNames(g, bundled) {
   if (bundled && bundled.length) return Promise.resolve(bundled);
-  return memo(`n:${g.key}`, () => { setStatus("Finding summit names…"); return T.summits(g.lat, g.lon, g.halfW, g.halfH); });
+  // keyed by the ground covered (not the grid's resolution), so a draft and the real draw share one lookup
+  const k = [r5(g.lat), r5(g.lon), Math.round(g.halfW / 200), Math.round(g.halfH / 200)].join(",");
+  return memo(`n:${k}`, () => { setStatus("Finding summit names…"); return T.summits(g.lat, g.lon, g.halfW, g.halfH); });
 }
 
 // ---- sheet and frames ----------------------------------------------------------------------
@@ -290,10 +292,12 @@ function areaFrame(box) {
   return { lat, lon, x0: -W / 2, x1: W / 2, y0: -W / aspect / 2, y1: W / aspect / 2 };
 }
 
-function frameGrid(fr) {
+// draft: a quick coarse grid (a sixteenth of the tiles) to show something while the real one loads
+function frameGrid(fr, draft) {
   const W = fr.x1 - fr.x0, H = fr.y1 - fr.y0;
   const halfW = W / 2 * 1.06, halfH = Math.max(H, W * 1.45) / 2 * 1.06;
-  const g = getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000), "elevation");
+  const g = getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000) * (draft ? 4 : 1), "elevation");
+  if (draft) return g;
   // Close frames over a LiDAR patch use it: real crags and edges instead of 30 m smoothing.
   const patch = W <= 12000 && hiresPatches().find(h => {
     const [x, y] = T.toXY(fr.lat, fr.lon, h.lat, h.lon);
@@ -345,10 +349,10 @@ function panoramaView() {
   return { lat, lon, az: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value * 1000, lift: 2, near: 1200, label, names };
 }
 
-function viewGrid(v) {
-  const res = Math.max(20, v.reach / 900);
+function viewGrid(v, draft) {
+  const res = Math.max(20, v.reach / 900) * (draft ? 3 : 1);
   const g = getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
-  if (!v.hires) return g;
+  if (!v.hires || draft) return g;
   // ready-made close views carry a LiDAR patch, so a ridge like Sharp Edge keeps its edge
   const f = hiresOf(v.hires);
   return Promise.all([g, f]).then(([g, f]) => T.withFine(Object.assign({}, g), f));
@@ -423,13 +427,26 @@ function wordsNow(details) {
 let runId = 0;
 // Where the time goes in a draw: window.PeaksTimings holds the last draw's stages in ms.
 let lastMark = 0, marks = [];
-function mark(name) { const t = performance.now(); marks.push([name, Math.round(t - lastMark)]); lastMark = t; }
+function markStage(name) { const t = performance.now(); marks.push([name, Math.round(t - lastMark)]); lastMark = t; }
 
+// Two passes run side by side: a quick draft from coarse grids (shown only if the real draw
+// isn't ready first), and the real draw. The print job skips the draft.
 async function refresh() {
   const id = ++runId;
   if (!state.place && !state.route) return;
   $("sheet").classList.add("busy");
-  const t0 = lastMark = performance.now(); marks = [];
+  const run = { id, full: false };
+  const full = compose(run, false);
+  if (!RENDER) setTimeout(() => { if (!run.full && run.id === runId) compose(run, true); }, 120);
+  await full;
+}
+
+async function compose(run, draft) {
+  const id = run.id;
+  const mark = draft ? () => {} : markStage;
+  const say = (text, warn) => { if (!draft || !run.full) setStatus(text, warn); };
+  const t0 = performance.now();
+  if (!draft) { lastMark = t0; marks = []; }
   try {
     const [pw, ph] = paperMM();
     const th = D.THEMES[state.theme];
@@ -447,10 +464,10 @@ async function refresh() {
       const fr = areaFrame(box);
       // a poster's skyline needs its own elevation: fetch both at once
       const pv = style === "poster" && !state.route ? skylineView(fr) : null;
-      const pvg = pv ? viewGrid(pv) : null;
+      const pvg = pv ? viewGrid(pv, draft) : null;
       if (pvg) pvg.catch(() => {});
-      const g = await frameGrid(fr);
-      if (id !== runId) return;
+      const g = await frameGrid(fr, draft);
+      if (id !== runId || (draft && run.full)) return;
       mark("elevation");
       lidar = !!g.fineSrc;
       const route = state.route ? routeOnGrid(g) : null;
@@ -461,7 +478,7 @@ async function refresh() {
         const nm = labels ? await getNames(g, state.route ? null : names) : [];
         if (id !== runId) return;
         mark("names");
-        setStatus("Drawing contours…");
+        say("Drawing contours…");
         await new Promise(r => setTimeout(r, 0));
         const a = state.place && state.place.area;
         const gkey = `c:${g.key}:${fr.x0}:${fr.y0}:${$("detail").value}:${a && a.smooth_m || 14}`;
@@ -484,7 +501,7 @@ async function refresh() {
             if (id !== runId) return;
             mark("view elevation");
             lidar = lidar || !!vg.fine;
-            setStatus("Drawing the skyline…");
+            say("Drawing the skyline…");
             const vn = labels ? await getNames(vg, v.names) : [];
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
             mark("skyline rays");
@@ -498,16 +515,17 @@ async function refresh() {
       if (!state.route || style !== "ridgelines") creditText += "  ·  summits © OpenStreetMap contributors";
     } else {
       const v = style === "panorama" ? panoramaView() : skylineView(null);
-      const vg = await viewGrid(v);
+      const vg = await viewGrid(v, draft);
+      if (draft && run.full) return;
       if (id !== runId) return;
       mark("view elevation");
       lidar = !!vg.fine;
       const vn = labels ? await getNames(vg, v.names) : [];
       if (id !== runId) return;
       mark("names");
-      setStatus(style === "panorama" ? "Drawing the panorama…" : "Drawing the skyline…");
+      say(style === "panorama" ? "Drawing the panorama…" : "Drawing the skyline…");
       await new Promise(r => setTimeout(r, 0));
-      const cols = Math.min(style === "panorama" ? 3600 : 2600, Math.round(L.map.w * 2.5));
+      const cols = Math.round(Math.min(style === "panorama" ? 3600 : 2600, Math.round(L.map.w * 2.5)) / (draft ? 3 : 1));
       const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${cols}`, () => D.skyline(vg, v, vn, cols));
       mark("skyline rays");
       D.drawSkyline(items, { sd, box: L.map, th, u, labels, compass: style === "panorama" });
@@ -522,18 +540,22 @@ async function refresh() {
     if (state.route && state.route.ready) creditText += "  ·  route along OpenStreetMap paths, routed by BRouter";
     if (lidar) creditText += "  ·  LiDAR © Environment Agency, Open Government Licence";
     D.credit(L, items, th, creditText);
+    if (draft && run.full) return;
+    if (!draft) run.full = true;
     state.composed = { items, pw, ph };
     mark("layout");
     draw();
     mark("paint");
+    if (draft) { say("Adding the detail…"); return; }
     window.PeaksTimings = { style, total: Math.round(performance.now() - t0), stages: marks };
-    setStatus("");
+    say("");
     state.error = null;
     updateShop();
   } catch (e) {
-    if (id === runId) { console.error(e); state.error = e; state.composed = null; setStatus(`Could not draw this: ${e.message}`, true); updateShop(); }
+    if (draft) { console.warn("draft:", e); return; }
+    if (id === runId) { console.error(e); state.error = e; state.composed = null; say(`Could not draw this: ${e.message}`, true); updateShop(); }
   } finally {
-    if (id === runId) { $("sheet").classList.remove("busy"); updateShop(); }
+    if (!draft && id === runId) { $("sheet").classList.remove("busy"); updateShop(); }
   }
 }
 function cached(key, fn) { if (!cache.has(key)) cache.set(key, fn()); return cache.get(key); }

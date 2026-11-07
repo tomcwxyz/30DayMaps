@@ -297,6 +297,8 @@ def timing(spec_file: Path, out: Path):
             try:
                 t = time.time()
                 page.goto(base + f"?place={item.get('place', 'helvellyn')}")
+                page.wait_for_function("() => typeof state !== 'undefined' && state.composed", timeout=600000)
+                picture = time.time() - t
                 wait_drawn(page)
                 first = time.time() - t
                 if item.get("round"):
@@ -312,7 +314,7 @@ def timing(spec_file: Path, out: Path):
                     st = "  ".join(f"{k} {v}" for k, v in pt["stages"]) if pt else "?"
                     lines.append(f"{item['name']:28s} {style:10s} {took:6.1f}s  | {st}")
                     print(lines[-1], flush=True)
-                lines.append(f"{item['name']:28s} first load {first:.1f}s, {net['tiles']} tiles {net['bytes'] // 1024} KB, {net['other']} other requests")
+                lines.append(f"{item['name']:28s} first picture {picture:.1f}s, finished {first:.1f}s, {net['tiles']} tiles {net['bytes'] // 1024} KB, {net['other']} other requests")
                 print(lines[-1], flush=True)
             except Exception as e:
                 lines.append(f"{item['name']}: FAILED {type(e).__name__}: {str(e)[:200]}")
