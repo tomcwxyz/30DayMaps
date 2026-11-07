@@ -421,10 +421,15 @@ function wordsNow(details) {
 }
 
 let runId = 0;
+// Where the time goes in a draw: window.PeaksTimings holds the last draw's stages in ms.
+let lastMark = 0, marks = [];
+function mark(name) { const t = performance.now(); marks.push([name, Math.round(t - lastMark)]); lastMark = t; }
+
 async function refresh() {
   const id = ++runId;
   if (!state.place && !state.route) return;
   $("sheet").classList.add("busy");
+  const t0 = lastMark = performance.now(); marks = [];
   try {
     const [pw, ph] = paperMM();
     const th = D.THEMES[state.theme];
@@ -442,6 +447,7 @@ async function refresh() {
       const fr = areaFrame(box);
       const g = await frameGrid(fr);
       if (id !== runId) return;
+      mark("elevation");
       lidar = !!g.fineSrc;
       const route = state.route ? routeOnGrid(g) : null;
       if (style === "ridgelines") {
@@ -450,12 +456,14 @@ async function refresh() {
       } else {
         const nm = labels ? await getNames(g, state.route ? null : names) : [];
         if (id !== runId) return;
+        mark("names");
         setStatus("Drawing contours…");
         await new Promise(r => setTimeout(r, 0));
         const a = state.place && state.place.area;
         const gkey = `c:${g.key}:${fr.x0}:${fr.y0}:${$("detail").value}:${a && a.smooth_m || 14}`;
         if (!cache.has(gkey)) cache.set(gkey, D.contourGeometry(g, fr, { lines: +$("detail").value, smooth: a && a.smooth_m || 14 }));
         const geo = cache.get(gkey);
+        mark("contour lines");
         D.drawContours(items, { g, geo, frame: fr, box, th, u, labels, names: nm, filled: state.theme === "bands", route });
         const top = state.place && state.place.area ? state.place.area.summit_m : Math.round(geo.hi);
         details = route ? `${D.fmtKm(route.length)}   ·   ${Math.round(route.ascent).toLocaleString("en-GB")} m of climbing   ·   high point ${Math.round(route.high)} m`
@@ -467,12 +475,15 @@ async function refresh() {
             details += "   ·   profile in km";
           } else {
             const v = skylineView(fr);
+            mark("contour drawing");
             const vg = await viewGrid(v);
             if (id !== runId) return;
+            mark("view elevation");
             lidar = lidar || !!vg.fine;
             setStatus("Drawing the skyline…");
             const vn = labels ? await getNames(vg, v.names) : [];
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
+            mark("skyline rays");
             const ink = th.panel !== th.page ? th.panel : th.line;
             sd.v.floor = v.floor; sd.v.stripAt = v.stripAt;
             D.drawSkyline(items, { sd, box: strip, th, u, labels: false, labelRoom: 0.08, exag: 1.6, colours: [th.page, th.page, D.mix(th.page, ink, 0.2), ink], sky: false });
@@ -485,13 +496,16 @@ async function refresh() {
       const v = style === "panorama" ? panoramaView() : skylineView(null);
       const vg = await viewGrid(v);
       if (id !== runId) return;
+      mark("view elevation");
       lidar = !!vg.fine;
       const vn = labels ? await getNames(vg, v.names) : [];
       if (id !== runId) return;
+      mark("names");
       setStatus(style === "panorama" ? "Drawing the panorama…" : "Drawing the skyline…");
       await new Promise(r => setTimeout(r, 0));
       const cols = Math.min(style === "panorama" ? 3600 : 2600, Math.round(L.map.w * 2.5));
       const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${cols}`, () => D.skyline(vg, v, vn, cols));
+      mark("skyline rays");
       D.drawSkyline(items, { sd, box: L.map, th, u, labels, compass: style === "panorama" });
       const facing = COMPASS[Math.round(((v.az % 360) + 360) % 360 / 45) % 8];
       details = style === "panorama" ? `${v.label}   ·   facing ${facing}   ·   ${v.fov}° wide   ·   to ${D.fmtKm(v.reach)}`
@@ -505,7 +519,10 @@ async function refresh() {
     if (lidar) creditText += "  ·  LiDAR © Environment Agency, Open Government Licence";
     D.credit(L, items, th, creditText);
     state.composed = { items, pw, ph };
+    mark("layout");
     draw();
+    mark("paint");
+    window.PeaksTimings = { style, total: Math.round(performance.now() - t0), stages: marks };
     setStatus("");
     state.error = null;
     updateShop();
