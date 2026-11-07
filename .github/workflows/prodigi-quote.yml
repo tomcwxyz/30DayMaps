@@ -29,8 +29,8 @@ jobs:
               except urllib.error.HTTPError as e:
                   try: return e.code, json.load(e)
                   except Exception: return e.code, {}
-          skus = ["GLOBAL-FAP-8X24", "GLOBAL-FAP-20X60", "GLOBAL-FAP-10X30", "GLOBAL-FAP-12X36", "GLOBAL-FAP-6X18",
-                  "GLOBAL-FAP-8X20", "GLOBAL-FAP-A3", "GLOBAL-FAP-A2"]
+          skus = ["GLOBAL-FAP-20X60CM", "GLOBAL-FAP-20X60-CM", "GLOBAL-FAP-60X20", "GLOBAL-FAP-24X8", "GLOBAL-FAP-8X24IN",
+                  "GLOBAL-FAP-25X75", "GLOBAL-FAP-30X90", "GLOBAL-FAP-7X21", "GLOBAL-FAP-9X27", "GLOBAL-FAP-20X28"]
           for sku in skus:
               st, p = call("GET", f"/products/{sku}")
               prod = p.get("product") or {}
