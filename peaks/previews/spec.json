@@ -1,8 +1,9 @@
 [
  {
-  "name": "cuillin-skyline-paper",
-  "place": "cuillin",
-  "style": "skyline",
-  "theme": "paper"
+  "name": "blen-dump",
+  "place": "blencathra",
+  "style": "contours",
+  "theme": "paper",
+  "dump": true
  }
 ]
