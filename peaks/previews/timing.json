@@ -1,0 +1,59 @@
+[
+ {
+  "name": "helvellyn",
+  "place": "helvellyn",
+  "styles": [
+   "poster",
+   "contours",
+   "skyline",
+   "panorama"
+  ]
+ },
+ {
+  "name": "blencathra (LiDAR)",
+  "place": "blencathra",
+  "styles": [
+   "poster",
+   "skyline"
+  ]
+ },
+ {
+  "name": "lake-district 34 km",
+  "place": "lake-district",
+  "styles": [
+   "contours",
+   "poster"
+  ]
+ },
+ {
+  "name": "cuillin",
+  "place": "cuillin",
+  "styles": [
+   "poster",
+   "panorama"
+  ]
+ },
+ {
+  "name": "matterhorn",
+  "place": "matterhorn",
+  "styles": [
+   "poster"
+  ]
+ },
+ {
+  "name": "bob graham round",
+  "place": "helvellyn",
+  "round": "bob-graham-round",
+  "styles": [
+   "poster"
+  ]
+ },
+ {
+  "name": "utmb",
+  "place": "helvellyn",
+  "round": "utmb",
+  "styles": [
+   "poster"
+  ]
+ }
+]
