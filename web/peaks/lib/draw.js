@@ -126,7 +126,20 @@
   // Height labels along index contours: on straight-ish stretches, spread out, kept upright.
   function contourLabels(geo, M, box, u, avoid) {
     const out = [], gap = 55 * u, edge = 9 * u, near = 24 * u;
-    const taken = avoid.slice();
+    // places already taken, bucketed so a long route doesn't make every check a full scan
+    let cell = near;
+    for (const a of avoid) if (a[2] > cell) cell = a[2];
+    const buckets = new Map(), bk = (x, y) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
+    const add = t => { const k = bk(t[0], t[1]); (buckets.get(k) || buckets.set(k, []).get(k)).push(t); };
+    avoid.forEach(add);
+    const clash = (x, y) => {
+      const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+        const b = buckets.get(`${cx + i},${cy + j}`);
+        if (b) for (const [tx, ty, tr] of b) if (Math.hypot(tx - x, ty - y) < (tr || near)) return true;
+      }
+      return false;
+    };
     for (const lv of geo.levels) {
       if (!lv.major) continue;
       for (const poly of lv.polys) for (const ring of poly) {
@@ -144,11 +157,11 @@
           const ax = M.x(ring[a]), ay = M.y(ring[a + 1]), bx = M.x(ring[b]), by = M.y(ring[b + 1]);
           const span = Math.hypot(bx - ax, by - ay);
           if (span < 6.6 * u) continue;   // too curly here
-          if (taken.some(([tx, ty, tr]) => Math.hypot(tx - x, ty - y) < (tr || near))) continue;
+          if (clash(x, y)) continue;
           let rot = Math.atan2(by - ay, bx - ax);
           if (rot > Math.PI / 2) rot -= Math.PI; else if (rot < -Math.PI / 2) rot += Math.PI;
           out.push({ x, y, rot, level: lv.level });
-          taken.push([x, y]); run = 0;
+          add([x, y]); run = 0;
         }
       }
     }
