@@ -390,14 +390,14 @@
    "labels": [
     {
      "name": "Striding Edge",
-     "lat": 54.52566,
-     "lon": -3.00349,
+     "lat": 54.52555,
+     "lon": -3.0089,
      "kind": "ridge",
      "sky": true
     }
    ],
-   "max_exag": 2.5,
-   "poster_centre": -10
+   "max_exag": 3.5,
+   "poster_centre": 4
   }
  ]
 }
