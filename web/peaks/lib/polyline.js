@@ -31,10 +31,12 @@
     const stack = [[0, points.length - 1]];
     while (stack.length) {
       const [a, b] = stack.pop();
-      const [ax, ay] = xy[a], [bx, by] = xy[b], dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+      const [ax, ay] = xy[a], [bx, by] = xy[b], dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
       let worst = -1, at = -1;
       for (let i = a + 1; i < b; i++) {
-        const d = Math.abs(dy * (xy[i][0] - ax) - dx * (xy[i][1] - ay)) / len;
+        // distance to the segment (not the infinite line), so a loop's matching ends still work
+        const t = l2 ? Math.max(0, Math.min(1, ((xy[i][0] - ax) * dx + (xy[i][1] - ay) * dy) / l2)) : 0;
+        const d = Math.hypot(xy[i][0] - ax - t * dx, xy[i][1] - ay - t * dy);
         if (d > worst) { worst = d; at = i; }
       }
       if (worst > tol) { keep[at] = 1; stack.push([a, at], [at, b]); }
