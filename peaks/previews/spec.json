@@ -1,31 +1,31 @@
 [
  {
-  "name": "sharpedge-skyline-paper",
-  "place": "blencathra",
+  "name": "stridingedge-skyline-paper",
+  "place": "helvellyn",
   "style": "skyline",
   "theme": "paper",
-  "seen": "view:sharp-edge-from-bannerdale",
-  "title": "Sharp Edge",
-  "subtitle": "Blencathra"
+  "seen": "view:striding-edge-from-red-tarn",
+  "title": "Striding Edge",
+  "subtitle": "Helvellyn"
  },
  {
-  "name": "sharpedge-skyline-night",
-  "place": "blencathra",
+  "name": "stridingedge-skyline-night",
+  "place": "helvellyn",
   "style": "skyline",
   "theme": "night",
-  "seen": "view:sharp-edge-from-bannerdale",
-  "title": "Sharp Edge",
-  "subtitle": "Blencathra"
+  "seen": "view:striding-edge-from-red-tarn",
+  "title": "Striding Edge",
+  "subtitle": "Helvellyn"
  },
  {
-  "name": "blencathra-poster-moss",
-  "place": "blencathra",
+  "name": "helvellyn-poster-moss",
+  "place": "helvellyn",
   "style": "poster",
   "theme": "moss"
  },
  {
-  "name": "blencathra-contours-white",
-  "place": "blencathra",
+  "name": "helvellyn-contours-white",
+  "place": "helvellyn",
   "style": "contours",
   "theme": "white"
  }
