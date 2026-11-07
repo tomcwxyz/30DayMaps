@@ -9,10 +9,10 @@
   "subtitle": "Helvellyn"
  },
  {
-  "name": "stridingedge-skyline-night",
+  "name": "stridingedge-skyline-moss",
   "place": "helvellyn",
   "style": "skyline",
-  "theme": "night",
+  "theme": "moss",
   "seen": "view:striding-edge-from-red-tarn",
   "title": "Striding Edge",
   "subtitle": "Helvellyn"
@@ -24,9 +24,9 @@
   "theme": "paper"
  },
  {
-  "name": "helvellyn-contours-white",
+  "name": "helvellyn-poster-navy",
   "place": "helvellyn",
-  "style": "contours",
-  "theme": "white"
+  "style": "poster",
+  "theme": "navy"
  }
 ]
