@@ -566,7 +566,7 @@ def skyline(slug, theme="green", out=None):
 
 POSTERS = {  # contour place -> (skyline that shows it, half-width of the strip in degrees or None for all)
     "cuillin": ("cuillin-from-elgol", None), "matterhorn": ("matterhorn-from-riffelsee", 10),
-    "ben-nevis": ("ben-nevis-from-corpach", 24), "helvellyn": ("helvellyn-from-place-fell", 26),
+    "ben-nevis": ("ben-nevis-from-corpach", 24), "helvellyn": ("striding-edge-from-red-tarn", None),
     "cheviot": ("cheviot-from-simonside", None), "lake-district": ("lakes-from-orrest-head", None),
     "blencathra": ("sharp-edge-from-bannerdale", None),
     "inaccessible-pinnacle": ("inaccessible-pinnacle-from-glen-brittle", None),

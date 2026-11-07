@@ -9,7 +9,18 @@
    "lat": 54.527,
    "lon": -3.0164,
    "width_km": 7,
-   "summit_m": 950
+   "summit_m": 950,
+   "hires": {
+    "src": "hires/helvellyn.png",
+    "lat": 54.52879,
+    "lon": -3.00589,
+    "halfW": 2950,
+    "halfH": 2950,
+    "res": 3
+   },
+   "views": [
+    "helvellyn-from-place-fell"
+   ]
   },
   {
    "slug": "blencathra",
@@ -352,6 +363,35 @@
      "name": "Sharp Edge",
      "lat": 54.64589,
      "lon": -3.04334,
+     "kind": "ridge",
+     "sky": true
+    }
+   ]
+  },
+  {
+   "slug": "striding-edge-from-red-tarn",
+   "title": "Striding Edge",
+   "subtitle": "from Red Tarn, looking south-west",
+   "lat": 54.53105,
+   "lon": -3.0044,
+   "azimuth": 205,
+   "fov": 84,
+   "reach_km": 15,
+   "lift_m": 2,
+   "near_km": 0.08,
+   "hires": {
+    "src": "hires/helvellyn.png",
+    "lat": 54.52879,
+    "lon": -3.00589,
+    "halfW": 2950,
+    "halfH": 2950,
+    "res": 3
+   },
+   "labels": [
+    {
+     "name": "Striding Edge",
+     "lat": 54.52566,
+     "lon": -3.00349,
      "kind": "ridge",
      "sky": true
     }
