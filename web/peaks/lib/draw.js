@@ -284,6 +284,9 @@
     const e0 = Math.max(near, 600) * 2.2;
     for (let i = 0; i < nb; i++) edges.push(e0 * (reach / e0) ** (i / (nb - 1)));
     const layers = edges.map(() => new Float32Array(cols));
+    // The last stretch of open sea seen in each band, as [lo, hi] angles: islands and far
+    // shores beyond it stand on that sea rather than reaching down to the nearer land.
+    const seaLo = edges.map(() => new Float32Array(cols).fill(-90)), seaHi = edges.map(() => new Float32Array(cols).fill(-90));
     const offs = new Float32Array(cols);
     let anySea = false;
     for (let c = 0; c < cols; c++) {
@@ -295,8 +298,12 @@
         while (b < nb && d > edges[b]) layers[b++][c] = m;
         if (b >= nb) break;
         const z = T.sample(g, sx * d, sy * d);
-        if (z <= 0.5) { anySea = true; continue; }
-        const a = Math.atan2(z - d * d * REFRACT / (2 * EARTH_R) - eye, d) * 180 / Math.PI;
+        const a = Math.atan2(Math.max(z, 0) - d * d * REFRACT / (2 * EARTH_R) - eye, d) * 180 / Math.PI;
+        if (z <= 0.5) {
+          anySea = true;
+          if (a > m) { if (seaHi[b][c] < m - 0.1) seaLo[b][c] = m; seaHi[b][c] = a; m = a; }
+          continue;
+        }
         if (a > m) m = a;
       }
       while (b < nb) layers[b++][c] = m;
@@ -321,7 +328,7 @@
       }
       if (a >= occ - 0.03) seen.push({ name: n.name, off, ang: a, h, dist: dd });
     }
-    return { offs, layers, eye, sea, summits: seen, v };
+    return { offs, layers, seaLo, seaHi, eye, sea, summits: seen, v };
   }
 
   function drawSkyline(items, { sd, box, th, u, labels, labelRoom, crop, colours, sky = true, compass = false, exag = 0 }) {
@@ -357,7 +364,8 @@
     const Y = a => box.y + box.h - (a - yLo) / (yHi - yLo) * box.h;
     if (sky) items.push({ t: "grad", x: box.x, y: box.y, w: box.w, h: box.h, top: skyTop, bottom: skyBottom });
     items.push({ t: "clip", x: box.x, y: box.y, w: box.w, h: box.h });
-    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: mix(skyBottom, far, 0.55) });   // sea: paler than any land
+    const seaFill = mix(skyBottom, far, 0.55);   // sea: paler than any land
+    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: seaFill });
     const n = L.length, cols = offs.length;
     for (let i = n - 1; i >= 0; i--) {
       const t = (n - 1 - i) / Math.max(1, n - 1);
@@ -366,6 +374,22 @@
       for (let c = 0; c < cols; c++) { pts[2 * c] = X(offs[c]); pts[2 * c + 1] = Math.min(box.y + box.h + 5, Y(Math.max(L[i][c], yLo - span))); }
       pts[2 * cols] = box.x + box.w; pts[2 * cols + 1] = box.y + box.h + 5; pts[2 * cols + 2] = box.x; pts[2 * cols + 3] = box.y + box.h + 5;
       items.push({ t: "path", rings: [pts], fill });
+      // open sea in this band, in front of anything further away
+      const hi = sd.seaHi && sd.seaHi[i].subarray(x0, x1 + 1), lo = sd.seaLo && sd.seaLo[i].subarray(x0, x1 + 1);
+      if (hi) {
+        let c = 0;
+        while (c < cols) {
+          if (hi[c] <= lo[c] || hi[c] <= -89) { c++; continue; }
+          let e = c;
+          while (e + 1 < cols && hi[e + 1] > lo[e + 1] && hi[e + 1] > -89) e++;
+          const ring = [];
+          for (let k = c; k <= e; k++) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(hi[k], yLo - span))));
+          for (let k = e; k >= c; k--) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(lo[k], yLo - span))));
+          if (e === c) { ring.splice(2, 0, X(offs[c]) + 0.01, ring[1]); ring.push(X(offs[c]) + 0.01, ring[ring.length - 1]); }
+          items.push({ t: "path", rings: [Float32Array.from(ring)], fill: seaFill });
+          c = e + 1;
+        }
+      }
     }
     items.push({ t: "unclip" });
     if (labels && sd.summits.length) {
