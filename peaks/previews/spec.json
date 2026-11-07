@@ -1,32 +1,48 @@
 [
  {
-  "name": "stridingedge-skyline-paper",
-  "place": "helvellyn",
-  "style": "skyline",
+  "name": "bgr-poster-paper",
+  "gpx": "peaks/previews/routes/bob-graham-round.gpx",
+  "style": "poster",
   "theme": "paper",
-  "seen": "view:striding-edge-from-red-tarn",
-  "title": "Striding Edge",
-  "subtitle": "Helvellyn"
+  "title": "Bob Graham Round",
+  "subtitle": "42 Lakeland fells in 24 hours"
  },
  {
-  "name": "stridingedge-skyline-moss",
-  "place": "helvellyn",
-  "style": "skyline",
+  "name": "bgr-contours-navy",
+  "gpx": "peaks/previews/routes/bob-graham-round.gpx",
+  "style": "contours",
+  "theme": "navy",
+  "title": "Bob Graham Round"
+ },
+ {
+  "name": "tea-poster-moss",
+  "gpx": "peaks/previews/routes/tea-round.gpx",
+  "style": "poster",
   "theme": "moss",
-  "seen": "view:striding-edge-from-red-tarn",
-  "title": "Striding Edge",
-  "subtitle": "Helvellyn"
+  "title": "The Tea Round",
+  "subtitle": "Abraham's Tea Round, from George Fisher"
  },
  {
-  "name": "helvellyn-poster-paper",
-  "place": "helvellyn",
+  "name": "utmb-poster-paper",
+  "gpx": "peaks/previews/routes/utmb.gpx",
   "style": "poster",
-  "theme": "paper"
+  "theme": "paper",
+  "title": "UTMB",
+  "subtitle": "Ultra-Trail du Mont-Blanc"
  },
  {
-  "name": "helvellyn-poster-navy",
-  "place": "helvellyn",
+  "name": "utmb-contours-night",
+  "gpx": "peaks/previews/routes/utmb.gpx",
+  "style": "contours",
+  "theme": "night",
+  "title": "UTMB"
+ },
+ {
+  "name": "l100-poster-paper",
+  "gpx": "peaks/previews/routes/lakeland-100.gpx",
   "style": "poster",
-  "theme": "navy"
+  "theme": "paper",
+  "title": "Lakeland 100",
+  "subtitle": "The Ultra Tour of the Lake District"
  }
 ]
