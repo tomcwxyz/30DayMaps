@@ -64,6 +64,22 @@
     return Object.assign({}, g, { z, fineSrc: true });
   }
 
+  // A pre-baked grid (web/peaks/baked, written by the harness's bake mode): heights in steps of
+  // q metres, as int16 differences across then down, gzipped. Same cleaning as grid() made it.
+  async function baked(url, { w, h, q }, where) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+    let buf = await r.arrayBuffer();
+    const head = new Uint8Array(buf, 0, 2);
+    if (head[0] === 0x1f && head[1] === 0x8b) buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+    const d = new Int16Array(buf);
+    if (d.length !== w * h) throw new Error(`${url}: expected ${w * h} heights, got ${d.length}`);
+    const v = new Int32Array(w * h), z = new Float32Array(w * h);
+    for (let c = 0; c < w; c++) { let acc = 0; for (let r0 = 0; r0 < h; r0++) { acc += d[r0 * w + c]; v[r0 * w + c] = acc; } }
+    for (let r0 = 0; r0 < h; r0++) { let acc = 0; for (let c = 0; c < w; c++) { acc += v[r0 * w + c]; z[r0 * w + c] = acc * q; } }
+    return { z, w, h, res: where.res, halfW: w * where.res / 2, halfH: h * where.res / 2, lat: where.lat, lon: where.lon };
+  }
+
   // Let g sample from a finer patch wherever the patch covers it.
   function withFine(g, f) {
     const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
@@ -270,14 +286,18 @@
       const o = r * w;
       for (let c = 0; c < w; c++) {
         let s = 0;
-        for (let j = -rad; j <= rad; j++) s += z[o + Math.min(w - 1, Math.max(0, c + j))] * k[j + rad];
+        if (c >= rad && c < w - rad) for (let j = -rad, i = o + c - rad; j <= rad; j++, i++) s += z[i] * k[j + rad];
+        else for (let j = -rad; j <= rad; j++) s += z[o + Math.min(w - 1, Math.max(0, c + j))] * k[j + rad];
         tmp[o + c] = s;
       }
     }
-    for (let c = 0; c < w; c++) for (let r = 0; r < h; r++) {
-      let s = 0;
-      for (let j = -rad; j <= rad; j++) s += tmp[Math.min(h - 1, Math.max(0, r + j)) * w + c] * k[j + rad];
-      out[r * w + c] = s;
+    // down the columns a row at a time, so memory is read in order
+    for (let r = 0; r < h; r++) {
+      const o = r * w;
+      for (let j = -rad; j <= rad; j++) {
+        const b = Math.min(h - 1, Math.max(0, r + j)) * w, kj = k[j + rad];
+        for (let c = 0; c < w; c++) out[o + c] += tmp[b + c] * kj;
+      }
     }
     return out;
   }
@@ -341,7 +361,7 @@
   }
 
   root.PeaksTerrain = {
-    grid, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
+    grid, baked, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); storeP = null; },
   };
 })(typeof window !== "undefined" ? window : globalThis);

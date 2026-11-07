@@ -96,15 +96,86 @@
     for (let v = Math.max(step, Math.ceil(lo / step) * step); v < hi; v += step) levels.push(v);
     const gx0 = -g.halfW + c0 * res, gy0 = g.halfH - r0 * res;
     const toM = geom => geom.coordinates.map(poly => poly.map(ring => {
-      const out = new Float64Array(ring.length * 2);
-      for (let i = 0; i < ring.length; i++) { out[2 * i] = gx0 + ring[i][0] * res; out[2 * i + 1] = gy0 - ring[i][1] * res; }
+      const out = new Float64Array(ring.length);
+      for (let i = 0; i < ring.length; i += 2) { out[i] = gx0 + ring[i] * res; out[i + 1] = gy0 - ring[i + 1] * res; }
       return out;
     }));
-    const gen = root.d3.contours().size([sw, sh]);
-    const all = levels.length ? gen.thresholds(levels)(z) : [];
+    const all = isolines(z, sw, sh, levels);
     const out = { step, lo, hi, levels: all.map(gm => ({ level: gm.value, major: Math.abs(gm.value / (step * 5) - Math.round(gm.value / (step * 5))) < 1e-6, polys: toM(gm) })) };
-    if (sea / (sw * sh) > 0.002) out.coast = toM(gen.thresholds([0.5])(z)[0]);
+    if (sea / (sw * sh) > 0.002) out.coast = toM(isolines(z, sw, sh, [0.5])[0]);
     return out;
+  }
+
+  // Closed contour rings for many levels in one pass over the grid (marching squares, each
+  // cell visiting only the levels that cross it). Sample (x, y) sits at (x + 0.5, y + 0.5), as
+  // in d3-contour; outside the grid counts as below every level, so every ring closes (just
+  // beyond the frame). Rings are left unsorted into outers and holes: strokes don't care, and
+  // fills use the even-odd rule. Returns [{ value, coordinates: [[ring]] }], d3's shape.
+  function isolines(z, sw, sh, levels) {
+    const W = sw + 2, H = sh + 2, LOW = -1e9;
+    const P = new Float64Array(W * H).fill(LOW);
+    for (let y = 0; y < sh; y++) P.set(z.subarray(y * sw, (y + 1) * sw), (y + 1) * W + 1);
+    const nL = levels.length;
+    const segs = Array.from({ length: nL }, () => []);
+    const T_ = 0, R_ = 1, B_ = 2, L_ = 3;
+    // edge ids: top of cell (x, y) = 2(yW + x), left = 2(yW + x) + 1
+    const eid = (x, y, side) => side === T_ ? 2 * (y * W + x) : side === L_ ? 2 * (y * W + x) + 1 : side === B_ ? 2 * ((y + 1) * W + x) : 2 * (y * W + x + 1) + 1;
+    const CASES = [null, [[L_, B_]], [[B_, R_]], [[L_, R_]], [[T_, R_]], "s5", [[T_, B_]], [[T_, L_]],
+                   [[T_, L_]], [[T_, B_]], "s10", [[T_, R_]], [[L_, R_]], [[B_, R_]], [[L_, B_]], null];
+    for (let y = 0; y < H - 1; y++) {
+      for (let x = 0; x < W - 1; x++) {
+        const i = y * W + x, a = P[i], b = P[i + 1], c = P[i + W + 1], d = P[i + W];
+        const mn = Math.min(a, b, c, d), mx = Math.max(a, b, c, d);
+        if (mx < levels[0] || mn >= levels[nL - 1]) continue;
+        let k = 0, hiK = nL;   // first level above mn
+        while (k < hiK) { const m = (k + hiK) >> 1; if (levels[m] <= mn) k = m + 1; else hiK = m; }
+        for (; k < nL && levels[k] <= mx; k++) {
+          const L = levels[k];
+          const idx = (a >= L ? 8 : 0) | (b >= L ? 4 : 0) | (c >= L ? 2 : 0) | (d >= L ? 1 : 0);
+          let cs = CASES[idx];
+          if (!cs) continue;
+          if (typeof cs === "string") {
+            const centre = (a + b + c + d) / 4 >= L;
+            cs = cs === "s5" ? (centre ? [[T_, L_], [B_, R_]] : [[T_, R_], [L_, B_]])
+                             : (centre ? [[T_, R_], [L_, B_]] : [[T_, L_], [B_, R_]]);
+          }
+          const out = segs[k];
+          for (const [p, q] of cs) out.push(eid(x, y, p), eid(x, y, q));
+        }
+      }
+    }
+    // where an edge id is crossed by a level: the interpolated point, in grid coordinates
+    const point = (e, L, o, j) => {
+      const cell = e >> 1, x = cell % W, y = (cell / W) | 0;
+      if (e & 1) { const v0 = P[cell], v1 = P[cell + W], t = (L - v0) / (v1 - v0); o[j] = x - 0.5; o[j + 1] = y + t - 0.5; }
+      else { const v0 = P[cell], v1 = P[cell + 1], t = (L - v0) / (v1 - v0); o[j] = x + t - 0.5; o[j + 1] = y - 0.5; }
+    };
+    const slot1 = new Int32Array(2 * W * H).fill(-1), slot2 = new Int32Array(2 * W * H).fill(-1);
+    return levels.map((L, k) => {
+      const s = segs[k], n = s.length >> 1, rings = [];
+      for (let i = 0; i < n; i++) for (const e of [s[2 * i], s[2 * i + 1]]) { if (slot1[e] < 0) slot1[e] = i; else slot2[e] = i; }
+      const used = new Uint8Array(n);
+      for (let i0 = 0; i0 < n; i0++) {
+        if (used[i0]) continue;
+        const pts = [];
+        let seg = i0, e = s[2 * i0], start = e;
+        for (;;) {
+          used[seg] = 1;
+          pts.push(e);
+          const nextE = s[2 * seg] === e ? s[2 * seg + 1] : s[2 * seg];
+          if (nextE === start) break;
+          const ns = slot1[nextE] === seg ? slot2[nextE] : slot1[nextE];
+          if (ns < 0 || used[ns]) { pts.push(nextE); break; }
+          seg = ns; e = nextE;
+        }
+        const ring = new Float64Array(pts.length * 2 + 2);
+        for (let j = 0; j < pts.length; j++) point(pts[j], L, ring, 2 * j);
+        ring[ring.length - 2] = ring[0]; ring[ring.length - 1] = ring[1];   // closed, like d3
+        rings.push([ring]);
+      }
+      for (let i = 0; i < 2 * n; i++) { slot1[s[i]] = -1; slot2[s[i]] = -1; }
+      return { value: L, coordinates: rings };
+    });
   }
 
   // A frame-to-millimetre mapping for a map box.
