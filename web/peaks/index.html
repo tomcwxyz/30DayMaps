@@ -268,11 +268,23 @@ function getGrid(lat, lon, halfW, halfH, res, what) {
   });
 }
 const SKIP = { skip: true };   // a draft isn't needed: the real grid is baked
+// Summit names come from Overpass, a free and sometimes slow server. On screen, a draw waits
+// for them at most NAMES_WAIT ms; if they come later, it draws again with them. The print job
+// (RENDER) always waits, and fails rather than print without them.
+const NAMES_WAIT = 1500;
 function getNames(g, bundled) {
   if (bundled && bundled.length) return Promise.resolve(bundled);
   // keyed by the ground covered (not the grid's resolution), so a draft and the real draw share one lookup
   const k = [r5(g.lat), r5(g.lon), Math.round(g.halfW / 200), Math.round(g.halfH / 200)].join(",");
-  return memo(`n:${k}`, () => { setStatus("Finding summit names…"); return T.summits(g.lat, g.lon, g.halfW, g.halfH); });
+  const p = memo(`n:${k}`, () => T.summits(g.lat, g.lon, g.halfW, g.halfH));
+  if (RENDER) return p;
+  let late = false;
+  return Promise.race([p, new Promise(res => setTimeout(() => { late = true; res(null); }, NAMES_WAIT))]).then(v => {
+    if (v) return v;
+    const id = runId;
+    p.then(n => { if (late && n && n.length && id === runId) schedule(0); }).catch(() => {});
+    return [];
+  });
 }
 
 // ---- sheet and frames ----------------------------------------------------------------------
@@ -516,7 +528,7 @@ async function compose(run, draft) {
             mark("view elevation");
             lidar = lidar || !!vg.fine;
             say("Drawing the skyline…");
-            const vn = labels ? await getNames(vg, v.names) : [];
+            const vn = [];   // the strip carries no labels
             const sd = cached(`s:${vg.key}:${JSON.stringify(v)}:${Math.round(strip.w * 2.5)}`, () => D.skyline(vg, v, vn, Math.min(2400, Math.round(strip.w * 2.5))));
             mark("skyline rays");
             const ink = th.panel !== th.page ? th.panel : th.line;
