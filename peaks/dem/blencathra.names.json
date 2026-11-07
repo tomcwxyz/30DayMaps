@@ -1,0 +1,101 @@
+[
+{
+"name": "Mungrisdale Common",
+"name_en": null,
+"lat": 54.6532046,
+"lon": -3.0684202,
+"x": -1460.0,
+"y": 1581.4,
+"ele": 631.8,
+"osm": 29952585,
+"kind": "peak"
+},
+{
+"name": "Bannerdale Crags (summit)",
+"name_en": null,
+"lat": 54.6519576,
+"lon": -3.0317162,
+"x": 909.1,
+"y": 1442.5,
+"ele": 684.1,
+"osm": 29952587,
+"kind": "peak"
+},
+{
+"name": "Blease Fell",
+"name_en": null,
+"lat": 54.6336837,
+"lon": -3.0673784,
+"x": -1393.4,
+"y": -591.6,
+"ele": 804.5,
+"osm": 443633527,
+"kind": "peak"
+},
+{
+"name": "Atkinson Pike",
+"name_en": null,
+"lat": 54.6453267,
+"lon": -3.0484605,
+"x": -171.8,
+"y": 704.3,
+"ele": 845.3,
+"osm": 5011923578,
+"kind": "peak"
+},
+{
+"name": "Blencathra",
+"name_en": null,
+"lat": 54.6399757,
+"lon": -3.0497219,
+"x": -253.2,
+"y": 108.6,
+"ele": 867.8,
+"osm": 5649488237,
+"kind": "peak"
+},
+{
+"name": "The Tongue",
+"name_en": null,
+"lat": 54.6623352,
+"lon": -3.0129609,
+"x": 2119.1,
+"y": 2598.1,
+"ele": 553.0,
+"osm": 9691490764,
+"kind": "peak"
+},
+{
+"name": "Gategill Fell Top",
+"name_en": null,
+"lat": 54.6367049,
+"lon": -3.0584236,
+"x": -815.1,
+"y": -255.4,
+"ele": 852.2,
+"osm": 11899721609,
+"kind": "peak"
+},
+{
+"name": "Bannerdale Crags",
+"name_en": null,
+"lat": 54.652403,
+"lon": -3.0305159,
+"x": 986.5,
+"y": 1492.1,
+"ele": 682.0,
+"osm": 12579646303,
+"kind": "peak"
+},
+{
+"name": "Middle Tongue",
+"name_en": null,
+"lat": 54.634581,
+"lon": -3.0519891,
+"x": -399.7,
+"y": -491.9,
+"ele": null,
+"osm": 1228942138,
+"kind": "ridge"
+}
+]
