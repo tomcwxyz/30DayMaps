@@ -19,6 +19,7 @@
   }
 
   // ---- tiles ------------------------------------------------------------------
+  const MAX_ZOOM = 13;
   const tileCache = new Map();   // "z/x/y" -> Promise<Float32Array(256*256)>
   let tileUrl = TERRARIUM;
 
@@ -70,14 +71,27 @@
     return g;
   }
 
+  // Tiles never change, so keep them between visits (Cache API; absent in some contexts).
+  let storeP = null;
+  function tileStore() {
+    if (!storeP) storeP = (typeof caches !== "undefined" && tileUrl.startsWith("http") ? caches.open("peaks-tiles-v1") : Promise.resolve(null)).catch(() => null);
+    return storeP;
+  }
+
   function getTile(z, x, y) {
     const key = `${z}/${x}/${y}`;
     if (!tileCache.has(key)) {
       const p = (async () => {
         for (let attempt = 0; ; attempt++) {
           try {
-            const r = await fetch(tileUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y));
-            if (!r.ok) throw new Error(`tile ${key}: HTTP ${r.status}`);
+            const url = tileUrl.replace("{z}", z).replace("{x}", x).replace("{y}", y);
+            const store = await tileStore();
+            let r = store && await store.match(url).catch(() => null);
+            if (!r) {
+              r = await fetch(url);
+              if (!r.ok) throw new Error(`tile ${key}: HTTP ${r.status}`);
+              if (store) store.put(url, r.clone()).catch(() => {});
+            }
             return await decodePNG(await r.blob());
           } catch (e) {
             if (attempt >= 2) throw e;
@@ -97,8 +111,10 @@
   }
 
   function chooseZoom(lat, res) {
-    for (let z = 5; z <= 14; z++) if (EQUATOR * Math.cos(lat * DEG) / (TILE * 2 ** z) <= res * 1.15) return z;
-    return 14;
+    // Terrarium's sources here are 25-30 m (SRTM, EU-DEM), so zoom 14 adds pixels, not detail:
+    // stop at 13, and let a tile pixel be up to 1.6 grid cells (bilinear fills in between).
+    for (let z = 5; z <= MAX_ZOOM; z++) if (EQUATOR * Math.cos(lat * DEG) / (TILE * 2 ** z) <= res * 1.6) return z;
+    return MAX_ZOOM;
   }
 
   // Elevation grid of w x h cells of `res` metres, covering [-halfW, halfW] x [-halfH, halfH].
@@ -326,6 +342,6 @@
 
   root.PeaksTerrain = {
     grid, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
-    setTileUrl(u) { tileUrl = u; tileCache.clear(); },
+    setTileUrl(u) { tileUrl = u; tileCache.clear(); storeP = null; },
   };
 })(typeof window !== "undefined" ? window : globalThis);

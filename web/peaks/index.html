@@ -445,6 +445,10 @@ async function refresh() {
     if (style === "contours" || style === "ridgelines" || style === "poster") {
       const box = style === "poster" ? { ...L.map, h: L.map.h * 0.72 } : L.map;
       const fr = areaFrame(box);
+      // a poster's skyline needs its own elevation: fetch both at once
+      const pv = style === "poster" && !state.route ? skylineView(fr) : null;
+      const pvg = pv ? viewGrid(pv) : null;
+      if (pvg) pvg.catch(() => {});
       const g = await frameGrid(fr);
       if (id !== runId) return;
       mark("elevation");
@@ -474,9 +478,9 @@ async function refresh() {
             D.drawProfile(items, { route, box: { ...strip, h: strip.h * 0.84 }, th, u, labels });
             details += "   ·   profile in km";
           } else {
-            const v = skylineView(fr);
+            const v = pv;
             mark("contour drawing");
-            const vg = await viewGrid(v);
+            const vg = await pvg;
             if (id !== runId) return;
             mark("view elevation");
             lidar = lidar || !!vg.fine;
