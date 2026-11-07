@@ -217,6 +217,30 @@ if __name__ == "__main__" and sys.argv[1:2] in (["suite"], ["live"]):
             f.unlink()
 
 
+def dump_grids(page, stem: Path):
+    """Save every elevation grid the page has fetched, after cleaning, as .npz plus a shaded JPEG."""
+    import base64
+    grids = page.evaluate("""async () => {
+      const out = [];
+      for (const [k, p] of cache) if (k.startsWith("g:")) {
+        const g = await p, b = new Uint8Array(g.z.buffer, g.z.byteOffset, g.z.byteLength);
+        let s = ""; for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
+        out.push({ key: k, w: g.w, h: g.h, res: g.res, lat: g.lat, lon: g.lon, z: btoa(s) });
+      }
+      return out;
+    }""")
+    for n, g in enumerate(grids):
+        z = np.frombuffer(base64.b64decode(g["z"]), dtype=np.float32).reshape(g["h"], g["w"])
+        np.savez_compressed(f"{stem}-grid{n}.npz", z=z, res=g["res"], lat=g["lat"], lon=g["lon"])
+        gy, gx = np.gradient(z, g["res"])
+        shade = np.clip(0.6 + 0.4 * (-gx - gy) / np.sqrt(1 + gx * gx + gy * gy), 0, 1)
+        tint = np.clip(z / max(1.0, float(z.max())), 0, 1)
+        rgb = np.stack([shade * (0.5 + 0.5 * tint), shade * (0.6 + 0.3 * tint), shade * (0.8 - 0.3 * tint)], -1)
+        rgb[z <= 0.5] = (0.2, 0.3, 0.5)
+        Image.fromarray((rgb * 255).astype(np.uint8)).save(f"{stem}-grid{n}.jpg", quality=88)
+        print(f"grid {n}: {g['key']} {g['w']}x{g['h']} res {g['res']} max {z.max():.0f}", flush=True)
+
+
 def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
     """Render a list of designs from a JSON spec, each saved as a JPEG at `dpi`:
     [{"name": "blencathra-poster", "place": "blencathra", "style": "poster", "theme": "paper",
@@ -256,6 +280,8 @@ def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
                 im = Image.open(png).convert("RGB")
                 im.save(out / f"{item['name']}.jpg", quality=86)
                 png.unlink()
+                if item.get("dump"):
+                    dump_grids(page, out / item["name"])
                 log.append(f"{item['name']}: ok {im.size} | {page.text_content('#meta')} | small print: {page.evaluate('state.composed.items.filter(i => i.t === \"text\" && i.family === \"IBM Plex Mono\").map(i => i.s).slice(0, 3).join(\" / \")')}")
             except Exception as e:
                 log.append(f"{item['name']}: FAILED {type(e).__name__}: {str(e)[:200]}")

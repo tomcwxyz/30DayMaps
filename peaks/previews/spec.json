@@ -1,60 +1,9 @@
 [
  {
-  "name": "blencathra-poster-paper",
-  "place": "blencathra",
-  "style": "poster",
-  "theme": "paper"
- },
- {
-  "name": "blencathra-contours-white",
-  "place": "blencathra",
-  "style": "contours",
-  "theme": "white"
- },
- {
-  "name": "blencathra-skyline-moss",
-  "place": "blencathra",
-  "style": "skyline",
-  "theme": "moss"
- },
- {
-  "name": "blencathra-poster-moss",
-  "place": "blencathra",
-  "style": "poster",
-  "theme": "moss"
- },
- {
-  "name": "inpin-contours-night",
-  "place": "inaccessible-pinnacle",
-  "style": "contours",
-  "theme": "night"
- },
- {
-  "name": "inpin-poster-navy",
-  "place": "inaccessible-pinnacle",
-  "style": "poster",
-  "theme": "navy"
- },
- {
   "name": "inpin-panorama-paper",
   "place": "inaccessible-pinnacle",
   "style": "panorama",
-  "theme": "paper"
- },
- {
-  "name": "lakeland50-contours-navy",
-  "gpx": "peaks/previews/lakeland-50.gpx",
-  "style": "contours",
-  "theme": "navy",
-  "title": "Lakeland 50",
-  "subtitle": "Dalemain to Coniston"
- },
- {
-  "name": "lakeland50-poster-paper",
-  "gpx": "peaks/previews/lakeland-50.gpx",
-  "style": "poster",
   "theme": "paper",
-  "title": "Lakeland 50",
-  "subtitle": "Dalemain to Coniston"
+  "dump": true
  }
 ]
