@@ -11,6 +11,7 @@ from __future__ import annotations
 import glob
 import io
 import json
+import time
 import math
 import sys
 import threading
@@ -269,6 +270,59 @@ def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
         b.close()
     (out / "log.txt").write_text("\n".join(log) + "\n")
 
+
+def timing(spec_file: Path, out: Path):
+    """Time cold and warm draws: [{"name", "place" | "round", "style"}]. Each case gets a fresh
+    browser (no cache), draws its style, then a second style on the same place (warm)."""
+    from playwright.sync_api import sync_playwright
+    out.mkdir(parents=True, exist_ok=True)
+    base = serve()
+    lines = []
+    with sync_playwright() as pw:
+        b = pw.chromium.launch()
+        for item in json.loads(Path(spec_file).read_text()):
+            ctx = b.new_context(viewport={"width": 1400, "height": 1000})
+            page = ctx.new_page()
+            net = {"tiles": 0, "bytes": 0, "other": 0}
+            def on_resp(r, net=net):
+                try:
+                    n = int(r.headers.get("content-length") or 0)
+                except Exception:
+                    n = 0
+                if "elevation-tiles" in r.url:
+                    net["tiles"] += 1; net["bytes"] += n
+                elif r.url.startswith("http") and "127.0.0.1" not in r.url:
+                    net["other"] += 1
+            page.on("response", on_resp)
+            try:
+                t = time.time()
+                page.goto(base + f"?place={item.get('place', 'helvellyn')}")
+                wait_drawn(page)
+                first = time.time() - t
+                if item.get("round"):
+                    page.click(f'#rounds button[data-slug="{item["round"]}"]')
+                    page.wait_for_timeout(300); wait_drawn(page)
+                for i, style in enumerate(item["styles"]):
+                    t = time.time()
+                    page.click(f"#styles button[data-style={style}]")
+                    page.wait_for_timeout(250)   # the draw is scheduled 220 ms after a click
+                    wait_drawn(page)
+                    took = time.time() - t - 0.25
+                    pt = page.evaluate("window.PeaksTimings")
+                    st = "  ".join(f"{k} {v}" for k, v in pt["stages"]) if pt else "?"
+                    lines.append(f"{item['name']:28s} {style:10s} {took:6.1f}s  | {st}")
+                    print(lines[-1], flush=True)
+                lines.append(f"{item['name']:28s} first load {first:.1f}s, {net['tiles']} tiles {net['bytes'] // 1024} KB, {net['other']} other requests")
+                print(lines[-1], flush=True)
+            except Exception as e:
+                lines.append(f"{item['name']}: FAILED {type(e).__name__}: {str(e)[:200]}")
+            ctx.close()
+        b.close()
+    (out / "timing.txt").write_text("\n".join(lines) + "\n")
+
+
+if __name__ == "__main__" and sys.argv[1:2] == ["timing"]:
+    timing(Path(sys.argv[2]), Path(sys.argv[3]))
 
 if __name__ == "__main__" and sys.argv[1:2] == ["custom"]:
     custom(Path(sys.argv[2]), Path(sys.argv[3]), offline="--offline" in sys.argv)
