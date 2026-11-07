@@ -1,0 +1,20 @@
+helvellyn                    poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 62  view elevation 0  skyline rays 0  layout 1  paint 95
+helvellyn                    contours      1.3s  | elevation 0  names 0  contour lines 1204  layout 112  paint 138
+helvellyn                    skyline       0.0s  | view elevation 0  names 0  skyline rays 208  layout 2  paint 3
+helvellyn                    panorama      2.4s  | view elevation 2351  names 0  skyline rays 213  layout 3  paint 5
+helvellyn                    first load 3.9s, 210 tiles 21607 KB, 0 other requests
+blencathra (LiDAR)           poster        0.1s  | elevation 0  names 0  contour lines 0  contour drawing 53  view elevation 0  skyline rays 0  layout 2  paint 28
+blencathra (LiDAR)           skyline       0.0s  | view elevation 0  names 0  skyline rays 229  layout 1  paint 3
+blencathra (LiDAR)           first load 3.6s, 79 tiles 8190 KB, 0 other requests
+lake-district 34 km          contours      1.5s  | elevation 0  names 0  contour lines 901  layout 120  paint 588
+lake-district 34 km          poster        0.4s  | elevation 0  names 0  contour lines 0  contour drawing 112  view elevation 0  skyline rays 0  layout 1  paint 451
+lake-district 34 km          first load 4.6s, 160 tiles 16837 KB, 0 other requests
+cuillin                      poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 52  view elevation 0  skyline rays 0  layout 1  paint 51
+cuillin                      panorama      1.6s  | view elevation 1617  names 0  skyline rays 174  layout 4  paint 6
+cuillin                      first load 3.3s, 202 tiles 18467 KB, 0 other requests
+matterhorn                   poster        0.0s  | elevation 0  names 0  contour lines 0  contour drawing 16  view elevation 0  skyline rays 0  layout 1  paint 32
+matterhorn                   first load 4.3s, 202 tiles 23805 KB, 0 other requests
+bob graham round             poster        1.7s  | elevation 1  names 3  contour lines 0  layout 1221  paint 632
+bob graham round             first load 3.4s, 130 tiles 13974 KB, 1 other requests
+utmb                         poster        2.2s  | elevation 2  names 4  contour lines 0  layout 1672  paint 679
+utmb                         first load 3.4s, 195 tiles 23900 KB, 1 other requests

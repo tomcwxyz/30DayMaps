@@ -1,3 +1,1 @@
-pick-utmb-poster-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 4807 m / 4208 m / 3901 m
-pick-l100-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
 page errors: []
