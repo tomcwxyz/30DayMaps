@@ -1,5 +1,5 @@
 import sys, time, importlib.util
-spec=importlib.util.spec_from_file_location('h','/home/claude/30daymaps/web/peaks/test/harness.py'); h=importlib.util.module_from_spec(spec); sys.argv=['x']; spec.loader.exec_module(h)
+spec=importlib.util.spec_from_file_location('h','web/peaks/test/harness.py'); h=importlib.util.module_from_spec(spec); sys.argv=['x']; spec.loader.exec_module(h)
 from playwright.sync_api import sync_playwright
 base="https://peaks.tomcw.xyz/"
 def settle(page, label, t):
