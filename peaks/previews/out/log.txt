@@ -1,0 +1,10 @@
+blencathra-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+blencathra-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+blencathra-skyline-moss: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 805 m / 852 m / 868 m
+blencathra-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+inpin-contours-night: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 992 m / 986 m / 973 m
+inpin-poster-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 992 m / 986 m / 965 m
+inpin-panorama-paper: ok (3543, 1181) | Panorama 90 × 30 cm · 900 × 300 mm | small print: 624 m / 488 m / 879 m
+lakeland50-contours-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 950 m / 930 m / 868 m
+lakeland50-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
+page errors: ['Failed to load resource: the server responded with a status of 502 ()']
