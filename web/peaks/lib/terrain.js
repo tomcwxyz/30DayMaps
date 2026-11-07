@@ -64,6 +64,22 @@
     return Object.assign({}, g, { z, fineSrc: true });
   }
 
+  // A pre-baked grid (web/peaks/baked, written by the harness's bake mode): heights in steps of
+  // q metres, as int16 differences across then down, gzipped. Same cleaning as grid() made it.
+  async function baked(url, { w, h, q }, where) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+    let buf = await r.arrayBuffer();
+    const head = new Uint8Array(buf, 0, 2);
+    if (head[0] === 0x1f && head[1] === 0x8b) buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
+    const d = new Int16Array(buf);
+    if (d.length !== w * h) throw new Error(`${url}: expected ${w * h} heights, got ${d.length}`);
+    const v = new Int32Array(w * h), z = new Float32Array(w * h);
+    for (let c = 0; c < w; c++) { let acc = 0; for (let r0 = 0; r0 < h; r0++) { acc += d[r0 * w + c]; v[r0 * w + c] = acc; } }
+    for (let r0 = 0; r0 < h; r0++) { let acc = 0; for (let c = 0; c < w; c++) { acc += v[r0 * w + c]; z[r0 * w + c] = acc * q; } }
+    return { z, w, h, res: where.res, halfW: w * where.res / 2, halfH: h * where.res / 2, lat: where.lat, lon: where.lon };
+  }
+
   // Let g sample from a finer patch wherever the patch covers it.
   function withFine(g, f) {
     const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
@@ -341,7 +357,7 @@
   }
 
   root.PeaksTerrain = {
-    grid, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
+    grid, baked, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); storeP = null; },
   };
 })(typeof window !== "undefined" ? window : globalThis);

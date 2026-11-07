@@ -323,6 +323,76 @@ def timing(spec_file: Path, out: Path):
     (out / "timing.txt").write_text("\n".join(lines) + "\n")
 
 
+BAKE_Q = 0.5   # metres per step: far finer than the 25-30 m sources can tell apart vertically
+
+
+def encode_grid(z: "np.ndarray", q: float = BAKE_Q) -> bytes:
+    """Heights as int16 steps of q, differenced across then down, gzipped (see terrain.js baked())."""
+    import gzip
+    v = np.round(z.astype(np.float64) / q).astype(np.int32)
+    d = np.diff(v, axis=1, prepend=0)
+    d = np.diff(d, axis=0, prepend=0)
+    if np.abs(d).max() > 32767:
+        raise ValueError("step too large for int16")
+    return gzip.compress(d.astype("<i2").tobytes(), 9, mtime=0)
+
+
+def bake(out: Path):
+    """Bake the grids every ready-made place and route draws by default into out/, with
+    out/index.json mapping grid key -> {file, w, h, q}."""
+    import base64
+    import hashlib
+    from playwright.sync_api import sync_playwright
+    out.mkdir(parents=True, exist_ok=True)
+    places = json.loads((WEB / "places.json").read_text())
+    base = serve()
+    index = {}
+    grab = """async () => {
+      const out = [];
+      for (const [k, p] of cache) if (k.startsWith("g:")) {
+        const g = await p, b = new Uint8Array(g.z.buffer, g.z.byteOffset, g.z.byteLength);
+        let s = ""; for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
+        out.push([k, g.w, g.h, btoa(s)]);
+      }
+      return out;
+    }"""
+    jobs = [("place", a["slug"]) for a in places["areas"]] + [("round", r["slug"]) for r in places.get("routes", [])]
+    with sync_playwright() as pw:
+        b = pw.chromium.launch(args=["--js-flags=--max-old-space-size=8192"])
+        for kind, slug in jobs:
+            page = b.new_page(viewport={"width": 1400, "height": 1000})
+            try:
+                page.goto(base + f"?nobake=1&place={slug if kind == 'place' else 'helvellyn'}")
+                wait_drawn(page)
+                if kind == "round":
+                    page.evaluate("cache.clear()")
+                    page.click(f'#rounds button[data-slug="{slug}"]')
+                    page.wait_for_timeout(300); wait_drawn(page)
+                for st in (["poster", "contours", "skyline", "panorama"] if kind == "place" else ["poster", "contours"]):
+                    page.click(f"#styles button[data-style={st}]")
+                    page.wait_for_timeout(300); wait_drawn(page)
+                for key, w, h, data in page.evaluate(grab):
+                    if key in index:
+                        continue
+                    z = np.frombuffer(base64.b64decode(data), dtype=np.float32).reshape(h, w)
+                    name = hashlib.sha1(key.encode()).hexdigest()[:12] + ".bin"
+                    (out / name).write_bytes(encode_grid(z))
+                    index[key] = {"file": name, "w": w, "h": h, "q": BAKE_Q}
+                    print(f"{kind} {slug}: {key} {w}x{h} -> {name} {(out / name).stat().st_size // 1024} KB", flush=True)
+            except Exception as e:
+                print(f"{kind} {slug}: FAILED {type(e).__name__}: {str(e)[:200]}", flush=True)
+            page.close()
+        b.close()
+    for f in out.glob("*.bin"):
+        if f.name not in {v["file"] for v in index.values()}:
+            f.unlink()
+    (out / "index.json").write_text(json.dumps(index, indent=1, sort_keys=True) + "\n")
+    print(f"baked {len(index)} grids, {sum(f.stat().st_size for f in out.glob('*.bin')) // 1024} KB")
+
+
+if __name__ == "__main__" and sys.argv[1:2] == ["bake"]:
+    bake(Path(sys.argv[2]) if len(sys.argv) > 2 else WEB / "baked")
+
 if __name__ == "__main__" and sys.argv[1:2] == ["timing"]:
     timing(Path(sys.argv[2]), Path(sys.argv[3]))
 

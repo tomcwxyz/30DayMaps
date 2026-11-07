@@ -50,3 +50,17 @@ test("a finer patch is sampled wherever it covers the grid", () => {
   assert.strictEqual(T.sample(g, 0, 0), 100, "the plain grid is untouched");
   assert.strictEqual(T.localMax(fg, 0, 0, 20), 300);
 });
+
+test("a baked grid decodes to the heights it was made from (to its half-metre step)", async () => {
+  const fs = require("fs"), path = require("path");
+  const bytes = fs.readFileSync(path.join(__dirname, "baked-fixture.bin"));
+  const real = global.fetch;
+  global.fetch = async () => new Response(bytes);
+  try {
+    const g = await T.baked("x.bin", { w: 9, h: 7, q: 0.5 }, { lat: 54, lon: -3, res: 10 });
+    const want = (x, y) => Math.round((100 + 30 * Math.sin(x / 2) + 12 * y + 0.3 * x * y) / 0.5) * 0.5;
+    assert.strictEqual(g.z[0], 0);
+    for (const [x, y] of [[1, 0], [8, 6], [4, 3], [0, 6]]) assert.ok(Math.abs(g.z[y * 9 + x] - want(x, y)) < 1e-6, `${x},${y}: ${g.z[y * 9 + x]} vs ${want(x, y)}`);
+    assert.strictEqual(g.halfW, 45);
+  } finally { global.fetch = real; }
+});

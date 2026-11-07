@@ -222,6 +222,7 @@ const T = PeaksTerrain, D = PeaksDraw, RN = PeaksRender;
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 if (params.get("tiles")) T.setTileUrl(params.get("tiles"));
+const NOBAKE = params.get("nobake") === "1";   // the bake itself, and checks against live tiles
 const RENDER = params.get("render") === "1";   // the print job: fail rather than print without names
 if (RENDER) T.strict = true;
 
@@ -253,10 +254,20 @@ const cache = new Map();
 function memo(key, fn) { if (!cache.has(key)) { const p = Promise.resolve().then(fn); p.catch(() => cache.delete(key)); cache.set(key, p); } return cache.get(key); }
 const r5 = v => Math.round(v * 1e5) / 1e5;
 
+// Ready-made places and routes ship their grids pre-baked (web/peaks/baked/index.json, made by
+// the harness's bake mode from these same tiles and cleaning): one small file, not ~100 tiles.
+let BAKED = {};
+const gridKey = (lat, lon, halfW, halfH, res) => `g:${r5(lat)},${r5(lon)},${Math.round(halfW)},${Math.round(halfH)},${Math.round(res)}`;
 function getGrid(lat, lon, halfW, halfH, res, what) {
-  const key = `g:${r5(lat)},${r5(lon)},${Math.round(halfW)},${Math.round(halfH)},${Math.round(res)}`;
-  return memo(key, () => T.grid({ lat, lon, halfW, halfH, res, onProgress: (a, b) => $("sheet").classList.contains("busy") && setStatus(`Fetching ${what}: ${a} of ${b} tiles`) }).then(g => Object.assign(g, { key })));
+  const key = gridKey(lat, lon, halfW, halfH, res);
+  const live = () => T.grid({ lat, lon, halfW, halfH, res, onProgress: (a, b) => $("sheet").classList.contains("busy") && setStatus(`Fetching ${what}: ${a} of ${b} tiles`) });
+  return memo(key, () => {
+    const b = !NOBAKE && BAKED[key];
+    const got = b ? T.baked(`baked/${b.file}`, b, { lat, lon, res }).catch(e => { console.warn(e); return live(); }) : live();
+    return got.then(g => Object.assign(g, { key }));
+  });
 }
+const SKIP = { skip: true };   // a draft isn't needed: the real grid is baked
 function getNames(g, bundled) {
   if (bundled && bundled.length) return Promise.resolve(bundled);
   // keyed by the ground covered (not the grid's resolution), so a draft and the real draw share one lookup
@@ -296,6 +307,7 @@ function areaFrame(box) {
 function frameGrid(fr, draft) {
   const W = fr.x1 - fr.x0, H = fr.y1 - fr.y0;
   const halfW = W / 2 * 1.06, halfH = Math.max(H, W * 1.45) / 2 * 1.06;
+  if (draft && !NOBAKE && BAKED[gridKey(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000))]) return Promise.reject(SKIP);
   const g = getGrid(fr.lat, fr.lon, halfW, halfH, Math.max(4, W / 1000) * (draft ? 4 : 1), "elevation");
   if (draft) return g;
   // Close frames over a LiDAR patch use it: real crags and edges instead of 30 m smoothing.
@@ -350,7 +362,9 @@ function panoramaView() {
 }
 
 function viewGrid(v, draft) {
-  const res = Math.max(20, v.reach / 900) * (draft ? 3 : 1);
+  const r1 = Math.max(20, v.reach / 900);
+  if (draft && !NOBAKE && BAKED[gridKey(v.lat, v.lon, v.reach + r1 * 4, v.reach + r1 * 4, r1)]) return Promise.reject(SKIP);
+  const res = r1 * (draft ? 3 : 1);
   const g = getGrid(v.lat, v.lon, v.reach + res * 4, v.reach + res * 4, res, "the view");
   if (!v.hires || draft) return g;
   // ready-made close views carry a LiDAR patch, so a ridge like Sharp Edge keeps its edge
@@ -552,7 +566,7 @@ async function compose(run, draft) {
     state.error = null;
     updateShop();
   } catch (e) {
-    if (draft) { console.warn("draft:", e); return; }
+    if (draft) { if (e !== SKIP) console.warn("draft:", e); return; }
     if (id === runId) { console.error(e); state.error = e; state.composed = null; say(`Could not draw this: ${e.message}`, true); updateShop(); }
   } finally {
     if (!draft && id === runId) { $("sheet").classList.remove("busy"); updateShop(); }
@@ -914,7 +928,9 @@ function build() {
 }
 
 PeaksApp.ready = (async () => {
+  const bakedP = NOBAKE ? Promise.resolve({}) : fetch("baked/index.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
   PLACES = await (await fetch("places.json")).json();
+  BAKED = await bakedP;
   build();
   await Promise.all(["500 12px Jost", "700 12px Jost", "400 12px 'IBM Plex Mono'"].map(f => document.fonts.load(f).catch(() => null)));
   if (RENDER) return;   // the print job applies its own recipe
