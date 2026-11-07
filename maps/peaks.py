@@ -630,7 +630,8 @@ def web_places(path: Path = WEB_PLACES) -> Path:
         named = [n for n in summits(a["slug"]) if not (n.get("kind") == "ridge" and near(n))]
         areas.append({**{k: v for k, v in a.items() if k != "ridges"}, "names": named + extra,
                       "poster_view": view, "poster_crop": crop})
-    views = [{**v, "names": summits(v["slug"])} for v in PLACES["views"]]
+    views = [{**{k: x for k, x in v.items() if k != "labels"}, "names": summits(v["slug"]) + v.get("labels", [])}
+             for v in PLACES["views"]]
     path.write_text(json.dumps({"areas": areas, "views": views}, ensure_ascii=False, separators=(",", ":")))
     print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views)")
     return path

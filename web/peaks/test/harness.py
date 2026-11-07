@@ -241,6 +241,8 @@ def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
                     page.wait_for_timeout(500); wait_drawn(page)
                 page.click(f"#styles button[data-style={item['style']}]")
                 page.click(f"#themes button[data-theme={item.get('theme', 'paper')}]")
+                if item.get("seen"):
+                    page.select_option("#seenFrom", item["seen"])
                 if item.get("orient"):
                     page.select_option("#orient", item["orient"])
                 if item.get("paper"):

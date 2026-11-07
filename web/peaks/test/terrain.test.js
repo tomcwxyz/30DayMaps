@@ -40,3 +40,13 @@ test("a two-cell needle is removed, a real summit is not", () => {
   assert.ok(z[25 * w + 25] < 350, `needle left at ${z[25 * w + 25]}`);
   assert.strictEqual(z[10 * w + 10], summit);
 });
+
+test("a finer patch is sampled wherever it covers the grid", () => {
+  const g = { z: new Float32Array(100 * 100).fill(100), w: 100, h: 100, res: 20, halfW: 1000, halfH: 1000, lat: 54.6, lon: -3 };
+  const f = { z: new Float32Array(50 * 50).fill(300), w: 50, h: 50, res: 4, halfW: 100, halfH: 100, lat: 54.6, lon: -3 };
+  const fg = T.withFine(Object.assign({}, g), f);
+  assert.strictEqual(T.sample(fg, 0, 0), 300);
+  assert.strictEqual(T.sample(fg, 500, 500), 100);
+  assert.strictEqual(T.sample(g, 0, 0), 100, "the plain grid is untouched");
+  assert.strictEqual(T.localMax(fg, 0, 0, 20), 300);
+});

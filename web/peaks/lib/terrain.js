@@ -22,16 +22,33 @@
   const tileCache = new Map();   // "z/x/y" -> Promise<Float32Array(256*256)>
   let tileUrl = TERRARIUM;
 
-  async function decodePNG(blob) {
+  async function decodePNG(blob, size) {
     const bmp = await createImageBitmap(blob, { colorSpaceConversion: "none", premultiplyAlpha: "none" });
-    const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(TILE, TILE)
-      : Object.assign(document.createElement("canvas"), { width: TILE, height: TILE });
+    const W = size ? bmp.width : TILE, H = size ? bmp.height : TILE;
+    const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(W, H)
+      : Object.assign(document.createElement("canvas"), { width: W, height: H });
     const ctx = c.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(bmp, 0, 0);
-    const px = ctx.getImageData(0, 0, TILE, TILE).data;
-    const out = new Float32Array(TILE * TILE);
+    const px = ctx.getImageData(0, 0, W, H).data;
+    const out = new Float32Array(W * H);
     for (let i = 0, j = 0; i < out.length; i++, j += 4) out[i] = px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768;
-    return out;
+    return size ? { z: out, w: W, h: H } : out;
+  }
+
+  // A finer elevation patch for a ready-made view (Environment Agency LiDAR, packed by
+  // maps/peaks_lidar.py onto this file's own local grid). meta: { src, lat, lon, halfW, halfH, res }.
+  async function hires(meta) {
+    const r = await fetch(meta.src);
+    if (!r.ok) throw new Error(`${meta.src}: HTTP ${r.status}`);
+    const { z, w, h } = await decodePNG(await r.blob(), true);
+    return { z, w, h, res: meta.res, halfW: w * meta.res / 2, halfH: h * meta.res / 2, lat: meta.lat, lon: meta.lon };
+  }
+
+  // Let g sample from a finer patch wherever the patch covers it.
+  function withFine(g, f) {
+    const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
+    g.fine = Object.assign({}, f, { dx, dy, mx: f.halfW - f.res, my: f.halfH - f.res });
+    return g;
   }
 
   function getTile(z, x, y) {
@@ -232,6 +249,11 @@
 
   // Bilinear sample at local metres.
   function sample(g, x, y, z = g.z) {
+    const f = g.fine;
+    if (f && z === g.z) {
+      const fx = x - f.dx, fy = y - f.dy;
+      if (fx > -f.mx && fx < f.mx && fy > -f.my && fy < f.my) return sample(f, fx, fy);
+    }
     const cx = (x + g.halfW) / g.res - 0.5, cy = (g.halfH - y) / g.res - 0.5;
     const ix = Math.max(0, Math.min(g.w - 2, Math.floor(cx))), iy = Math.max(0, Math.min(g.h - 2, Math.floor(cy)));
     const fx = Math.max(0, Math.min(1, cx - ix)), fy = Math.max(0, Math.min(1, cy - iy));
@@ -241,6 +263,8 @@
 
   // Highest value within `rad` metres of (x, y): a summit's height even if the point is a little off.
   function localMax(g, x, y, rad) {
+    const f = g.fine;
+    if (f && Math.abs(x - f.dx) < f.mx - rad && Math.abs(y - f.dy) < f.my - rad) return localMax(f, x - f.dx, y - f.dy, rad);
     const n = Math.max(1, Math.round(rad / g.res));
     const cx = Math.round((x + g.halfW) / g.res - 0.5), cy = Math.round((g.halfH - y) / g.res - 0.5);
     let m = -Infinity;
@@ -282,7 +306,7 @@
   }
 
   root.PeaksTerrain = {
-    grid, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
+    grid, hires, withFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); },
   };
 })(typeof window !== "undefined" ? window : globalThis);
