@@ -356,60 +356,6 @@
      "sky": true
     }
    ]
-  },
-  {
-   "slug": "se-tele",
-   "title": "Sharp Edge",
-   "subtitle": "from Bannerdale Crags, looking south-west (tele)",
-   "lat": 54.65196,
-   "lon": -3.03171,
-   "azimuth": 231,
-   "fov": 24,
-   "reach_km": 15,
-   "lift_m": 2,
-   "near_km": 0.08,
-   "hires": {
-    "src": "hires/blencathra.png",
-    "lat": 54.64076,
-    "lon": -3.04971,
-    "res": 3
-   },
-   "labels": [
-    {
-     "name": "Sharp Edge",
-     "lat": 54.64546,
-     "lon": -3.04596,
-     "kind": "ridge",
-     "sky": true
-    }
-   ]
-  },
-  {
-   "slug": "se-below",
-   "title": "Sharp Edge",
-   "subtitle": "from below Bannerdale Crags, looking south-west",
-   "lat": 54.64998,
-   "lon": -3.0384,
-   "azimuth": 225,
-   "fov": 46,
-   "reach_km": 15,
-   "lift_m": 2,
-   "near_km": 0.08,
-   "hires": {
-    "src": "hires/blencathra.png",
-    "lat": 54.64076,
-    "lon": -3.04971,
-    "res": 3
-   },
-   "labels": [
-    {
-     "name": "Sharp Edge",
-     "lat": 54.64546,
-     "lon": -3.04596,
-     "kind": "ridge",
-     "sky": true
-    }
-   ]
   }
  ]
 }
