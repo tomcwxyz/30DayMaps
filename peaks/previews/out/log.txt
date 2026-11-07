@@ -1,7 +1,7 @@
-bgr-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 162 m / 75 / 75
-bgr-contours-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 369 m / 162 m / 75
-tea-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 162 m / 75 / 75
-utmb-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 1050 / 1050 / 1050
-utmb-contours-night: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 1050 / 1050 / 1050
-l100-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 372 m / 50 / 50
-page errors: []
+bgr-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
+bgr-contours-navy: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
+tea-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 852 m / 807 m / 790 m
+utmb-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 4807 m / 4208 m / 3901 m
+utmb-contours-night: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 4807 m / 4208 m / 4121 m
+l100-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 978 m / 950 m / 930 m
+page errors: ['Failed to load resource: the server responded with a status of 502 ()']
