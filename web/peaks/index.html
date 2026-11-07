@@ -83,6 +83,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .range output { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; min-width: 4.8em; text-align: right; color: var(--fg); }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 .hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.4; }
+.rounds { display: grid; gap: 6px; margin-top: 10px; }
 .gpx { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 8px; padding: 10px; }
 .gpx input[type=file] { font: 13px var(--display); color: var(--muted); max-width: 100%; }
 .status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
@@ -119,6 +120,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
         <button type="button" id="find">Find</button>
       </div>
       <div class="results" id="results" aria-live="polite"></div>
+      <div class="rounds" id="roundsRow" hidden>
+        <span class="hint">Famous rounds and races</span>
+        <div class="chips" id="rounds" aria-label="Ready-made routes"></div>
+      </div>
       <div class="gpx">
         <label for="gpxFile">Or draw your own route (GPX from a watch or app)
           <input type="file" id="gpxFile" accept=".gpx,application/gpx+xml,application/xml,text/xml">
@@ -496,6 +501,7 @@ async function refresh() {
     if (id !== runId) return;
     const W = wordsNow(details);
     D.caption(D.layout(pw, ph, kind, W), items, th, W);
+    if (state.route && state.route.ready) creditText += "  ·  route along OpenStreetMap paths, routed by BRouter";
     if (lidar) creditText += "  ·  LiDAR © Environment Agency, Open Government Licence";
     D.credit(L, items, th, creditText);
     state.composed = { items, pw, ph };
@@ -593,6 +599,7 @@ function choosePlace(p, { keepStyle = true } = {}) {
   $("title").value = a ? a.title : p.name;
   $("subtitle").value = D.ll(p.lat, p.lon);
   for (const b of $("presets").children) b.setAttribute("aria-pressed", String(!!a && b.dataset.slug === a.slug));
+  for (const b of $("rounds").children) b.setAttribute("aria-pressed", "false");
   syncOutputs(); showFor(); schedule(0);
 }
 
@@ -634,15 +641,31 @@ async function search() {
   } catch (e) { $("results").innerHTML = "<p class='hint'>Search is not available just now.</p>"; }
 }
 
-async function loadGPX(file) {
+// A ready-made route ships as a GPX beside the page and loads exactly like an upload.
+async function loadRound(slug) {
+  const meta = (PLACES.routes || []).find(r => r.slug === slug);
+  if (!meta) return;
+  setStatus("Fetching the route…");
+  try {
+    const res = await fetch(`routes/${slug}.gpx`);
+    if (!res.ok) throw new Error(`${meta.name}: HTTP ${res.status}`);
+    const text = await res.text();
+    await loadGPX({ name: `${slug}.gpx`, text: async () => text }, meta);
+    for (const b of $("rounds").children) b.setAttribute("aria-pressed", String(b.dataset.slug === slug));
+  } catch (e) { setStatus(e.message, true); }
+}
+
+async function loadGPX(file, meta) {
   try {
     const r = parseGPX(await file.text(), file.name);
+    r.ready = meta ? meta.slug : "";
     state.route = r;
     prepareRoute(r);
     r.high = r.pts[0];   // replaced by the true high point once the terrain is in
     state.place = { lat: r.bbox.lat, lon: r.bbox.lon, name: r.name, region: "" };
-    $("title").value = r.name;
-    $("subtitle").value = r.date && !isNaN(r.date) ? r.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : D.ll(r.bbox.lat, r.bbox.lon);
+    $("title").value = meta ? meta.title : r.name;
+    $("subtitle").value = meta ? meta.subtitle : r.date && !isNaN(r.date) ? r.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : D.ll(r.bbox.lat, r.bbox.lon);
+    if (!meta) for (const b of $("rounds").children) b.setAttribute("aria-pressed", "false");
     $("gpxClear").hidden = false; $("trimRow").hidden = false;
     for (const b of $("presets").children) b.setAttribute("aria-pressed", "false");
     if (state.style === "skyline") setStyle("poster"); else { showFor(); schedule(0); }
@@ -749,7 +772,7 @@ function recipe() {
     title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), paper: $("paper").value, orient: $("orient").value,
     width: +$("width").value, detail: +$("detail").value, rows: +$("rows").value, seen: $("seenFrom").value || "S",
     dist: +$("dist").value, facing: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value,
-    route: state.route ? state.route.pts.length : 0,
+    route: state.route ? state.route.pts.length : 0, round: state.route && state.route.ready || "",
   };
 }
 async function order() {
@@ -772,6 +795,7 @@ async function applyRecipe(rc, encodedRoute) {
   if (rc.route) {
     const r = { name: rc.name, date: null, raw: Polyline.decode(encodedRoute || "") };
     if (r.raw.length !== rc.route) throw new Error("route doesn't match the recipe");
+    r.ready = rc.round || "";
     state.route = r; prepareRoute(r); r.high = r.pts[0];
     state.place = { lat: r.bbox.lat, lon: r.bbox.lon, name: rc.name, region: "" };
   } else {
@@ -834,6 +858,10 @@ function build() {
   $("find").onclick = search;
   $("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); search(); } });
   $("gpxFile").addEventListener("change", e => e.target.files[0] && loadGPX(e.target.files[0]));
+  const rounds = PLACES.routes || [];
+  $("roundsRow").hidden = !rounds.length;
+  $("rounds").innerHTML = rounds.map(r => `<button type="button" data-slug="${r.slug}" aria-pressed="false">${r.name}</button>`).join("");
+  $("rounds").onclick = e => { const b = e.target.closest("button"); if (b) loadRound(b.dataset.slug); };
   $("trim").addEventListener("change", () => { if (state.route) { prepareRoute(state.route); schedule(0); } });
   $("gpxClear").onclick = () => { const a = PLACES.areas[0]; choosePlace({ lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names }); };
   $("order").onclick = order;

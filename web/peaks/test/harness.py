@@ -236,6 +236,9 @@ def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
             try:
                 page.goto(base + f"?place={item.get('place', 'helvellyn')}")
                 wait_drawn(page)
+                if item.get("round"):
+                    page.click(f'#rounds button[data-slug="{item["round"]}"]')
+                    page.wait_for_timeout(500)
                 if item.get("gpx"):
                     page.set_input_files("#gpxFile", item["gpx"])
                     page.wait_for_timeout(500); wait_drawn(page)
