@@ -9,36 +9,12 @@
   "subtitle": "Blencathra"
  },
  {
-  "name": "sharpedge-skyline-night",
+  "name": "sharpedge-skyline-moss",
   "place": "blencathra",
   "style": "skyline",
-  "theme": "night",
+  "theme": "moss",
   "seen": "view:sharp-edge-from-bannerdale",
   "title": "Sharp Edge",
   "subtitle": "Blencathra"
- },
- {
-  "name": "blencathra-poster-paper",
-  "place": "blencathra",
-  "style": "poster",
-  "theme": "paper"
- },
- {
-  "name": "blencathra-poster-moss",
-  "place": "blencathra",
-  "style": "poster",
-  "theme": "moss"
- },
- {
-  "name": "blencathra-contours-white",
-  "place": "blencathra",
-  "style": "contours",
-  "theme": "white"
- },
- {
-  "name": "blencathra-ridgelines-night",
-  "place": "blencathra",
-  "style": "ridgelines",
-  "theme": "night"
  }
 ]
