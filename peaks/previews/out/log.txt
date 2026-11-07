@@ -1,6 +1,7 @@
-se-tele-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
-se-tele-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 868 m / 845 m / Blencathra
-se-below-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 544 M   ·   46° WIDE
-se-below-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 544 M   ·   46° WIDE
-se-below-poster: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+sharpedge-skyline-paper: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 543 M   ·   46° WIDE
+sharpedge-skyline-night: ok (1654, 1169) | A3 landscape · 420 × 297 mm | small print: 845 m / Blencathra / FROM BELOW BANNERDALE CRAGS, LOOKING SOUTH-WEST   ·   EYE 543 M   ·   46° WIDE
+blencathra-poster-paper: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+blencathra-poster-moss: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+blencathra-contours-white: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 868 m / 852 m / 805 m
+blencathra-ridgelines-night: ok (1169, 1654) | A3 portrait · 297 × 420 mm | small print: 54.6390° N   ·   3.0458° W / 64 WEST–EAST PROFILES   ·   4.5 KM ACROSS   ·   NORTH AT THE BACK / Elevation: Mapzen/Tilezen Terrain Tiles (AWS Open Data) incl. SRTM, EU-DEM, UK LiDAR  ·  summits © OpenStreetMap contributors
 page errors: []
