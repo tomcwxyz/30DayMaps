@@ -330,6 +330,11 @@
       }
       if (a >= occ - 0.03) seen.push({ name: n.name, off, ang: a, h, dist: dd, ridge });
     }
+    // a ridge label points at the skyline itself where it crosses that bearing
+    for (const p of seen) if (p.ridge) {
+      const c = Math.round((p.off + v.fov / 2) / v.fov * (cols - 1));
+      if (c >= 0 && c < cols) p.ang = layers[nb - 1][c];
+    }
     return { offs, layers, seaLo, seaHi, eye, sea, summits: seen, v };
   }
 
