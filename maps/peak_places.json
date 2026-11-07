@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look).",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge).",
  "areas": [
   {
    "slug": "helvellyn",
@@ -19,7 +19,19 @@
    "lat": 54.639,
    "lon": -3.0458,
    "width_km": 4.5,
-   "summit_m": 868
+   "summit_m": 868,
+   "ridges": [
+    {
+     "name": "Sharp Edge",
+     "lat": 54.64529,
+     "lon": -3.04595
+    },
+    {
+     "name": "Hall's Fell",
+     "lat": 54.63355,
+     "lon": -3.05185
+    }
+   ]
   },
   {
    "slug": "scafell",

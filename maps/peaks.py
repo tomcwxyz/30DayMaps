@@ -622,7 +622,13 @@ def web_places(path: Path = WEB_PLACES) -> Path:
     areas = []
     for a in PLACES["areas"]:
         view, crop = POSTERS.get(a["slug"], (None, None))
-        areas.append({**a, "names": summits(a["slug"]), "poster_view": view, "poster_crop": crop})
+        # Hand-named ridges replace any OpenStreetMap ridge within 400 m of them.
+        extra = [{**r, "kind": "ridge"} for r in a.get("ridges", [])]
+        near = lambda n: any(abs(n["lat"] - r["lat"]) * 111320 < 400 and
+                             abs(n["lon"] - r["lon"]) * 111320 * math.cos(math.radians(r["lat"])) < 400 for r in extra)
+        named = [n for n in summits(a["slug"]) if not (n.get("kind") == "ridge" and near(n))]
+        areas.append({**{k: v for k, v in a.items() if k != "ridges"}, "names": named + extra,
+                      "poster_view": view, "poster_crop": crop})
     views = [{**v, "names": summits(v["slug"])} for v in PLACES["views"]]
     path.write_text(json.dumps({"areas": areas, "views": views}, ensure_ascii=False, separators=(",", ":")))
     print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views)")
