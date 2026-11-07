@@ -120,7 +120,7 @@ def attach(page):
 
 
 def wait_drawn(page, timeout=600000):
-    page.wait_for_function("() => !document.getElementById('png').disabled && !document.getElementById('sheet').classList.contains('busy') && document.getElementById('status').textContent === ''", timeout=timeout)
+    page.wait_for_function("() => typeof state !== 'undefined' && state.composed && !document.getElementById('sheet').classList.contains('busy') && document.getElementById('status').textContent === ''", timeout=timeout)
 
 
 def errors_of(page):
@@ -190,12 +190,11 @@ def suite(out: Path, offline: bool = True):
         # downloads
         style("poster")
         page.wait_for_timeout(300); wait_drawn(page)
-        page.select_option("#dpi", "150")
         with page.expect_download(timeout=180000) as d:
-            page.click("#png")
+            page.evaluate("PeaksApp.file('png', 150 / 25.4)")
         png = out / d.value.suggested_filename; d.value.save_as(png)
         with page.expect_download(timeout=180000) as d:
-            page.click("#svg")
+            page.evaluate("PeaksApp.file('svg')")
         svg = out / d.value.suggested_filename; d.value.save_as(svg)
         print("downloads:", png.name, png.stat().st_size // 1024, "KB;", svg.name, svg.stat().st_size // 1024, "KB")
         print("errors:", errs)
@@ -216,3 +215,57 @@ if __name__ == "__main__" and sys.argv[1:2] in (["suite"], ["live"]):
             f.unlink()
         for f in o.glob("*-A3.png"):
             f.unlink()
+
+
+def custom(spec_file: Path, out: Path, offline: bool = False, dpi: int = 100):
+    """Render a list of designs from a JSON spec, each saved as a JPEG at `dpi`:
+    [{"name": "blencathra-poster", "place": "blencathra", "style": "poster", "theme": "paper",
+      "paper": "A3", "orient": "portrait", "gpx": "path/to/route.gpx", "title": "..."}]"""
+    from playwright.sync_api import sync_playwright
+    out.mkdir(parents=True, exist_ok=True)
+    spec = json.loads(Path(spec_file).read_text())
+    base = serve()
+    log = []
+    with sync_playwright() as pw:
+        b = pw.chromium.launch()
+        page = b.new_page(viewport={"width": 1400, "height": 1000}, accept_downloads=True)
+        errs = errors_of(page)
+        if offline:
+            attach(page)
+        for item in spec:
+            try:
+                page.goto(base + f"?place={item.get('place', 'helvellyn')}")
+                wait_drawn(page)
+                if item.get("gpx"):
+                    page.set_input_files("#gpxFile", item["gpx"])
+                    page.wait_for_timeout(500); wait_drawn(page)
+                page.click(f"#styles button[data-style={item['style']}]")
+                page.click(f"#themes button[data-theme={item.get('theme', 'paper')}]")
+                if item.get("seen"):
+                    page.select_option("#seenFrom", item["seen"])
+                if item.get("orient"):
+                    page.select_option("#orient", item["orient"])
+                if item.get("paper"):
+                    page.select_option("#paper", item["paper"])
+                for field in ("title", "subtitle"):
+                    if field in item:
+                        page.fill(f"#{field}", item[field])
+                page.wait_for_timeout(500); wait_drawn(page)
+                with page.expect_download(timeout=600000) as d:
+                    page.evaluate(f"PeaksApp.file('png', {dpi} / 25.4, 'x.png')")
+                png = out / f"{item['name']}.png"
+                d.value.save_as(png)
+                im = Image.open(png).convert("RGB")
+                im.save(out / f"{item['name']}.jpg", quality=86)
+                png.unlink()
+                log.append(f"{item['name']}: ok {im.size} | {page.text_content('#meta')} | small print: {page.evaluate('state.composed.items.filter(i => i.t === \"text\" && i.family === \"IBM Plex Mono\").map(i => i.s).slice(0, 3).join(\" / \")')}")
+            except Exception as e:
+                log.append(f"{item['name']}: FAILED {type(e).__name__}: {str(e)[:200]}")
+            print(log[-1], flush=True)
+        log.append(f"page errors: {[e for e in errs if '404' not in e]}")
+        b.close()
+    (out / "log.txt").write_text("\n".join(log) + "\n")
+
+
+if __name__ == "__main__" and sys.argv[1:2] == ["custom"]:
+    custom(Path(sys.argv[2]), Path(sys.argv[3]), offline="--offline" in sys.argv)

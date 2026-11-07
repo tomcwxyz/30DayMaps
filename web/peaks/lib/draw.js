@@ -160,6 +160,7 @@
     const mx = (frame.x1 - frame.x0) * 0.05, my = (frame.y1 - frame.y0) * 0.05;
     const cand = [];
     for (const p of names || []) {
+      if (p.kind === "ridge") continue;
       const [x, y] = T.toXY(g.lat, g.lon, p.lat, p.lon);
       if (x < frame.x0 + mx || x > frame.x1 - mx || y < frame.y0 + my || y > frame.y1 - my) continue;
       const h = p.ele || T.localMax(g, x, y, 80);
@@ -189,6 +190,23 @@
     return out;
   }
 
+  // Named ridges (Sharp Edge, Striding Edge…) in spaced capitals at their middle, as OS maps do.
+  function ridgeLabels(items, names, g, frame, M, box, th, u, avoid) {
+    const out = [], size = 2.2 * u, edge = 12 * u;
+    for (const p of names || []) {
+      if (p.kind !== "ridge" || out.length >= 5) continue;
+      const [gx, gy] = T.toXY(g.lat, g.lon, p.lat, p.lon);
+      const x = M.x(gx), y = M.y(gy);
+      if (x < box.x + edge || x > box.x + box.w - edge || y < box.y + edge || y > box.y + box.h - edge) continue;
+      const half = p.name.length * size * 0.42;
+      if (avoid.concat(out).some(([ax, ay, r]) => Math.abs(ax - x) < half + (r || 6 * u) * 0.5 && Math.abs(ay - y) < (r || 6 * u) * 0.5 + size)) continue;
+      items.push({ t: "text", x, y, s: p.name.toUpperCase(), size, family: SANS, weight: 500, fill: th.line, align: "center", base: "middle",
+                   spacing: 0.22, halo: { color: th.panel, width: 0.9 * u } });
+      out.push([x, y, half * 2]);
+    }
+    return out;
+  }
+
   function drawContours(items, { g, geo, frame, box, th, u, labels, names, filled, route }) {
     const M = mapping(frame, box);
     items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: th.panel });
@@ -209,6 +227,7 @@
     if (labels) {
       const peaks = pickSummits(names, g, frame, Math.round(6 * Math.sqrt(box.w * box.h) / 260), 0.14);
       avoid = avoid.concat(summitMarks(items, peaks, M, box, th, u));
+      if (frame.x1 - frame.x0 <= 12000) avoid = avoid.concat(ridgeLabels(items, names, g, frame, M, box, th, u, avoid));
       for (const l of contourLabels(geo, M, box, u, avoid))
         items.push({ t: "text", x: l.x, y: l.y, s: `${Math.round(l.level)}`, size: 1.95 * u, family: MONO, weight: 400, fill: th.line,
                      align: "center", base: "middle", rot: l.rot, halo: { color: filled && th.fills ? th.page : th.panel, width: 0.9 * u } });
@@ -259,12 +278,16 @@
     const res = g.res, reach = Math.min(v.reach, g.halfW, g.halfH), near = v.near != null ? v.near : 400;
     const eye = T.sample(g, 0, 0) + (v.lift || 2);
     const dist = [];
-    for (let d = near; d < 3000; d += res / 2) dist.push(d);
-    for (let d = Math.max(near, 3000); d < reach; d += res * 0.8) dist.push(d);
+    const fine = g.fine ? Math.hypot(g.fine.dx, g.fine.dy) + Math.hypot(g.fine.halfW, g.fine.halfH) : 0;   // where a finer patch may reach
+    for (let d = near; d < Math.max(3000, fine); d += d < fine ? g.fine.res * 0.75 : res / 2) dist.push(d);
+    for (let d = Math.max(near, 3000, fine); d < reach; d += res * 0.8) dist.push(d);
     const nb = 7, edges = [];
     const e0 = Math.max(near, 600) * 2.2;
     for (let i = 0; i < nb; i++) edges.push(e0 * (reach / e0) ** (i / (nb - 1)));
     const layers = edges.map(() => new Float32Array(cols));
+    // The last stretch of open sea seen in each band, as [lo, hi] angles: islands and far
+    // shores beyond it stand on that sea rather than reaching down to the nearer land.
+    const seaLo = edges.map(() => new Float32Array(cols).fill(-90)), seaHi = edges.map(() => new Float32Array(cols).fill(-90));
     const offs = new Float32Array(cols);
     let anySea = false;
     for (let c = 0; c < cols; c++) {
@@ -276,8 +299,12 @@
         while (b < nb && d > edges[b]) layers[b++][c] = m;
         if (b >= nb) break;
         const z = T.sample(g, sx * d, sy * d);
-        if (z <= 0.5) { anySea = true; continue; }
-        const a = Math.atan2(z - d * d * REFRACT / (2 * EARTH_R) - eye, d) * 180 / Math.PI;
+        const a = Math.atan2(Math.max(z, 0) - d * d * REFRACT / (2 * EARTH_R) - eye, d) * 180 / Math.PI;
+        if (z <= 0.5) {
+          anySea = true;
+          if (a > m) { if (seaHi[b][c] < m - 0.1) seaLo[b][c] = m; seaHi[b][c] = a; m = a; }
+          continue;
+        }
         if (a > m) m = a;
       }
       while (b < nb) layers[b++][c] = m;
@@ -286,12 +313,14 @@
     // named summits that stand on the horizon
     const seen = [];
     for (const n of names || []) {
+      const ridge = n.kind === "ridge";
+      if (ridge && !n.sky) continue;   // only hand-placed ridge labels go on a skyline
       const [x, y] = T.toXY(g.lat, g.lon, n.lat, n.lon);
       const dd = Math.hypot(x, y);
       if (dd < near + 300 || dd > reach) continue;
       const off = ((Math.atan2(x, y) * 180 / Math.PI - v.az + 540) % 360) - 180;
       if (Math.abs(off) > v.fov / 2 * 0.97) continue;
-      const h = Math.max(n.ele || 0, T.localMax(g, x, y, 90));
+      const h = ridge ? T.localMax(g, x, y, 25) : Math.max(n.ele || 0, T.localMax(g, x, y, 90));
       const a = Math.atan2(h - dd * dd * REFRACT / (2 * EARTH_R) - eye, dd) * 180 / Math.PI;
       let occ = -90;
       for (const d of dist) {
@@ -299,9 +328,14 @@
         const z = T.sample(g, x / dd * d, y / dd * d);
         occ = Math.max(occ, Math.atan2(z - d * d * REFRACT / (2 * EARTH_R) - eye, d) * 180 / Math.PI);
       }
-      if (a >= occ - 0.03) seen.push({ name: n.name, off, ang: a, h, dist: dd });
+      if (a >= occ - 0.03) seen.push({ name: n.name, off, ang: a, h, dist: dd, ridge });
     }
-    return { offs, layers, eye, sea, summits: seen, v };
+    // a ridge label points at the skyline itself where it crosses that bearing
+    for (const p of seen) if (p.ridge) {
+      const c = Math.round((p.off + v.fov / 2) / v.fov * (cols - 1));
+      if (c >= 0 && c < cols) p.ang = layers[nb - 1][c];
+    }
+    return { offs, layers, seaLo, seaHi, eye, sea, summits: seen, v };
   }
 
   function drawSkyline(items, { sd, box, th, u, labels, labelRoom, crop, colours, sky = true, compass = false, exag = 0 }) {
@@ -337,7 +371,8 @@
     const Y = a => box.y + box.h - (a - yLo) / (yHi - yLo) * box.h;
     if (sky) items.push({ t: "grad", x: box.x, y: box.y, w: box.w, h: box.h, top: skyTop, bottom: skyBottom });
     items.push({ t: "clip", x: box.x, y: box.y, w: box.w, h: box.h });
-    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: mix(far, near, 0.45) });
+    const seaFill = mix(skyBottom, far, 0.55);   // sea: paler than any land
+    if (sd.sea != null) items.push({ t: "rect", x: box.x, y: Y(sd.sea), w: box.w, h: box.y + box.h - Y(sd.sea), fill: seaFill });
     const n = L.length, cols = offs.length;
     for (let i = n - 1; i >= 0; i--) {
       const t = (n - 1 - i) / Math.max(1, n - 1);
@@ -346,12 +381,28 @@
       for (let c = 0; c < cols; c++) { pts[2 * c] = X(offs[c]); pts[2 * c + 1] = Math.min(box.y + box.h + 5, Y(Math.max(L[i][c], yLo - span))); }
       pts[2 * cols] = box.x + box.w; pts[2 * cols + 1] = box.y + box.h + 5; pts[2 * cols + 2] = box.x; pts[2 * cols + 3] = box.y + box.h + 5;
       items.push({ t: "path", rings: [pts], fill });
+      // open sea in this band, in front of anything further away
+      const hi = sd.seaHi && sd.seaHi[i].subarray(x0, x1 + 1), lo = sd.seaLo && sd.seaLo[i].subarray(x0, x1 + 1);
+      if (hi) {
+        let c = 0;
+        while (c < cols) {
+          if (hi[c] <= lo[c] || hi[c] <= -89) { c++; continue; }
+          let e = c;
+          while (e + 1 < cols && hi[e + 1] > lo[e + 1] && hi[e + 1] > -89) e++;
+          const ring = [];
+          for (let k = c; k <= e; k++) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(hi[k], yLo - span))) - (hi[k] >= L[i][k] - 1e-4 ? 0.3 * u : 0));   // cover the land edge where the sea is the top
+          for (let k = e; k >= c; k--) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(lo[k], yLo - span)) + 0.4 * u));   // overlap the strip below: no seams
+          if (e === c) { ring.splice(2, 0, X(offs[c]) + 0.01, ring[1]); ring.push(X(offs[c]) + 0.01, ring[ring.length - 1]); }
+          items.push({ t: "path", rings: [Float32Array.from(ring)], fill: seaFill });
+          c = e + 1;
+        }
+      }
     }
     items.push({ t: "unclip" });
     if (labels && sd.summits.length) {
       const lo = offs[0], hi = offs[offs.length - 1], sep = (hi - lo) / Math.max(8, box.w / (22 * u));
       const keep = [];
-      for (const p of sd.summits.filter(p => p.off >= lo && p.off <= hi).sort((a, b) => b.h - a.h)) {
+      for (const p of sd.summits.filter(p => p.off >= lo && p.off <= hi).sort((a, b) => (b.ridge ? 1e9 : b.h) - (a.ridge ? 1e9 : a.h))) {
         if (keep.every(q => Math.abs(p.off - q.off) > sep)) keep.push(p);
         if (keep.length >= Math.round(box.w / (24 * u))) break;
       }
@@ -362,7 +413,7 @@
         const x = X(p.off);
         items.push({ t: "line", pts: [x, Y(p.ang) - 1.2 * u, x, yy + 1.2 * u], stroke: th.muted, w: 0.15 * u });
         items.push({ t: "text", x, y: yy - 2.6 * u, s: p.name, size: 2.35 * u, family: SANS, weight: 500, fill: th.text, align: "center", base: "bottom" });
-        items.push({ t: "text", x, y: yy - 2.4 * u, s: `${Math.round(p.h)} m`, size: 1.95 * u, family: MONO, weight: 400, fill: th.muted, align: "center", base: "top" });
+        if (!p.ridge) items.push({ t: "text", x, y: yy - 2.4 * u, s: `${Math.round(p.h)} m`, size: 1.95 * u, family: MONO, weight: 400, fill: th.muted, align: "center", base: "top" });
       });
     }
     if (compass) {

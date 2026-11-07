@@ -1,0 +1,72 @@
+{
+  "_help": "Same rules as web/footprints/shop.json. Prices are in pence; a size with price null is not for sale as a print. Panoramas come in two 3:1 sheets that fit standard panoramic frames: pano75 (25 × 75 cm, Prodigi 10 × 30 in) and pano90 (30 × 90 cm, Prodigi 12 × 36 in). site is where the order emails and download links point. email.from_name replaces the display name in SHOP_EMAIL_FROM for this shop's emails (same address).",
+  "site": "https://peaks.tomcw.xyz",
+  "currency": "gbp",
+  "countries": [
+    "GB"
+  ],
+  "sizes": {
+    "A4": {
+      "label": "A4 print, unframed, matte art paper",
+      "price": 2200,
+      "prodigi_sku": "GLOBAL-FAP-A4"
+    },
+    "A3": {
+      "label": "A3 print, unframed, matte art paper",
+      "price": 2600,
+      "prodigi_sku": "GLOBAL-FAP-A3"
+    },
+    "A2": {
+      "label": "A2 print, unframed, matte art paper",
+      "price": 3000,
+      "prodigi_sku": "GLOBAL-FAP-A2"
+    },
+    "A1": {
+      "label": "A1 print, unframed, matte art paper",
+      "price": 3500,
+      "prodigi_sku": "GLOBAL-FAP-A1"
+    },
+    "50x70": {
+      "label": "50 × 70 cm print, unframed, matte art paper",
+      "price": 3200,
+      "prodigi_sku": "GLOBAL-FAP-20X28"
+    },
+    "square": {
+      "label": "30 × 30 cm print, unframed, matte art paper",
+      "price": 2200,
+      "prodigi_sku": "GLOBAL-FAP-12X12"
+    },
+    "pano75": {
+      "label": "75 × 25 cm panoramic print, unframed, matte art paper",
+      "price": 2800,
+      "prodigi_sku": "GLOBAL-FAP-10X30"
+    },
+    "pano90": {
+      "label": "90 × 30 cm panoramic print, unframed, matte art paper",
+      "price": 3000,
+      "prodigi_sku": "GLOBAL-FAP-12X36"
+    }
+  },
+  "shipping": {
+    "label": "Free UK delivery",
+    "price": 0
+  },
+  "digital": {
+    "label": "Digital file by email",
+    "price": 500,
+    "link_days": 30
+  },
+  "email": {
+    "signoff": "Tom",
+    "from_name": "Peaks",
+    "brand": "Peaks",
+    "thing": "peaks print",
+    "made": "drawn just now from open elevation data"
+  },
+  "fulfilment": {
+    "provider": "prodigi",
+    "shipping_method": "Standard"
+  },
+  "note": "Printed to order. Personalised prints can't be returned unless they arrive faulty or damaged.",
+  "digital_note": "Your file is made for you and emailed straight away. By paying you agree to that, and that you lose the 14-day right to cancel once it's sent."
+}

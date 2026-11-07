@@ -7,7 +7,8 @@
 "x": 4654.7,
 "y": 7180.9,
 "ele": 4121.0,
-"osm": 26862462
+"osm": 26862462,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tré-la-Tête Centrale Sud-Est",
@@ -17,7 +18,8 @@
 "x": -7379.8,
 "y": -8375.1,
 "ele": 3930.0,
-"osm": 26862463
+"osm": 26862463,
+"kind": "peak"
 },
 {
 "name": "Grandes Jorasses / Pointe Walker",
@@ -27,7 +29,8 @@
 "x": 6132.8,
 "y": -201.9,
 "ele": 4208.0,
-"osm": 26863024
+"osm": 26863024,
+"kind": "peak"
 },
 {
 "name": "Mont Berrio Blanc",
@@ -37,7 +40,8 @@
 "x": -935.9,
 "y": -12990.5,
 "ele": 3252.0,
-"osm": 26863796
+"osm": 26863796,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Midi",
@@ -47,7 +51,8 @@
 "x": -1758.3,
 "y": 960.9,
 "ele": 3842.0,
-"osm": 167075493
+"osm": 167075493,
+"kind": "peak"
 },
 {
 "name": "Signal Forbes",
@@ -57,7 +62,8 @@
 "x": 191.4,
 "y": 6499.0,
 "ele": 2200.0,
-"osm": 275445172
+"osm": 275445172,
+"kind": "peak"
 },
 {
 "name": "Mont Blanc / Monte Bianco",
@@ -67,7 +73,8 @@
 "x": -3483.1,
 "y": -4144.2,
 "ele": 4807.3,
-"osm": 281399025
+"osm": 281399025,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Chardonnet",
@@ -77,7 +84,8 @@
 "x": 7095.9,
 "y": 10930.8,
 "ele": 3824.0,
-"osm": 290497892
+"osm": 290497892,
+"kind": "peak"
 },
 {
 "name": "Aiguille d'Argentière",
@@ -87,7 +95,8 @@
 "x": 8543.5,
 "y": 9978.4,
 "ele": 3901.0,
-"osm": 290497894
+"osm": 290497894,
+"kind": "peak"
 },
 {
 "name": "Pointe Hélène / Punta Elena",
@@ -97,7 +106,8 @@
 "x": 5384.0,
 "y": -135.8,
 "ele": 4045.0,
-"osm": 307195492
+"osm": 307195492,
+"kind": "peak"
 },
 {
 "name": "Pointe Croz / Punta Croz",
@@ -107,7 +117,8 @@
 "x": 5600.9,
 "y": -82.0,
 "ele": 4110.0,
-"osm": 307195496
+"osm": 307195496,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Leschaux",
@@ -117,7 +128,8 @@
 "x": 7504.0,
 "y": 1916.8,
 "ele": 3759.0,
-"osm": 307195544
+"osm": 307195544,
+"kind": "peak"
 },
 {
 "name": "Aiguille de l'Éboulement",
@@ -127,7 +139,8 @@
 "x": 7218.5,
 "y": 2579.2,
 "ele": 3599.0,
-"osm": 307195567
+"osm": 307195567,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Talèfre",
@@ -137,7 +150,8 @@
 "x": 7277.8,
 "y": 3283.1,
 "ele": 3730.0,
-"osm": 307195579
+"osm": 307195579,
+"kind": "peak"
 },
 {
 "name": "Pointe du Domino / Punta del Domino",
@@ -147,7 +161,8 @@
 "x": 9391.0,
 "y": 5633.6,
 "ele": 3648.0,
-"osm": 307195602
+"osm": 307195602,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Glaciers",
@@ -157,7 +172,8 @@
 "x": -8355.0,
 "y": -10176.6,
 "ele": 3815.0,
-"osm": 307676211
+"osm": 307676211,
+"kind": "peak"
 },
 {
 "name": "Triangle de l'Herse",
@@ -167,7 +183,8 @@
 "x": 2963.6,
 "y": 9585.1,
 "ele": 2557.0,
-"osm": 340230288
+"osm": 340230288,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Rochefort",
@@ -177,7 +194,8 @@
 "x": 3880.6,
 "y": -876.6,
 "ele": 4001.0,
-"osm": 340235998
+"osm": 340235998,
+"kind": "peak"
 },
 {
 "name": "Pointe d'Anterne",
@@ -187,7 +205,8 @@
 "x": -9695.6,
 "y": 12225.2,
 "ele": 2733.0,
-"osm": 343481677
+"osm": 343481677,
+"kind": "peak"
 },
 {
 "name": "Mont Blanc du Tacul",
@@ -197,7 +216,8 @@
 "x": -1712.1,
 "y": -1490.3,
 "ele": 4248.0,
-"osm": 344715573
+"osm": 344715573,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Plan",
@@ -207,7 +227,8 @@
 "x": -215.1,
 "y": 2412.0,
 "ele": 3673.0,
-"osm": 344715578
+"osm": 344715578,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Blaitière",
@@ -217,7 +238,8 @@
 "x": 236.4,
 "y": 3254.3,
 "ele": 3522.0,
-"osm": 344715579
+"osm": 344715579,
+"kind": "peak"
 },
 {
 "name": "Grand Dru",
@@ -227,7 +249,8 @@
 "x": 3584.8,
 "y": 6984.2,
 "ele": 3754.0,
-"osm": 344715583
+"osm": 344715583,
+"kind": "peak"
 },
 {
 "name": "Les Droites",
@@ -237,7 +260,8 @@
 "x": 6150.9,
 "y": 6748.1,
 "ele": 4000.0,
-"osm": 344715584
+"osm": 344715584,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Tacul",
@@ -247,7 +271,8 @@
 "x": 3941.7,
 "y": 1595.9,
 "ele": 3444.0,
-"osm": 344715662
+"osm": 344715662,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Bionnassay",
@@ -257,7 +282,8 @@
 "x": -7095.3,
 "y": -3769.0,
 "ele": 4052.0,
-"osm": 366260714
+"osm": 366260714,
+"kind": "peak"
 },
 {
 "name": "Petit Mont Blanc",
@@ -267,7 +293,8 @@
 "x": -5989.7,
 "y": -8692.0,
 "ele": 3431.0,
-"osm": 367510882
+"osm": 367510882,
+"kind": "peak"
 },
 {
 "name": "Monte Gruetta",
@@ -277,7 +304,8 @@
 "x": 8612.5,
 "y": 1587.4,
 "ele": 3686.0,
-"osm": 367945270
+"osm": 367945270,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Grands Charmoz",
@@ -287,7 +315,8 @@
 "x": 686.1,
 "y": 3804.8,
 "ele": 3445.0,
-"osm": 367945274
+"osm": 367945274,
+"kind": "peak"
 },
 {
 "name": "Dent du Requin",
@@ -297,7 +326,8 @@
 "x": 592.9,
 "y": 1958.5,
 "ele": 3422.0,
-"osm": 367945276
+"osm": 367945276,
+"kind": "peak"
 },
 {
 "name": "Les Périades",
@@ -307,7 +337,8 @@
 "x": 4051.3,
 "y": 1218.3,
 "ele": 3503.0,
-"osm": 367945277
+"osm": 367945277,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Moine",
@@ -317,7 +348,8 @@
 "x": 3990.2,
 "y": 5184.3,
 "ele": 3412.0,
-"osm": 367945278
+"osm": 367945278,
+"kind": "peak"
 },
 {
 "name": "Petites Jorasses",
@@ -327,7 +359,8 @@
 "x": 7189.1,
 "y": 1305.2,
 "ele": 3650.0,
-"osm": 367945279
+"osm": 367945279,
+"kind": "peak"
 },
 {
 "name": "Mont Mallet",
@@ -337,7 +370,8 @@
 "x": 3965.0,
 "y": -491.9,
 "ele": 3970.0,
-"osm": 367945280
+"osm": 367945280,
+"kind": "peak"
 },
 {
 "name": "Grand Flambeau",
@@ -347,7 +381,8 @@
 "x": 1371.4,
 "y": -2483.8,
 "ele": 3569.0,
-"osm": 367945303
+"osm": 367945303,
+"kind": "peak"
 },
 {
 "name": "Aiguille Blanche de Peuterey - Nord",
@@ -357,7 +392,8 @@
 "x": -2233.1,
 "y": -5140.1,
 "ele": 4098.0,
-"osm": 367945311
+"osm": 367945311,
+"kind": "peak"
 },
 {
 "name": "Aiguille Noire de Peuterey",
@@ -367,7 +403,8 @@
 "x": -1289.9,
 "y": -6092.8,
 "ele": 3772.0,
-"osm": 367945312
+"osm": 367945312,
+"kind": "peak"
 },
 {
 "name": "Dômes de Miage",
@@ -377,7 +414,8 @@
 "x": -8527.8,
 "y": -6077.5,
 "ele": 3673.0,
-"osm": 367945330
+"osm": 367945330,
+"kind": "peak"
 },
 {
 "name": "Aiguille Brouillard",
@@ -387,7 +425,8 @@
 "x": -3881.1,
 "y": -7050.2,
 "ele": 3353.0,
-"osm": 367945331
+"osm": 367945331,
+"kind": "peak"
 },
 {
 "name": "Tête Carrée",
@@ -397,7 +436,8 @@
 "x": -7632.9,
 "y": -7584.1,
 "ele": 3752.0,
-"osm": 367945332
+"osm": 367945332,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Échelettes",
@@ -407,7 +447,8 @@
 "x": -6861.7,
 "y": -10699.2,
 "ele": 2975.0,
-"osm": 367945337
+"osm": 367945337,
+"kind": "peak"
 },
 {
 "name": "Le Grand Capucin",
@@ -417,7 +458,8 @@
 "x": -793.9,
 "y": -1997.3,
 "ele": 3838.0,
-"osm": 367945343
+"osm": 367945343,
+"kind": "peak"
 },
 {
 "name": "Aiguille de l'M",
@@ -427,7 +469,8 @@
 "x": 201.7,
 "y": 4693.5,
 "ele": 2844.0,
-"osm": 369467780
+"osm": 369467780,
+"kind": "peak"
 },
 {
 "name": "Le Cardinal",
@@ -437,7 +480,8 @@
 "x": 4305.0,
 "y": 6469.8,
 "ele": 3638.0,
-"osm": 369467782
+"osm": 369467782,
+"kind": "peak"
 },
 {
 "name": "L'Évêque",
@@ -447,7 +491,8 @@
 "x": 4034.9,
 "y": 6028.9,
 "ele": 3469.0,
-"osm": 369467784
+"osm": 369467784,
+"kind": "peak"
 },
 {
 "name": "La Nonne",
@@ -457,7 +502,8 @@
 "x": 3923.9,
 "y": 5569.7,
 "ele": 3341.0,
-"osm": 369467786
+"osm": 369467786,
+"kind": "peak"
 },
 {
 "name": "Le Brévent",
@@ -467,7 +513,8 @@
 "x": -5596.8,
 "y": 7106.3,
 "ele": 2525.0,
-"osm": 436622732
+"osm": 436622732,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Crochues",
@@ -477,7 +524,8 @@
 "x": -2791.3,
 "y": 12427.2,
 "ele": 2837.0,
-"osm": 469385443
+"osm": 469385443,
+"kind": "peak"
 },
 {
 "name": "Pointe Gaspard",
@@ -487,7 +535,8 @@
 "x": -2957.3,
 "y": 12090.8,
 "ele": 2741.0,
-"osm": 469385444
+"osm": 469385444,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Crochues - Sommet S",
@@ -497,7 +546,8 @@
 "x": -2855.4,
 "y": 12267.8,
 "ele": 2840.0,
-"osm": 469385447
+"osm": 469385447,
+"kind": "peak"
 },
 {
 "name": "Petite Aiguille de la Floria",
@@ -507,7 +557,8 @@
 "x": -3343.8,
 "y": 11611.7,
 "ele": 2826.0,
-"osm": 469385450
+"osm": 469385450,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Floria",
@@ -517,7 +568,8 @@
 "x": -3203.6,
 "y": 11769.9,
 "ele": 2888.0,
-"osm": 469385451
+"osm": 469385451,
+"kind": "peak"
 },
 {
 "name": "Index de la Glière",
@@ -527,7 +579,8 @@
 "x": -3084.6,
 "y": 10872.4,
 "ele": 2595.0,
-"osm": 469385452
+"osm": 469385452,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Glière Sud",
@@ -537,7 +590,8 @@
 "x": -3577.3,
 "y": 11086.3,
 "ele": 2836.0,
-"osm": 469385453
+"osm": 469385453,
+"kind": "peak"
 },
 {
 "name": "Aiguille Inférieure de la Floria",
@@ -547,7 +601,8 @@
 "x": -3475.3,
 "y": 11238.8,
 "ele": 2850.0,
-"osm": 469385454
+"osm": 469385454,
+"kind": "peak"
 },
 {
 "name": "Aiguille Nord de la Glière",
@@ -557,7 +612,8 @@
 "x": -3540.1,
 "y": 11270.4,
 "ele": 2846.0,
-"osm": 469385455
+"osm": 469385455,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Pouce",
@@ -567,7 +623,8 @@
 "x": -3967.3,
 "y": 11468.9,
 "ele": 2873.0,
-"osm": 469385456
+"osm": 469385456,
+"kind": "peak"
 },
 {
 "name": "Chapelle de la Glière",
@@ -577,7 +634,8 @@
 "x": -3407.2,
 "y": 10690.1,
 "ele": 2663.0,
-"osm": 469385458
+"osm": 469385458,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Charlanon",
@@ -587,7 +645,8 @@
 "x": -4624.9,
 "y": 9357.4,
 "ele": 2549.0,
-"osm": 469385462
+"osm": 469385462,
+"kind": "peak"
 },
 {
 "name": "Clocher de Planpraz",
@@ -597,7 +656,8 @@
 "x": -5023.5,
 "y": 8523.9,
 "ele": 2412.0,
-"osm": 469385464
+"osm": 469385464,
+"kind": "peak"
 },
 {
 "name": "Pointe Noire de Pormenaz",
@@ -607,7 +667,8 @@
 "x": -8440.3,
 "y": 9826.2,
 "ele": 2323.0,
-"osm": 469385467
+"osm": 469385467,
+"kind": "peak"
 },
 {
 "name": "Pointe de la Ratelière",
@@ -617,7 +678,8 @@
 "x": -9807.6,
 "y": 11935.1,
 "ele": 2708.0,
-"osm": 469385674
+"osm": 469385674,
+"kind": "peak"
 },
 {
 "name": "Tête Blanche",
@@ -627,7 +689,8 @@
 "x": 8515.7,
 "y": 12666.7,
 "ele": 3421.0,
-"osm": 473228789
+"osm": 473228789,
+"kind": "peak"
 },
 {
 "name": "Petit Dru",
@@ -637,7 +700,8 @@
 "x": 3479.3,
 "y": 6980.2,
 "ele": 3733.0,
-"osm": 503688240
+"osm": 503688240,
+"kind": "peak"
 },
 {
 "name": "Les Courtes",
@@ -647,7 +711,8 @@
 "x": 7230.1,
 "y": 6387.6,
 "ele": 3856.0,
-"osm": 503688527
+"osm": 503688527,
+"kind": "peak"
 },
 {
 "name": "Aiguille Chenavier",
@@ -657,7 +722,8 @@
 "x": 7410.8,
 "y": 6268.1,
 "ele": 3799.0,
-"osm": 503688529
+"osm": 503688529,
+"kind": "peak"
 },
 {
 "name": "Aiguille qui Remue",
@@ -667,7 +733,8 @@
 "x": 7525.0,
 "y": 6073.1,
 "ele": 3724.0,
-"osm": 503688530
+"osm": 503688530,
+"kind": "peak"
 },
 {
 "name": "Pointe de Pré de Bar Est",
@@ -677,7 +744,8 @@
 "x": 9942.5,
 "y": 5709.3,
 "ele": 3658.0,
-"osm": 503688535
+"osm": 503688535,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Jardin",
@@ -687,7 +755,8 @@
 "x": 5114.9,
 "y": 7103.0,
 "ele": 4035.0,
-"osm": 503688743
+"osm": 503688743,
+"kind": "peak"
 },
 {
 "name": "Grande Rocheuse",
@@ -697,7 +766,8 @@
 "x": 4866.7,
 "y": 7169.8,
 "ele": 4102.0,
-"osm": 503688744
+"osm": 503688744,
+"kind": "peak"
 },
 {
 "name": "Aiguille Sans Nom",
@@ -707,7 +777,8 @@
 "x": 4205.4,
 "y": 7043.9,
 "ele": 3982.0,
-"osm": 503688748
+"osm": 503688748,
+"kind": "peak"
 },
 {
 "name": "Diamant des Flammes de Pierre",
@@ -717,7 +788,8 @@
 "x": 2739.7,
 "y": 6141.3,
 "ele": 2850.0,
-"osm": 503688799
+"osm": 503688799,
+"kind": "peak"
 },
 {
 "name": "Pointe de Frébouze - Antoldi",
@@ -727,7 +799,8 @@
 "x": 6866.4,
 "y": 961.5,
 "ele": 3530.0,
-"osm": 503688811
+"osm": 503688811,
+"kind": "peak"
 },
 {
 "name": "Pointe Marguerite / Punta Margherita",
@@ -737,7 +810,8 @@
 "x": 5269.1,
 "y": -156.5,
 "ele": 4065.0,
-"osm": 503688816
+"osm": 503688816,
+"kind": "peak"
 },
 {
 "name": "Pointe Yeld",
@@ -747,7 +821,8 @@
 "x": 2630.3,
 "y": -459.8,
 "ele": 3560.0,
-"osm": 503688820
+"osm": 503688820,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Marbrées Nord",
@@ -757,7 +832,8 @@
 "x": 2406.2,
 "y": -2069.8,
 "ele": 3535.0,
-"osm": 503688821
+"osm": 503688821,
+"kind": "peak"
 },
 {
 "name": "Pointe Sisyphe",
@@ -767,7 +843,8 @@
 "x": 3884.1,
 "y": 512.2,
 "ele": 3460.0,
-"osm": 503688825
+"osm": 503688825,
+"kind": "peak"
 },
 {
 "name": "Petite Fourche",
@@ -777,7 +854,8 @@
 "x": 8693.6,
 "y": 12299.1,
 "ele": 3512.0,
-"osm": 519333132
+"osm": 519333132,
+"kind": "peak"
 },
 {
 "name": "Dôme des Glaciers",
@@ -787,7 +865,8 @@
 "x": -8725.5,
 "y": -10080.2,
 "ele": 3592.0,
-"osm": 527040376
+"osm": 527040376,
+"kind": "peak"
 },
 {
 "name": "Gros Rognon",
@@ -797,7 +876,8 @@
 "x": -435.6,
 "y": -154.4,
 "ele": 3541.0,
-"osm": 705002228
+"osm": 705002228,
+"kind": "peak"
 },
 {
 "name": "Petit Flambeau",
@@ -807,7 +887,8 @@
 "x": 1490.7,
 "y": -2005.7,
 "ele": 3440.0,
-"osm": 705002231
+"osm": 705002231,
+"kind": "peak"
 },
 {
 "name": "Mont Fortin",
@@ -817,7 +898,8 @@
 "x": -3064.3,
 "y": -11849.8,
 "ele": 2758.0,
-"osm": 796564567
+"osm": 796564567,
+"kind": "peak"
 },
 {
 "name": "Punta Innominata",
@@ -827,7 +909,8 @@
 "x": -2610.6,
 "y": -5966.9,
 "ele": 3731.0,
-"osm": 808543806
+"osm": 808543806,
+"kind": "peak"
 },
 {
 "name": "Aiguille Croux",
@@ -837,7 +920,8 @@
 "x": -1937.8,
 "y": -6589.4,
 "ele": 3256.0,
-"osm": 808543830
+"osm": 808543830,
+"kind": "peak"
 },
 {
 "name": "Pointe Baretti",
@@ -847,7 +931,8 @@
 "x": -3617.2,
 "y": -6181.4,
 "ele": 4013.0,
-"osm": 808543881
+"osm": 808543881,
+"kind": "peak"
 },
 {
 "name": "Grand Pilier d'Angle",
@@ -857,7 +942,8 @@
 "x": -2347.1,
 "y": -4684.3,
 "ele": 4243.0,
-"osm": 808543911
+"osm": 808543911,
+"kind": "peak"
 },
 {
 "name": "Mont Brouillard",
@@ -867,7 +953,8 @@
 "x": -3495.8,
 "y": -5823.4,
 "ele": 4069.0,
-"osm": 808544029
+"osm": 808544029,
+"kind": "peak"
 },
 {
 "name": "Picco Luigi Amedeo",
@@ -877,7 +964,8 @@
 "x": -3486.8,
 "y": -5344.3,
 "ele": 4460.0,
-"osm": 808544051
+"osm": 808544051,
+"kind": "peak"
 },
 {
 "name": "Mont Lachat",
@@ -887,7 +975,8 @@
 "x": -9040.0,
 "y": 107.1,
 "ele": 2115.0,
-"osm": 857445444
+"osm": 857445444,
+"kind": "peak"
 },
 {
 "name": "Dômes de Miage (5ème dôme)",
@@ -897,7 +986,8 @@
 "x": -8293.8,
 "y": -6007.9,
 "ele": 3672.0,
-"osm": 857445639
+"osm": 857445639,
+"kind": "peak"
 },
 {
 "name": "Dômes de Miage (2nd dôme)",
@@ -907,7 +997,8 @@
 "x": -9021.6,
 "y": -6269.9,
 "ele": 3633.0,
-"osm": 857445641
+"osm": 857445641,
+"kind": "peak"
 },
 {
 "name": "Dômes de Miage - Pointe Sud-Ouest",
@@ -917,7 +1008,8 @@
 "x": -9343.6,
 "y": -6614.5,
 "ele": 3670.0,
-"osm": 857445645
+"osm": 857445645,
+"kind": "peak"
 },
 {
 "name": "Piton des Italiens",
@@ -927,7 +1019,8 @@
 "x": -6181.7,
 "y": -3641.7,
 "ele": 4002.0,
-"osm": 857445692
+"osm": 857445692,
+"kind": "peak"
 },
 {
 "name": "Mont Chétif",
@@ -937,7 +1030,8 @@
 "x": 3018.0,
 "y": -7818.8,
 "ele": 2343.0,
-"osm": 963399583
+"osm": 963399583,
+"kind": "peak"
 },
 {
 "name": "Tête du Grand Mont",
@@ -947,7 +1041,8 @@
 "x": 2872.0,
 "y": -11703.2,
 "ele": 2737.0,
-"osm": 963457055
+"osm": 963457055,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Toula",
@@ -957,7 +1052,8 @@
 "x": 914.0,
 "y": -2452.0,
 "ele": 3528.0,
-"osm": 964735608
+"osm": 964735608,
+"kind": "peak"
 },
 {
 "name": "Mont Percé",
@@ -967,7 +1063,8 @@
 "x": -4606.8,
 "y": -12599.0,
 "ele": 2844.0,
-"osm": 967023429
+"osm": 967023429,
+"kind": "peak"
 },
 {
 "name": "Testa di Liconi",
@@ -977,7 +1074,8 @@
 "x": 8467.6,
 "y": -8073.6,
 "ele": 2929.0,
-"osm": 985177435
+"osm": 985177435,
+"kind": "peak"
 },
 {
 "name": "Tête Neyron",
@@ -987,7 +1085,8 @@
 "x": 1758.4,
 "y": -8493.6,
 "ele": 2044.1,
-"osm": 1119368976
+"osm": 1119368976,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Roc",
@@ -997,7 +1096,8 @@
 "x": 852.0,
 "y": 3553.6,
 "ele": 3409.0,
-"osm": 1241259938
+"osm": 1241259938,
+"kind": "peak"
 },
 {
 "name": "Dent du Caïman",
@@ -1007,7 +1107,8 @@
 "x": -75.1,
 "y": 2714.3,
 "ele": 3554.0,
-"osm": 1241259959
+"osm": 1241259959,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Fou",
@@ -1017,7 +1118,8 @@
 "x": 182.0,
 "y": 3039.5,
 "ele": 3501.0,
-"osm": 1241260041
+"osm": 1241260041,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Ciseaux",
@@ -1027,7 +1129,8 @@
 "x": 211.1,
 "y": 3131.9,
 "ele": 3479.0,
-"osm": 1241260056
+"osm": 1241260056,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Grépon",
@@ -1037,7 +1140,8 @@
 "x": 703.0,
 "y": 3650.6,
 "ele": 3482.0,
-"osm": 1241260299
+"osm": 1241260299,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la République",
@@ -1047,7 +1151,8 @@
 "x": 874.0,
 "y": 3964.6,
 "ele": 3305.0,
-"osm": 1241260305
+"osm": 1241260305,
+"kind": "peak"
 },
 {
 "name": "Pointe Lépiney",
@@ -1057,7 +1162,8 @@
 "x": 123.3,
 "y": 2872.4,
 "ele": 3429.0,
-"osm": 1241260312
+"osm": 1241260312,
+"kind": "peak"
 },
 {
 "name": "Dent du Crocodile",
@@ -1067,7 +1173,8 @@
 "x": -178.4,
 "y": 2536.1,
 "ele": 3640.0,
-"osm": 1241260315
+"osm": 1241260315,
+"kind": "peak"
 },
 {
 "name": "La Tour Rouge",
@@ -1077,7 +1184,8 @@
 "x": 1158.6,
 "y": 3691.1,
 "ele": 2899.0,
-"osm": 1241260441
+"osm": 1241260441,
+"kind": "peak"
 },
 {
 "name": "Bec d'Oiseau",
@@ -1087,7 +1195,8 @@
 "x": 683.9,
 "y": 3460.6,
 "ele": 3417.0,
-"osm": 1241260495
+"osm": 1241260495,
+"kind": "peak"
 },
 {
 "name": "Flèche Rousse",
@@ -1097,7 +1206,8 @@
 "x": 8739.2,
 "y": 9811.9,
 "ele": 3879.0,
-"osm": 1373113835
+"osm": 1373113835,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Goûter",
@@ -1107,7 +1217,8 @@
 "x": -6117.5,
 "y": -2114.3,
 "ele": 3863.0,
-"osm": 1438494348
+"osm": 1438494348,
+"kind": "peak"
 },
 {
 "name": "Tête de la Tronche",
@@ -1117,7 +1228,8 @@
 "x": 8524.3,
 "y": -5328.2,
 "ele": 2584.0,
-"osm": 1609022406
+"osm": 1609022406,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Chambave",
@@ -1127,7 +1239,8 @@
 "x": 9749.2,
 "y": -6769.1,
 "ele": 3089.0,
-"osm": 1609071427
+"osm": 1609071427,
+"kind": "peak"
 },
 {
 "name": "Testa Bernarda",
@@ -1137,7 +1250,8 @@
 "x": 8077.6,
 "y": -4917.5,
 "ele": 2533.0,
-"osm": 1609071442
+"osm": 1609071442,
+"kind": "peak"
 },
 {
 "name": "Tête du Curru",
@@ -1147,7 +1261,8 @@
 "x": 9494.3,
 "y": -6546.2,
 "ele": 2990.0,
-"osm": 1609071443
+"osm": 1609071443,
+"kind": "peak"
 },
 {
 "name": "Grande Fourche",
@@ -1157,7 +1272,8 @@
 "x": 8605.6,
 "y": 11830.4,
 "ele": 3610.0,
-"osm": 1725337237
+"osm": 1725337237,
+"kind": "peak"
 },
 {
 "name": "Aiguillette d'Argentiere",
@@ -1167,7 +1283,8 @@
 "x": 213.7,
 "y": 12784.2,
 "ele": 1893.0,
-"osm": 1888307277
+"osm": 1888307277,
+"kind": "peak"
 },
 {
 "name": "Pointe Mieulet",
@@ -1177,7 +1294,8 @@
 "x": -2916.1,
 "y": -2216.7,
 "ele": 4287.0,
-"osm": 2037238340
+"osm": 2037238340,
+"kind": "peak"
 },
 {
 "name": "Pointe Bayeux",
@@ -1187,7 +1305,8 @@
 "x": -5175.1,
 "y": -2577.5,
 "ele": 4258.0,
-"osm": 2037238366
+"osm": 2037238366,
+"kind": "peak"
 },
 {
 "name": "Corne du Diable",
@@ -1197,7 +1316,8 @@
 "x": -1293.6,
 "y": -1740.2,
 "ele": 4064.0,
-"osm": 2151026958
+"osm": 2151026958,
+"kind": "peak"
 },
 {
 "name": "L'Isolée",
@@ -1207,7 +1327,8 @@
 "x": -1477.9,
 "y": -1713.4,
 "ele": 4114.0,
-"osm": 2151026961
+"osm": 2151026961,
+"kind": "peak"
 },
 {
 "name": "Le Clocher",
@@ -1217,7 +1338,8 @@
 "x": -991.0,
 "y": -2125.5,
 "ele": 3853.0,
-"osm": 2151026964
+"osm": 2151026964,
+"kind": "peak"
 },
 {
 "name": "Le Petit Capucin",
@@ -1227,7 +1349,8 @@
 "x": -697.4,
 "y": -1811.5,
 "ele": 3693.0,
-"osm": 2151026967
+"osm": 2151026967,
+"kind": "peak"
 },
 {
 "name": "Le Trident",
@@ -1237,7 +1360,8 @@
 "x": -798.0,
 "y": -2142.6,
 "ele": 3639.0,
-"osm": 2151026975
+"osm": 2151026975,
+"kind": "peak"
 },
 {
 "name": "Pointe Adolphe Rey",
@@ -1247,7 +1371,8 @@
 "x": -458.9,
 "y": -1770.6,
 "ele": 3536.0,
-"osm": 2151026977
+"osm": 2151026977,
+"kind": "peak"
 },
 {
 "name": "Pointe Carmen",
@@ -1257,7 +1382,8 @@
 "x": -1415.0,
 "y": -1716.9,
 "ele": 4109.0,
-"osm": 2151026980
+"osm": 2151026980,
+"kind": "peak"
 },
 {
 "name": "Pointe Chaubert",
@@ -1267,7 +1393,8 @@
 "x": -1316.2,
 "y": -1733.0,
 "ele": 4074.0,
-"osm": 2151026982
+"osm": 2151026982,
+"kind": "peak"
 },
 {
 "name": "Pointe Lachenal",
@@ -1277,7 +1404,8 @@
 "x": -1101.1,
 "y": -589.0,
 "ele": 3613.0,
-"osm": 2151026983
+"osm": 2151026983,
+"kind": "peak"
 },
 {
 "name": "Pointe Médiane",
@@ -1287,7 +1415,8 @@
 "x": -1393.1,
 "y": -1718.8,
 "ele": 4097.0,
-"osm": 2151026984
+"osm": 2151026984,
+"kind": "peak"
 },
 {
 "name": "Pyramide du Tacul",
@@ -1297,7 +1426,8 @@
 "x": -602.0,
 "y": -1499.7,
 "ele": 3468.0,
-"osm": 2151026986
+"osm": 2151026986,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Grands Montets",
@@ -1307,7 +1437,8 @@
 "x": 3919.1,
 "y": 8693.3,
 "ele": 3296.0,
-"osm": 2401280720
+"osm": 2401280720,
+"kind": "peak"
 },
 {
 "name": "Pic Eccles",
@@ -1317,7 +1448,8 @@
 "x": -2735.2,
 "y": -5374.2,
 "ele": 4041.0,
-"osm": 2409782067
+"osm": 2409782067,
+"kind": "peak"
 },
 {
 "name": "Triangle du Tacul",
@@ -1327,7 +1459,8 @@
 "x": -1707.8,
 "y": -1019.9,
 "ele": 3970.0,
-"osm": 2417756510
+"osm": 2417756510,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tré-la-Tête Orientale",
@@ -1337,7 +1470,8 @@
 "x": -7140.2,
 "y": -8408.3,
 "ele": 3892.0,
-"osm": 2427826282
+"osm": 2427826282,
+"kind": "peak"
 },
 {
 "name": "Pointe de Pré de Bar Est",
@@ -1347,7 +1481,8 @@
 "x": 9669.6,
 "y": 5699.2,
 "ele": 3608.0,
-"osm": 2739732467
+"osm": 2739732467,
+"kind": "peak"
 },
 {
 "name": "Pointe de Lapaz",
@@ -1357,7 +1492,8 @@
 "x": -7483.4,
 "y": 5504.6,
 "ele": 2313.0,
-"osm": 2899082023
+"osm": 2899082023,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Pèlerins - Secteur du Plan",
@@ -1367,7 +1503,8 @@
 "x": -660.8,
 "y": 2772.7,
 "ele": 3318.0,
-"osm": 2938505180
+"osm": 2938505180,
+"kind": "peak"
 },
 {
 "name": "L'Enfant de Chœur",
@@ -1377,7 +1514,8 @@
 "x": 4199.3,
 "y": 6239.2,
 "ele": 3477.0,
-"osm": 2940263653
+"osm": 2940263653,
+"kind": "peak"
 },
 {
 "name": "Tête de Moëde",
@@ -1387,7 +1525,8 @@
 "x": -7984.7,
 "y": 12443.0,
 "ele": 2459.0,
-"osm": 3032430999
+"osm": 3032430999,
+"kind": "peak"
 },
 {
 "name": "Tête du Couvercle",
@@ -1397,7 +1536,8 @@
 "x": 3788.1,
 "y": 4348.8,
 "ele": 2735.0,
-"osm": 3061852072
+"osm": 3061852072,
+"kind": "peak"
 },
 {
 "name": "Le Gros Béchard",
@@ -1407,7 +1547,8 @@
 "x": -5401.8,
 "y": 474.2,
 "ele": 2582.0,
-"osm": 3149270109
+"osm": 3149270109,
+"kind": "peak"
 },
 {
 "name": "Le Petit Béchard",
@@ -1417,7 +1558,8 @@
 "x": -5783.0,
 "y": 1053.4,
 "ele": 2150.0,
-"osm": 3149270110
+"osm": 3149270110,
+"kind": "peak"
 },
 {
 "name": "Mont Cormet",
@@ -1427,7 +1569,8 @@
 "x": 7360.0,
 "y": -9662.8,
 "ele": 2475.0,
-"osm": 3226123802
+"osm": 3226123802,
+"kind": "peak"
 },
 {
 "name": "Tête Drumianaz",
@@ -1437,7 +1580,8 @@
 "x": 9803.0,
 "y": -9748.3,
 "ele": 2402.0,
-"osm": 3226276664
+"osm": 3226276664,
+"kind": "peak"
 },
 {
 "name": "Aiguillette des Houches",
@@ -1447,7 +1591,8 @@
 "x": -8114.7,
 "y": 5713.8,
 "ele": 2285.0,
-"osm": 3408780382
+"osm": 3408780382,
+"kind": "peak"
 },
 {
 "name": "Pic Wilson",
@@ -1457,7 +1602,8 @@
 "x": -3869.2,
 "y": -743.1,
 "ele": 3266.0,
-"osm": 3413063150
+"osm": 3413063150,
+"kind": "peak"
 },
 {
 "name": "Pointe Durier",
@@ -1467,7 +1613,8 @@
 "x": -3018.5,
 "y": -1856.0,
 "ele": 3997.0,
-"osm": 3413069041
+"osm": 3413069041,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Saussure",
@@ -1477,7 +1624,8 @@
 "x": -2635.7,
 "y": -1159.4,
 "ele": 3839.0,
-"osm": 3413078727
+"osm": 3413078727,
+"kind": "peak"
 },
 {
 "name": "Dôme du Goûter",
@@ -1487,7 +1635,8 @@
 "x": -5168.0,
 "y": -3045.5,
 "ele": 4304.0,
-"osm": 3559071817
+"osm": 3559071817,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tré-la-Tête Centrale Nord-Ouest",
@@ -1497,7 +1646,8 @@
 "x": -7517.6,
 "y": -8267.7,
 "ele": 3908.0,
-"osm": 3613468597
+"osm": 3613468597,
+"kind": "peak"
 },
 {
 "name": "Petite Aiguille des Glaciers",
@@ -1507,7 +1657,8 @@
 "x": -8233.4,
 "y": -10970.7,
 "ele": 3463.0,
-"osm": 3668636373
+"osm": 3668636373,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tré-la-Tête Nord",
@@ -1517,7 +1668,8 @@
 "x": -7664.2,
 "y": -7971.0,
 "ele": 3892.0,
-"osm": 3668810726
+"osm": 3668810726,
+"kind": "peak"
 },
 {
 "name": "Aiguille Pourrie",
@@ -1527,7 +1679,8 @@
 "x": -4028.9,
 "y": 9810.7,
 "ele": 2511.0,
-"osm": 3695453069
+"osm": 3695453069,
+"kind": "peak"
 },
 {
 "name": "Tête des Prapators",
@@ -1537,7 +1690,8 @@
 "x": 629.3,
 "y": 9130.6,
 "ele": 1844.0,
-"osm": 3822582233
+"osm": 3822582233,
+"kind": "peak"
 },
 {
 "name": "Pyramides Calcaires - Punta Nord",
@@ -1547,7 +1701,8 @@
 "x": -7022.2,
 "y": -12014.1,
 "ele": 2726.0,
-"osm": 3829470857
+"osm": 3829470857,
+"kind": "peak"
 },
 {
 "name": "Pyramides Calcaires - Punta Sud",
@@ -1557,7 +1712,8 @@
 "x": -6843.5,
 "y": -12140.5,
 "ele": 2691.0,
-"osm": 3829476357
+"osm": 3829476357,
+"kind": "peak"
 },
 {
 "name": "Rocher de la Tournette",
@@ -1567,7 +1723,8 @@
 "x": -3891.5,
 "y": -4124.2,
 "ele": 4677.0,
-"osm": 3848979146
+"osm": 3848979146,
+"kind": "peak"
 },
 {
 "name": "Pic Moore",
@@ -1577,7 +1734,8 @@
 "x": -1724.2,
 "y": -3820.7,
 "ele": 3557.0,
-"osm": 3855245113
+"osm": 3855245113,
+"kind": "peak"
 },
 {
 "name": "Punta Gugliermina",
@@ -1587,7 +1745,8 @@
 "x": -1779.0,
 "y": -5604.7,
 "ele": 3893.0,
-"osm": 3855245114
+"osm": 3855245114,
+"kind": "peak"
 },
 {
 "name": "Les Dames Anglaises",
@@ -1597,7 +1756,8 @@
 "x": -1373.4,
 "y": -5908.9,
 "ele": 3601.0,
-"osm": 3855245115
+"osm": 3855245115,
+"kind": "peak"
 },
 {
 "name": "Mont Noire de Peuterey",
@@ -1607,7 +1767,8 @@
 "x": -144.7,
 "y": -6480.7,
 "ele": 2921.0,
-"osm": 3859704619
+"osm": 3859704619,
+"kind": "peak"
 },
 {
 "name": "Picco Gamba",
@@ -1617,7 +1778,8 @@
 "x": -1217.7,
 "y": -6781.9,
 "ele": 3067.0,
-"osm": 3859704621
+"osm": 3859704621,
+"kind": "peak"
 },
 {
 "name": "Punta Brendel",
@@ -1627,7 +1789,8 @@
 "x": -1298.1,
 "y": -6360.8,
 "ele": 3586.0,
-"osm": 3859704622
+"osm": 3859704622,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Rouges du Brouillard",
@@ -1637,7 +1800,8 @@
 "x": -3287.9,
 "y": -7555.1,
 "ele": 3349.0,
-"osm": 3968742773
+"osm": 3968742773,
+"kind": "peak"
 },
 {
 "name": "Tour des Aiguilles Grise",
@@ -1647,7 +1811,8 @@
 "x": -6317.8,
 "y": -4293.8,
 "ele": 3825.0,
-"osm": 3968742779
+"osm": 3968742779,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Brenva",
@@ -1657,7 +1822,8 @@
 "x": 656.8,
 "y": -3994.0,
 "ele": 3278.0,
-"osm": 3968754766
+"osm": 3968754766,
+"kind": "peak"
 },
 {
 "name": "Aiguille Rouge de Rochefort",
@@ -1667,7 +1833,8 @@
 "x": 4559.8,
 "y": -2418.0,
 "ele": 3109.0,
-"osm": 3968789008
+"osm": 3968789008,
+"kind": "peak"
 },
 {
 "name": "Mont de Rochefort",
@@ -1677,7 +1844,8 @@
 "x": 4304.6,
 "y": -1787.7,
 "ele": 3456.0,
-"osm": 3968789009
+"osm": 3968789009,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tronchey",
@@ -1687,7 +1855,8 @@
 "x": 6886.3,
 "y": -632.8,
 "ele": 3495.0,
-"osm": 3977814005
+"osm": 3977814005,
+"kind": "peak"
 },
 {
 "name": "Aiguille de l'Évêque",
@@ -1697,7 +1866,8 @@
 "x": 7338.6,
 "y": -961.8,
 "ele": 3258.0,
-"osm": 3977814006
+"osm": 3977814006,
+"kind": "peak"
 },
 {
 "name": "Cima Centrale",
@@ -1707,7 +1877,8 @@
 "x": 9963.0,
 "y": 3937.5,
 "ele": 3332.0,
-"osm": 3977841020
+"osm": 3977841020,
+"kind": "peak"
 },
 {
 "name": "Cima Nord",
@@ -1717,7 +1888,8 @@
 "x": 9360.4,
 "y": 4648.8,
 "ele": 3435.0,
-"osm": 3977841021
+"osm": 3977841021,
+"kind": "peak"
 },
 {
 "name": "Bec de Lachat",
@@ -1727,7 +1899,8 @@
 "x": 3659.9,
 "y": 12958.5,
 "ele": 2447.0,
-"osm": 4062329913
+"osm": 4062329913,
+"kind": "peak"
 },
 {
 "name": "Pointe Bravais",
@@ -1737,7 +1910,8 @@
 "x": -4604.5,
 "y": -2071.0,
 "ele": 4057.0,
-"osm": 4108275426
+"osm": 4108275426,
+"kind": "peak"
 },
 {
 "name": "Calotte de Rochefort",
@@ -1747,7 +1921,8 @@
 "x": 4646.2,
 "y": -355.2,
 "ele": 3981.0,
-"osm": 4108319889
+"osm": 4108319889,
+"kind": "peak"
 },
 {
 "name": "Petite Aiguille Verte",
@@ -1757,7 +1932,8 @@
 "x": 4158.0,
 "y": 8210.3,
 "ele": 3512.0,
-"osm": 4357285689
+"osm": 4357285689,
+"kind": "peak"
 },
 {
 "name": "Pointe des Charmont Sud",
@@ -1767,7 +1943,8 @@
 "x": -1178.0,
 "y": -11981.7,
 "ele": 2967.0,
-"osm": 4375568482
+"osm": 4375568482,
+"kind": "peak"
 },
 {
 "name": "Les Rognes",
@@ -1777,7 +1954,8 @@
 "x": -7349.9,
 "y": -766.7,
 "ele": 2853.0,
-"osm": 4383819029
+"osm": 4383819029,
+"kind": "peak"
 },
 {
 "name": "Pointe Sella",
@@ -1787,7 +1965,8 @@
 "x": 3246.8,
 "y": -924.3,
 "ele": 4009.0,
-"osm": 5818422347
+"osm": 5818422347,
+"kind": "peak"
 },
 {
 "name": "Tour des Jorasses",
@@ -1797,7 +1976,8 @@
 "x": 5713.6,
 "y": -692.7,
 "ele": 3813.0,
-"osm": 5819008835
+"osm": 5819008835,
+"kind": "peak"
 },
 {
 "name": "Pointe Walker / Punta Walker",
@@ -1807,7 +1987,8 @@
 "x": 6057.8,
 "y": -129.2,
 "ele": 4203.0,
-"osm": 5819009077
+"osm": 5819009077,
+"kind": "peak"
 },
 {
 "name": "Pointe de la Mitraille",
@@ -1817,7 +1998,8 @@
 "x": -9779.7,
 "y": 12461.3,
 "ele": 2741.0,
-"osm": 6111674803
+"osm": 6111674803,
+"kind": "peak"
 },
 {
 "name": "Mont de la Saxe",
@@ -1827,7 +2009,8 @@
 "x": 7053.7,
 "y": -5349.5,
 "ele": 2346.0,
-"osm": 6542256787
+"osm": 6542256787,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Tricot",
@@ -1837,7 +2020,8 @@
 "x": -7920.9,
 "y": -3647.1,
 "ele": 3665.0,
-"osm": 6563278829
+"osm": 6563278829,
+"kind": "peak"
 },
 {
 "name": "Pointe Supérieure",
@@ -1847,7 +2031,8 @@
 "x": -8648.2,
 "y": -3256.6,
 "ele": 3221.0,
-"osm": 6563278843
+"osm": 6563278843,
+"kind": "peak"
 },
 {
 "name": "Pointe Centrale",
@@ -1857,7 +2042,8 @@
 "x": -9140.5,
 "y": -3038.9,
 "ele": 3061.0,
-"osm": 6563278851
+"osm": 6563278851,
+"kind": "peak"
 },
 {
 "name": "Pointe Inférieure",
@@ -1867,7 +2053,8 @@
 "x": -9931.5,
 "y": -2678.0,
 "ele": 2830.0,
-"osm": 6563278863
+"osm": 6563278863,
+"kind": "peak"
 },
 {
 "name": "Petite Bosse",
@@ -1877,7 +2064,8 @@
 "x": -4202.1,
 "y": -3863.1,
 "ele": 4547.0,
-"osm": 7164818516
+"osm": 7164818516,
+"kind": "peak"
 },
 {
 "name": "Grande Bosse",
@@ -1887,7 +2075,8 @@
 "x": -4304.1,
 "y": -3770.6,
 "ele": 4513.0,
-"osm": 7164818517
+"osm": 7164818517,
+"kind": "peak"
 },
 {
 "name": "Monte Bianco di Courmayeur",
@@ -1897,7 +2086,8 @@
 "x": -3133.5,
 "y": -4625.1,
 "ele": 4748.0,
-"osm": 7164818567
+"osm": 7164818567,
+"kind": "peak"
 },
 {
 "name": "Mont Maudit / Monte Maudit",
@@ -1907,7 +2097,8 @@
 "x": -2642.0,
 "y": -2507.0,
 "ele": 4465.0,
-"osm": 7164832011
+"osm": 7164832011,
+"kind": "peak"
 },
 {
 "name": "La Tour Ronde",
@@ -1917,7 +2108,8 @@
 "x": -191.6,
 "y": -2889.9,
 "ele": 3792.0,
-"osm": 7164832044
+"osm": 7164832044,
+"kind": "peak"
 },
 {
 "name": "Aiguille d'Entrèves",
@@ -1927,7 +2119,8 @@
 "x": 551.2,
 "y": -2797.2,
 "ele": 3604.0,
-"osm": 7164832069
+"osm": 7164832069,
+"kind": "peak"
 },
 {
 "name": "Pointe Helbronner / Punta Helbronner",
@@ -1937,7 +2130,8 @@
 "x": 1689.9,
 "y": -2681.6,
 "ele": 3462.0,
-"osm": 7164832098
+"osm": 7164832098,
+"kind": "peak"
 },
 {
 "name": "Dent du Géant / Pointe Graham",
@@ -1947,7 +2141,8 @@
 "x": 3253.7,
 "y": -899.7,
 "ele": 4013.0,
-"osm": 7164832145
+"osm": 7164832145,
+"kind": "peak"
 },
 {
 "name": "Dôme de Rochefort",
@@ -1957,7 +2152,8 @@
 "x": 4478.7,
 "y": -625.9,
 "ele": 4015.0,
-"osm": 7164832188
+"osm": 7164832188,
+"kind": "peak"
 },
 {
 "name": "Pointe Young",
@@ -1967,7 +2163,8 @@
 "x": 5131.9,
 "y": -174.7,
 "ele": 3996.0,
-"osm": 7164832201
+"osm": 7164832201,
+"kind": "peak"
 },
 {
 "name": "Pointe Whymper / Punta Whymper",
@@ -1977,7 +2174,8 @@
 "x": 5822.1,
 "y": -134.8,
 "ele": 4180.0,
-"osm": 7165004784
+"osm": 7165004784,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Rouges du Dolent - Pointe Kurz",
@@ -1987,7 +2185,8 @@
 "x": 9753.1,
 "y": 7628.8,
 "ele": 3680.0,
-"osm": 7165008398
+"osm": 7165008398,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Lex Blanche",
@@ -1997,7 +2196,8 @@
 "x": -8311.0,
 "y": -9275.5,
 "ele": 3684.0,
-"osm": 7251779825
+"osm": 7251779825,
+"kind": "peak"
 },
 {
 "name": "Pyramides des Aiguilles Grises",
@@ -2007,7 +2207,8 @@
 "x": -6279.2,
 "y": -5365.2,
 "ele": 3364.0,
-"osm": 7251779831
+"osm": 7251779831,
+"kind": "peak"
 },
 {
 "name": "Mont Tseuc - Punta Sud",
@@ -2017,7 +2218,8 @@
 "x": -4670.3,
 "y": -9655.0,
 "ele": 2740.0,
-"osm": 7251834320
+"osm": 7251834320,
+"kind": "peak"
 },
 {
 "name": "Mont Tseuc - Punta Nord",
@@ -2027,7 +2229,8 @@
 "x": -4710.7,
 "y": -9506.6,
 "ele": 2795.0,
-"osm": 7251834321
+"osm": 7251834321,
+"kind": "peak"
 },
 {
 "name": "Aiguilles de Combai - Punta Sud",
@@ -2037,7 +2240,8 @@
 "x": -5033.4,
 "y": -9775.3,
 "ele": 2836.0,
-"osm": 7251834322
+"osm": 7251834322,
+"kind": "peak"
 },
 {
 "name": "Aiguilles de Combai - Punta Nord",
@@ -2047,7 +2251,8 @@
 "x": -5081.7,
 "y": -9721.2,
 "ele": 2840.0,
-"osm": 7251834323
+"osm": 7251834323,
+"kind": "peak"
 },
 {
 "name": "Pointe Pfann",
@@ -2057,7 +2262,8 @@
 "x": -4805.6,
 "y": -4379.8,
 "ele": 3984.0,
-"osm": 7251834346
+"osm": 7251834346,
+"kind": "peak"
 },
 {
 "name": "Aiguille des Chavannes",
@@ -2067,7 +2273,8 @@
 "x": -2512.1,
 "y": -12458.1,
 "ele": 2750.0,
-"osm": 7256213650
+"osm": 7256213650,
+"kind": "peak"
 },
 {
 "name": "Trident de la Brenva",
@@ -2077,7 +2284,8 @@
 "x": -1038.2,
 "y": -3036.9,
 "ele": 3720.0,
-"osm": 7256252861
+"osm": 7256252861,
+"kind": "peak"
 },
 {
 "name": "Fourche de la Brenva",
@@ -2087,7 +2295,8 @@
 "x": -1522.0,
 "y": -2831.2,
 "ele": 3727.0,
-"osm": 7256252863
+"osm": 7256252863,
+"kind": "peak"
 },
 {
 "name": "Punta Ottoz",
@@ -2097,7 +2306,8 @@
 "x": -1325.6,
 "y": -6222.6,
 "ele": 3742.0,
-"osm": 7256451494
+"osm": 7256451494,
+"kind": "peak"
 },
 {
 "name": "Aiguille Blanche de Peuterey - Sud",
@@ -2107,7 +2317,8 @@
 "x": -2014.5,
 "y": -5217.7,
 "ele": 4099.0,
-"osm": 7256451496
+"osm": 7256451496,
+"kind": "peak"
 },
 {
 "name": "Aiguille Blanche de Peuterey - Centrale",
@@ -2117,7 +2328,8 @@
 "x": -2195.4,
 "y": -5181.0,
 "ele": 4112.0,
-"osm": 7256451497
+"osm": 7256451497,
+"kind": "peak"
 },
 {
 "name": "Calotta della Brenva / Calotte de la Brenva",
@@ -2127,7 +2339,8 @@
 "x": -1335.3,
 "y": -2943.4,
 "ele": 3701.0,
-"osm": 7256451499
+"osm": 7256451499,
+"kind": "peak"
 },
 {
 "name": "Pointes des Chavannes",
@@ -2137,7 +2350,8 @@
 "x": -2368.5,
 "y": -12148.7,
 "ele": 2808.0,
-"osm": 7259190605
+"osm": 7259190605,
+"kind": "peak"
 },
 {
 "name": "Pointe des Charmonts Nord",
@@ -2147,7 +2361,8 @@
 "x": -1108.5,
 "y": -11859.8,
 "ele": 2951.0,
-"osm": 7259190607
+"osm": 7259190607,
+"kind": "peak"
 },
 {
 "name": "Pointe des Charmonts Centrale",
@@ -2157,7 +2372,8 @@
 "x": -1144.9,
 "y": -11920.5,
 "ele": 2962.0,
-"osm": 7259190608
+"osm": 7259190608,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Châtelet",
@@ -2167,7 +2383,8 @@
 "x": -1951.9,
 "y": -8323.6,
 "ele": 2523.0,
-"osm": 7259190609
+"osm": 7259190609,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Père Éternel",
@@ -2177,7 +2394,8 @@
 "x": 690.4,
 "y": -3829.9,
 "ele": 3224.0,
-"osm": 7259293212
+"osm": 7259293212,
+"kind": "peak"
 },
 {
 "name": "Mont de la Brenva",
@@ -2187,7 +2405,8 @@
 "x": 867.0,
 "y": -4302.4,
 "ele": 3011.0,
-"osm": 7259293213
+"osm": 7259293213,
+"kind": "peak"
 },
 {
 "name": "Tour de la Brenva",
@@ -2197,7 +2416,8 @@
 "x": 763.8,
 "y": -4155.2,
 "ele": 3096.0,
-"osm": 7259293214
+"osm": 7259293214,
+"kind": "peak"
 },
 {
 "name": "Brèche d'Entrèves",
@@ -2207,7 +2427,8 @@
 "x": 1024.2,
 "y": -3528.3,
 "ele": 3070.0,
-"osm": 7259293215
+"osm": 7259293215,
+"kind": "peak"
 },
 {
 "name": "Tour d'Entrèves",
@@ -2217,7 +2438,8 @@
 "x": 1080.3,
 "y": -3600.3,
 "ele": 3118.0,
-"osm": 7259293216
+"osm": 7259293216,
+"kind": "peak"
 },
 {
 "name": "Mont Nix",
@@ -2227,7 +2449,8 @@
 "x": -40.3,
 "y": -12110.0,
 "ele": 2918.0,
-"osm": 7259474427
+"osm": 7259474427,
+"kind": "peak"
 },
 {
 "name": "Tête d'Arp",
@@ -2237,7 +2460,8 @@
 "x": 1182.7,
 "y": -10772.4,
 "ele": 2747.0,
-"osm": 7259474428
+"osm": 7259474428,
+"kind": "peak"
 },
 {
 "name": "Fourches de la Youlaz",
@@ -2247,7 +2471,8 @@
 "x": -197.0,
 "y": -11693.7,
 "ele": 2808.0,
-"osm": 7262043884
+"osm": 7262043884,
+"kind": "peak"
 },
 {
 "name": "Pointe des Papillons Nord",
@@ -2257,7 +2482,8 @@
 "x": 8139.0,
 "y": 4483.5,
 "ele": 3640.0,
-"osm": 7274341121
+"osm": 7274341121,
+"kind": "peak"
 },
 {
 "name": "Pointe des Papillons Sud",
@@ -2267,7 +2493,8 @@
 "x": 8106.8,
 "y": 4415.9,
 "ele": 3635.0,
-"osm": 7274341122
+"osm": 7274341122,
+"kind": "peak"
 },
 {
 "name": "Aiguille Savoie",
@@ -2277,7 +2504,8 @@
 "x": 8088.2,
 "y": 4071.2,
 "ele": 3603.0,
-"osm": 7274341124
+"osm": 7274341124,
+"kind": "peak"
 },
 {
 "name": "L'Aiguillon",
@@ -2287,7 +2515,8 @@
 "x": 7287.5,
 "y": 2261.9,
 "ele": 3489.0,
-"osm": 7274341129
+"osm": 7274341129,
+"kind": "peak"
 },
 {
 "name": "Pointe de Frébouze - Borgna",
@@ -2297,7 +2526,8 @@
 "x": 6952.7,
 "y": 1025.3,
 "ele": 3526.0,
-"osm": 7274424288
+"osm": 7274424288,
+"kind": "peak"
 },
 {
 "name": "Pointe de Frébouze - Alberico",
@@ -2307,7 +2537,8 @@
 "x": 6884.7,
 "y": 772.3,
 "ele": 3473.0,
-"osm": 7274424289
+"osm": 7274424289,
+"kind": "peak"
 },
 {
 "name": "Pointe des Hirondelles Nord",
@@ -2317,7 +2548,8 @@
 "x": 6938.9,
 "y": 518.5,
 "ele": 3520.0,
-"osm": 7274424290
+"osm": 7274424290,
+"kind": "peak"
 },
 {
 "name": "Pointe des Hirondelles Sud",
@@ -2327,7 +2559,8 @@
 "x": 6917.7,
 "y": 436.7,
 "ele": 3526.0,
-"osm": 7274424291
+"osm": 7274424291,
+"kind": "peak"
 },
 {
 "name": "Doigt de Rochefort",
@@ -2337,7 +2570,8 @@
 "x": 4177.6,
 "y": -690.4,
 "ele": 3931.0,
-"osm": 7274424294
+"osm": 7274424294,
+"kind": "peak"
 },
 {
 "name": "Pointe Isabelle Nord / Punta Isabella Nord",
@@ -2347,7 +2581,8 @@
 "x": 8395.8,
 "y": 4930.3,
 "ele": 3761.0,
-"osm": 7274427713
+"osm": 7274427713,
+"kind": "peak"
 },
 {
 "name": "Pointe Isabelle Sud / Punta Isabella Sud",
@@ -2357,7 +2592,8 @@
 "x": 8401.1,
 "y": 4879.9,
 "ele": 3761.0,
-"osm": 7274427714
+"osm": 7274427714,
+"kind": "peak"
 },
 {
 "name": "Punta Guibert / Pointe Guibert",
@@ -2367,7 +2603,8 @@
 "x": 9086.4,
 "y": 5434.4,
 "ele": 3648.0,
-"osm": 7274586191
+"osm": 7274586191,
+"kind": "peak"
 },
 {
 "name": "Petite Aiguille de Triolet Occidentale",
@@ -2377,7 +2614,8 @@
 "x": 8666.6,
 "y": 5201.1,
 "ele": 3800.0,
-"osm": 7274586193
+"osm": 7274586193,
+"kind": "peak"
 },
 {
 "name": "Petite Aiguille de Triolet Orientale",
@@ -2387,7 +2625,8 @@
 "x": 8741.5,
 "y": 5192.1,
 "ele": 3798.0,
-"osm": 7274586194
+"osm": 7274586194,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Triolet",
@@ -2397,7 +2636,8 @@
 "x": 8859.7,
 "y": 5171.0,
 "ele": 3870.0,
-"osm": 7274586195
+"osm": 7274586195,
+"kind": "peak"
 },
 {
 "name": "Mont Rouge de Peuterey",
@@ -2407,7 +2647,8 @@
 "x": -951.3,
 "y": -7304.2,
 "ele": 2941.0,
-"osm": 7631617114
+"osm": 7631617114,
+"kind": "peak"
 },
 {
 "name": "Arête du Mont Favre",
@@ -2417,7 +2658,8 @@
 "x": -1553.6,
 "y": -10872.1,
 "ele": 2442.0,
-"osm": 7881154985
+"osm": 7881154985,
+"kind": "peak"
 },
 {
 "name": "Tête de Jeubon",
@@ -2427,7 +2669,8 @@
 "x": -6745.0,
 "y": 10746.5,
 "ele": 1710.0,
-"osm": 7925500129
+"osm": 7925500129,
+"kind": "peak"
 },
 {
 "name": "Aiguille à Bochard",
@@ -2437,7 +2680,8 @@
 "x": 1856.2,
 "y": 8596.7,
 "ele": 2655.0,
-"osm": 7944517093
+"osm": 7944517093,
+"kind": "peak"
 },
 {
 "name": "Pointe Petigax",
@@ -2447,7 +2691,8 @@
 "x": 4337.9,
 "y": 7080.4,
 "ele": null,
-"osm": 7973584577
+"osm": 7973584577,
+"kind": "peak"
 },
 {
 "name": "Pointe Croux",
@@ -2457,7 +2702,8 @@
 "x": 4295.4,
 "y": 7160.4,
 "ele": 4023.0,
-"osm": 7973584578
+"osm": 7973584578,
+"kind": "peak"
 },
 {
 "name": "Grande Tête",
@@ -2467,7 +2713,8 @@
 "x": 7815.2,
 "y": -8806.2,
 "ele": 2765.0,
-"osm": 8062122285
+"osm": 8062122285,
+"kind": "peak"
 },
 {
 "name": "Dent de Jétoula",
@@ -2477,7 +2724,8 @@
 "x": 2782.2,
 "y": -2790.4,
 "ele": 3303.9,
-"osm": 8268287168
+"osm": 8268287168,
+"kind": "peak"
 },
 {
 "name": "Tour de Jétoula",
@@ -2487,7 +2735,8 @@
 "x": 2743.4,
 "y": -2697.8,
 "ele": 3339.3,
-"osm": 8268287169
+"osm": 8268287169,
+"kind": "peak"
 },
 {
 "name": "Mont de Nona",
@@ -2497,7 +2746,8 @@
 "x": 4340.1,
 "y": -12109.8,
 "ele": 2075.0,
-"osm": 8270123942
+"osm": 8270123942,
+"kind": "peak"
 },
 {
 "name": "Tête des Vieux",
@@ -2507,7 +2757,8 @@
 "x": 1921.3,
 "y": -12312.0,
 "ele": 2856.1,
-"osm": 8270136365
+"osm": 8270136365,
+"kind": "peak"
 },
 {
 "name": "Tête de l'Ane",
@@ -2517,7 +2768,8 @@
 "x": 1657.4,
 "y": -11763.0,
 "ele": 2788.5,
-"osm": 8270297432
+"osm": 8270297432,
+"kind": "peak"
 },
 {
 "name": "Tête des Jeunes",
@@ -2527,7 +2779,8 @@
 "x": 2266.2,
 "y": -12770.7,
 "ele": 2784.1,
-"osm": 8270297433
+"osm": 8270297433,
+"kind": "peak"
 },
 {
 "name": "Mont Brisé",
@@ -2537,7 +2790,8 @@
 "x": 2563.1,
 "y": -10172.1,
 "ele": 2146.9,
-"osm": 8270317632
+"osm": 8270317632,
+"kind": "peak"
 },
 {
 "name": "Le Casque",
@@ -2547,7 +2801,8 @@
 "x": 8174.1,
 "y": 9460.7,
 "ele": 3668.0,
-"osm": 8384028088
+"osm": 8384028088,
+"kind": "peak"
 },
 {
 "name": "Aiguille de l'A Neuve",
@@ -2557,7 +2812,8 @@
 "x": 9821.3,
 "y": 9217.7,
 "ele": 3753.0,
-"osm": 8398131971
+"osm": 8398131971,
+"kind": "peak"
 },
 {
 "name": "Tour Noir",
@@ -2567,7 +2823,8 @@
 "x": 9880.0,
 "y": 8770.9,
 "ele": 3836.0,
-"osm": 8398131979
+"osm": 8398131979,
+"kind": "peak"
 },
 {
 "name": "Pointe Supérieure des Améthystes",
@@ -2577,7 +2834,8 @@
 "x": 9354.5,
 "y": 8781.9,
 "ele": 3586.0,
-"osm": 8398131997
+"osm": 8398131997,
+"kind": "peak"
 },
 {
 "name": "Pointe Inférieure des Améthystes",
@@ -2587,7 +2845,8 @@
 "x": 8605.0,
 "y": 8572.8,
 "ele": 3273.0,
-"osm": 8398141217
+"osm": 8398141217,
+"kind": "peak"
 },
 {
 "name": "La Vierge",
@@ -2597,7 +2856,8 @@
 "x": 1277.6,
 "y": -1550.5,
 "ele": 3244.0,
-"osm": 8735598171
+"osm": 8735598171,
+"kind": "peak"
 },
 {
 "name": "Pointe des Vioz",
@@ -2607,7 +2867,8 @@
 "x": -5132.7,
 "y": 8492.8,
 "ele": 2461.0,
-"osm": 9957878297
+"osm": 9957878297,
+"kind": "peak"
 },
 {
 "name": "Tête de Bellachat",
@@ -2617,7 +2878,8 @@
 "x": -6201.3,
 "y": 6117.2,
 "ele": 2276.0,
-"osm": 10804512952
+"osm": 10804512952,
+"kind": "peak"
 },
 {
 "name": "Aiguillette du Brévent",
@@ -2627,7 +2889,8 @@
 "x": -7175.3,
 "y": 5516.7,
 "ele": 2310.0,
-"osm": 10804512975
+"osm": 10804512975,
+"kind": "peak"
 },
 {
 "name": "Le Béchar",
@@ -2637,7 +2900,8 @@
 "x": 634.2,
 "y": 12952.1,
 "ele": 1720.0,
-"osm": 10837381577
+"osm": 10837381577,
+"kind": "peak"
 },
 {
 "name": "Tête de la Raverettaz",
@@ -2647,7 +2911,8 @@
 "x": -1469.0,
 "y": 10282.2,
 "ele": 1823.0,
-"osm": 10837381579
+"osm": 10837381579,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Passon",
@@ -2657,7 +2922,8 @@
 "x": 6386.2,
 "y": 11568.0,
 "ele": 3370.0,
-"osm": 10870208656
+"osm": 10870208656,
+"kind": "peak"
 },
 {
 "name": "Bec Rouge Inférieur",
@@ -2667,7 +2933,8 @@
 "x": 4739.7,
 "y": 12653.5,
 "ele": 2844.0,
-"osm": 10870230688
+"osm": 10870230688,
+"kind": "peak"
 },
 {
 "name": "Bec Rouge Supérieur",
@@ -2677,7 +2944,8 @@
 "x": 5518.1,
 "y": 11852.1,
 "ele": 3047.0,
-"osm": 10870230689
+"osm": 10870230689,
+"kind": "peak"
 },
 {
 "name": "Mont Corbeau",
@@ -2687,7 +2955,8 @@
 "x": -4249.5,
 "y": 1214.3,
 "ele": 2322.0,
-"osm": 10944787347
+"osm": 10944787347,
+"kind": "peak"
 },
 {
 "name": "Tête sur les Lacs",
@@ -2697,7 +2966,8 @@
 "x": -1650.2,
 "y": 12974.6,
 "ele": 2506.0,
-"osm": 11057519134
+"osm": 11057519134,
+"kind": "peak"
 },
 {
 "name": "Pointe Morin",
@@ -2707,7 +2977,8 @@
 "x": 9816.7,
 "y": 8180.3,
 "ele": 3587.0,
-"osm": 11536828038
+"osm": 11536828038,
+"kind": "peak"
 },
 {
 "name": "Aiguille Forbes",
@@ -2717,7 +2988,8 @@
 "x": 7763.9,
 "y": 11478.5,
 "ele": 3488.0,
-"osm": 11538000930
+"osm": 11538000930,
+"kind": "peak"
 },
 {
 "name": "Tête Biselx",
@@ -2727,7 +2999,8 @@
 "x": 9928.6,
 "y": 12706.4,
 "ele": 3508.0,
-"osm": 11538076857
+"osm": 11538076857,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Varappe",
@@ -2737,7 +3010,8 @@
 "x": 9581.4,
 "y": 12555.0,
 "ele": 3518.0,
-"osm": 11538112717
+"osm": 11538112717,
+"kind": "peak"
 },
 {
 "name": "Pointe de la Fouly",
@@ -2747,7 +3021,8 @@
 "x": 9966.1,
 "y": 7051.7,
 "ele": 3608.0,
-"osm": 12040710684
+"osm": 12040710684,
+"kind": "peak"
 },
 {
 "name": "Petit Rognon",
@@ -2757,7 +3032,8 @@
 "x": 725.6,
 "y": 1084.1,
 "ele": 3009.0,
-"osm": 13013728246
+"osm": 13013728246,
+"kind": "peak"
 },
 {
 "name": "Les Grands Mulets",
@@ -2767,7 +3043,8 @@
 "x": -3760.0,
 "y": -319.2,
 "ele": 3057.0,
-"osm": 13013796735
+"osm": 13013796735,
+"kind": "peak"
 },
 {
 "name": "Tête de Trélaporte",
@@ -2777,7 +3054,8 @@
 "x": 1615.9,
 "y": 4236.8,
 "ele": 2552.0,
-"osm": 13013811813
+"osm": 13013811813,
+"kind": "peak"
 },
 {
 "name": "Épaule Ouest",
@@ -2787,7 +3065,8 @@
 "x": 7075.6,
 "y": 6436.6,
 "ele": 3838.0,
-"osm": 13016996006
+"osm": 13016996006,
+"kind": "peak"
 },
 {
 "name": "Rognon des Drus",
@@ -2797,7 +3076,8 @@
 "x": 3006.1,
 "y": 7300.2,
 "ele": 2663.0,
-"osm": 13016997205
+"osm": 13016997205,
+"kind": "peak"
 },
 {
 "name": "Aiguille Carrée",
@@ -2807,7 +3087,8 @@
 "x": 4452.9,
 "y": 7807.6,
 "ele": 3716.0,
-"osm": 13017005429
+"osm": 13017005429,
+"kind": "peak"
 },
 {
 "name": "Tour des Courtes",
@@ -2817,7 +3098,8 @@
 "x": 6809.7,
 "y": 6581.3,
 "ele": 3816.0,
-"osm": 13017010925
+"osm": 13017010925,
+"kind": "peak"
 },
 {
 "name": "Aiguille Mummery",
@@ -2827,7 +3109,8 @@
 "x": 7863.9,
 "y": 5796.5,
 "ele": 3700.0,
-"osm": 13017013180
+"osm": 13017013180,
+"kind": "peak"
 },
 {
 "name": "Aiguille Croulante",
@@ -2837,7 +3120,8 @@
 "x": 7504.0,
 "y": 6194.9,
 "ele": 3765.0,
-"osm": 13017026924
+"osm": 13017026924,
+"kind": "peak"
 },
 {
 "name": "Pointe Tournier",
@@ -2847,7 +3131,8 @@
 "x": 7957.0,
 "y": 5661.4,
 "ele": 3649.0,
-"osm": 13017026926
+"osm": 13017026926,
+"kind": "peak"
 },
 {
 "name": "Aiguille Ravanel",
@@ -2857,7 +3142,8 @@
 "x": 7865.5,
 "y": 5858.9,
 "ele": 3696.0,
-"osm": 13017036815
+"osm": 13017036815,
+"kind": "peak"
 },
 {
 "name": "Pointe Eales",
@@ -2867,7 +3153,8 @@
 "x": 8055.7,
 "y": 5460.5,
 "ele": 3612.0,
-"osm": 13017044043
+"osm": 13017044043,
+"kind": "peak"
 },
 {
 "name": "Le Yatagan",
@@ -2877,7 +3164,8 @@
 "x": 8019.5,
 "y": 9349.2,
 "ele": 3510.0,
-"osm": 13017094404
+"osm": 13017094404,
+"kind": "peak"
 },
 {
 "name": "Le Minaret",
@@ -2887,7 +3175,8 @@
 "x": 8044.9,
 "y": 9264.5,
 "ele": 3450.0,
-"osm": 13017094421
+"osm": 13017094421,
+"kind": "peak"
 },
 {
 "name": "Pointe de la Chalette",
@@ -2897,7 +3186,8 @@
 "x": -8267.7,
 "y": 5577.4,
 "ele": 2241.0,
-"osm": 13202664438
+"osm": 13202664438,
+"kind": "peak"
 },
 {
 "name": "Pic de la Brenva",
@@ -2907,7 +3197,8 @@
 "x": 342.6,
 "y": -3419.5,
 "ele": 3504.0,
-"osm": 13467926092
+"osm": 13467926092,
+"kind": "peak"
 },
 {
 "name": "Punta Welzenbach",
@@ -2917,7 +3208,8 @@
 "x": -1301.4,
 "y": -6542.1,
 "ele": 3355.0,
-"osm": 13467931023
+"osm": 13467931023,
+"kind": "peak"
 },
 {
 "name": "Aiguille de l'Aigle",
@@ -2927,7 +3219,8 @@
 "x": -6213.6,
 "y": -8359.8,
 "ele": 3553.0,
-"osm": 13467936287
+"osm": 13467936287,
+"kind": "peak"
 },
 {
 "name": "Aiguilles Marbrées Sud",
@@ -2937,7 +3230,8 @@
 "x": 2503.3,
 "y": -2395.8,
 "ele": 3455.0,
-"osm": 13477810039
+"osm": 13477810039,
+"kind": "peak"
 },
 {
 "name": "Tour des Crochues",
@@ -2947,7 +3241,8 @@
 "x": -2107.5,
 "y": 12069.7,
 "ele": 2589.0,
-"osm": 14070357449
+"osm": 14070357449,
+"kind": "peak"
 },
 {
 "name": "Aiguille du Peigne",
@@ -2957,7 +3252,8 @@
 "x": -805.5,
 "y": 2891.0,
 "ele": 3192.0,
-"osm": 14070704872
+"osm": 14070704872,
+"kind": "peak"
 },
 {
 "name": "Aiguille de la Balme",
@@ -2967,7 +3263,8 @@
 "x": -4250.6,
 "y": 11476.2,
 "ele": 2696.0,
-"osm": 14103253902
+"osm": 14103253902,
+"kind": "peak"
 },
 {
 "name": "Aiguille de Chamonix",
@@ -2977,7 +3274,8 @@
 "x": 166.6,
 "y": 3313.4,
 "ele": 3507.0,
-"osm": 14124434675
+"osm": 14124434675,
+"kind": "peak"
 },
 {
 "name": "Rocher de l'Heureux Retour",
@@ -2987,6 +3285,227 @@
 "x": -4090.5,
 "y": -1308.2,
 "ele": 3509.0,
-"osm": 14124705561
+"osm": 14124705561,
+"kind": "peak"
+},
+{
+"name": "Aiguilles du Diable",
+"name_en": null,
+"lat": 45.8544627,
+"lon": 6.8921576,
+"x": -1385.8,
+"y": -1726.8,
+"ele": null,
+"osm": 205129729,
+"kind": "ridge"
+},
+{
+"name": "Les Rognes",
+"name_en": null,
+"lat": 45.8613438,
+"lon": 6.8050591,
+"x": -8149.3,
+"y": -956.8,
+"ele": null,
+"osm": 297402219,
+"kind": "ridge"
+},
+{
+"name": "Cresta Innominata",
+"name_en": null,
+"lat": 45.8141608,
+"lon": 6.8799222,
+"x": -2337.7,
+"y": -6206.0,
+"ele": null,
+"osm": 382748954,
+"kind": "ridge"
+},
+{
+"name": "Rocce della Brenva",
+"name_en": null,
+"lat": 45.8262347,
+"lon": 6.924088,
+"x": 1094.7,
+"y": -4864.3,
+"ele": null,
+"osm": 393669142,
+"kind": "ridge"
+},
+{
+"name": "Monts Rouges de Triolet",
+"name_en": null,
+"lat": 45.8990213,
+"lon": 7.0431955,
+"x": 10336.5,
+"y": 3234.3,
+"ele": null,
+"osm": 394889820,
+"kind": "ridge"
+},
+{
+"name": "Moraine terminale",
+"name_en": null,
+"lat": 45.8603488,
+"lon": 6.7859528,
+"x": -9633.2,
+"y": -1065.2,
+"ele": null,
+"osm": 669828133,
+"kind": "ridge"
+},
+{
+"name": "Arête de Tricot",
+"name_en": null,
+"lat": 45.8415727,
+"lon": 6.8004096,
+"x": -8513.4,
+"y": -3153.8,
+"ele": null,
+"osm": 698923520,
+"kind": "ridge"
+},
+{
+"name": "Rochers du Mont Blanc",
+"name_en": null,
+"lat": 45.8264461,
+"lon": 6.8473363,
+"x": -4869.3,
+"y": -4839.0,
+"ele": null,
+"osm": 777189310,
+"kind": "ridge"
+},
+{
+"name": "Rochers des Fiz",
+"name_en": null,
+"lat": 45.9941958,
+"lon": 6.7795615,
+"x": -10105.3,
+"y": 13812.6,
+"ele": null,
+"osm": 812520465,
+"kind": "ridge"
+},
+{
+"name": "Arête des Bosses / Cresta delle Bosses",
+"name_en": null,
+"lat": 45.8358932,
+"lon": 6.8582841,
+"x": -4017.9,
+"y": -3789.6,
+"ele": null,
+"osm": 817132019,
+"kind": "ridge"
+},
+{
+"name": "Peutérey intégrale",
+"name_en": null,
+"lat": 45.813773,
+"lon": 6.8873068,
+"x": -1763.8,
+"y": -6249.3,
+"ele": null,
+"osm": 817132023,
+"kind": "ridge"
+},
+{
+"name": "Rochers des Fiz",
+"name_en": null,
+"lat": 45.9748807,
+"lon": 6.7788992,
+"x": -10160.1,
+"y": 11665.8,
+"ele": null,
+"osm": 834631027,
+"kind": "ridge"
+},
+{
+"name": "Flammes de Pierre",
+"name_en": null,
+"lat": 45.9272639,
+"lon": 6.9477244,
+"x": 2926.1,
+"y": 6365.5,
+"ele": null,
+"osm": 854955934,
+"kind": "ridge"
+},
+{
+"name": "Les Drus",
+"name_en": null,
+"lat": 45.9328634,
+"lon": 6.9555417,
+"x": 3532.1,
+"y": 6988.2,
+"ele": null,
+"osm": 854955935,
+"kind": "ridge"
+},
+{
+"name": "Crête de Chambave",
+"name_en": null,
+"lat": 45.8048225,
+"lon": 7.0387923,
+"x": 10011.7,
+"y": -7236.3,
+"ele": null,
+"osm": 889585033,
+"kind": "ridge"
+},
+{
+"name": "Frêtes de Moëde",
+"name_en": null,
+"lat": 45.9873865,
+"lon": 6.8110497,
+"x": -7666.8,
+"y": 13052.3,
+"ele": null,
+"osm": 920709516,
+"kind": "ridge"
+},
+{
+"name": "Arête de Rochy",
+"name_en": null,
+"lat": 45.9525847,
+"lon": 6.8021363,
+"x": -8362.6,
+"y": 9184.9,
+"ele": null,
+"osm": 957064318,
+"kind": "ridge"
+},
+{
+"name": "Arête de la Bérangère",
+"name_en": null,
+"lat": 45.8036582,
+"lon": 6.7798855,
+"x": -10114.7,
+"y": -7365.5,
+"ele": null,
+"osm": 1292710956,
+"kind": "ridge"
+},
+{
+"name": "Arête des Cosmiques",
+"name_en": null,
+"lat": 45.8767797,
+"lon": 6.8860491,
+"x": -1859.4,
+"y": 753.8,
+"ele": null,
+"osm": 1552497053,
+"kind": "ridge"
+},
+{
+"name": "Arête de Tricot",
+"name_en": null,
+"lat": 45.8488036,
+"lon": 6.7760787,
+"x": -10402.2,
+"y": -2347.2,
+"ele": null,
+"osm": 1552497058,
+"kind": "ridge"
 }
 ]

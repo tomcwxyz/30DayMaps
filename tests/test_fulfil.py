@@ -417,3 +417,95 @@ def test_owner_gets_a_preview_to_approve(monkeypatch, capsys):
     assert "https://github.com/o/r/actions/runs/42" in body["html"]
     assert "dashboard.stripe.com/test/payments/pi_3Abcdefgh12345678" in body["text"]
     assert not any(p in capsys.readouterr().out for p in PERSONAL)   # nothing personal in the public log
+
+
+# --- Peaks orders --------------------------------------------------------------
+
+PEAKS_RECIPE = json.dumps({"v": 1, "place": "", "lat": 54.53, "lon": -2.99, "name": "Helvellyn by Striding Edge",
+                           "region": "", "style": "poster", "theme": "paper", "labels": 1, "details": 1,
+                           "title": "Our round", "subtitle": "18 October 2026", "paper": "A3", "orient": "portrait",
+                           "width": 8, "detail": 90, "rows": 64, "seen": "S", "dist": 10, "facing": 0, "fov": 160,
+                           "reach": 35, "route": 3})
+ROUTE = "_p~iF~ps|U_ulLnnqC_mqNvxq`@"   # three points, split across two metadata values below
+
+
+def peaks_session(meta=None, product=None, **kw):
+    s = session(meta, product=product, **kw)
+    s["metadata"] = {"recipe": PEAKS_RECIPE, "shop": "peaks", "route_0": ROUTE[:10], "route_1": ROUTE[10:],
+                     **({"product": product} if product else {})}
+    if product == "digital":
+        s.pop("shipping_details", None)
+    return s
+
+
+def test_orders_say_which_shop_they_are_from():
+    assert fulfil.order_from_session(session()).shop == "footprints"   # older orders carry no shop
+    o = fulfil.order_from_session(peaks_session())
+    assert o.shop == "peaks" and o.route == ROUTE
+    bad = peaks_session(); bad["metadata"]["shop"] = "elsewhere"
+    with pytest.raises(fulfil.FulfilError, match="Unknown shop"):
+        fulfil.order_from_session(bad)
+
+
+def test_peaks_print_is_rendered_with_its_route_and_sent_with_its_own_reference(monkeypatch):
+    seen = {}
+    def peaks_render(recipe, out, kinds, min_long_px=None, route=None):
+        seen.update(recipe=recipe, route=route, kinds=kinds)
+        return fake_render(recipe, out, kinds)
+    monkeypatch.setitem(fulfil.RENDERERS, "peaks", peaks_render)
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, peaks_session()), ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up, shop=SHOP) == "submit"
+    assert seen["route"] == ROUTE and json.loads(seen["recipe"])["style"] == "poster"
+    payload = fulfil.order_payload(fulfil.order_from_session(peaks_session()), "SKU", "Standard", "https://f")
+    assert payload["items"][0]["merchantReference"] == "peaks-print"
+
+
+def test_peaks_digital_email_uses_its_own_words_and_site(monkeypatch):
+    monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    monkeypatch.setenv("DOWNLOAD_SECRET", "k")
+    monkeypatch.setenv("SITE_URL", "https://footprints.example")   # the workflow's default site
+    monkeypatch.setenv("SHOP_EMAIL_FROM", "Tom <prints@example.org>")
+    emailed = {}
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, peaks_session(product="digital")),
+                     ("POST", "api.resend.com/emails", 200, lambda kw: emailed.update(kw) or {"id": "e"}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, _ = uploads()
+    shop = fulfil.load_shop(fulfil.SHOP_FILES["peaks"])
+    monkeypatch.setitem(fulfil.RENDERERS, "peaks", lambda r, out, kinds, min_long_px=None, route=None: fake_render(r, out, kinds))
+    assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up, shop=shop) == "skip"
+    body = emailed["json"]
+    assert "peaks print" in body["text"] and "open elevation data" in body["text"]
+    assert "every building" not in body["text"] and "Peaks · peaks.tomcw.xyz" in body["text"]
+    assert "https://peaks.tomcw.xyz/api/download?" in body["text"] and "footprints.example" not in body["text"]
+    assert body["subject"] == "Your print of Our round is ready"
+    assert body["from"] == "Peaks <prints@example.org>"   # shop's own name, shared address
+
+
+def test_footprints_emails_are_unchanged():
+    subject, text, _ = fulfil.digital_email("Home", "p", "d", 30, "Jo", {"email": {"signoff": "Tom"}})
+    assert subject == "Your map of Home is ready" and "footprints map" in text and "every building in OpenStreetMap" in text
+
+
+def test_owner_approval_email_describes_a_peaks_order():
+    subject, text, _ = fulfil.approval_email(json.loads(PEAKS_RECIPE), "A3 print", "https://p", "https://run", "https://s", "peaks")
+    assert "Shop: Peaks" in text and "Style: poster" in text and "Route: yes, 3 points" in text
+
+
+def test_status_checks_each_order_against_its_own_shop():
+    up, _ = uploads()
+    http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [
+        session({"print_file": "orders/a.png"}, created=1_000_000),
+        peaks_session(product="digital", meta={"digital_sent": "x", "digital_png": "d/a", "digital_pdf": "d/b"}, created=1_000_000)],
+        "has_more": False})])
+    result = fulfil.status(http=http, key="sk", uploader=up, now=1_000_000 + 3600)
+    assert result["counts"]["awaiting approval"] == 1 and result["counts"]["digital emailed"] == 1
+
+
+def test_peaks_shop_json_is_valid_and_sells_both_panoramas():
+    shop = fulfil.load_shop(fulfil.SHOP_FILES["peaks"])
+    assert fulfil.config_problems(shop) == []
+    assert shop["site"] == "https://peaks.tomcw.xyz"
+    assert set(p for p in shop["sizes"] if p.startswith("pano")) == {"pano75", "pano90"}
+    assert fulfil.sku_for(shop, "pano75") == "GLOBAL-FAP-10X30" and fulfil.sku_for(shop, "pano90") == "GLOBAL-FAP-12X36"
+    assert shop["sizes"]["A3"]["prodigi_sku"] == fulfil.load_shop()["sizes"]["A3"]["prodigi_sku"]

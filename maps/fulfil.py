@@ -1,4 +1,4 @@
-"""Turn paid footprints shop orders into Prodigi print orders.
+"""Turn paid shop orders (footprints and peaks) into Prodigi print orders and emailed files.
 
     python -m maps.fulfil prepare --session cs_...   render the print and store the file
                                                     (digital orders: render, store and email)
@@ -7,6 +7,9 @@
 
 The "Print order" GitHub workflow runs prepare, waits for approval, then runs submit.
 Digital orders finish in prepare: the files are emailed to the customer as download links.
+Both print makers sell through one Stripe account. A Checkout session's `shop` metadata
+says which shop an order is from (none means footprints); each shop has its own
+shop.json (prices, Prodigi products, email wording, site) and its own renderer.
 Stripe is the record: each order's progress is kept in its payment's metadata
 (print_status, print_preview, print_file, prodigi_order, tracking, print_error;
 digital_png, digital_pdf, digital_sent for digital orders).
@@ -40,6 +43,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 SHOP_JSON = ROOT / "web" / "footprints" / "shop.json"
+SHOP_FILES = {"footprints": SHOP_JSON, "peaks": ROOT / "web" / "peaks" / "shop.json"}
 BLOB_SCRIPT = ROOT / "web" / "footprints" / "scripts" / "blob.mjs"
 STRIPE = os.environ.get("STRIPE_API_BASE", "https://api.stripe.com") + "/v1"
 PRODIGI = {"sandbox": "https://api.sandbox.prodigi.com/v4.0", "live": "https://api.prodigi.com/v4.0"}
@@ -88,6 +92,21 @@ def load_shop(path: Path = SHOP_JSON) -> dict:
     return json.loads(Path(path).read_text())
 
 
+def shop_name(meta: dict | None) -> str:
+    """Which shop an order is from: the session's `shop` metadata, or footprints for older orders."""
+    name = (meta or {}).get("shop") or "footprints"
+    if name not in SHOP_FILES:
+        raise FulfilError("Unknown shop on this order")
+    return name
+
+
+def paper_of(order: "Order") -> str:
+    if order.shop == "footprints":
+        from maps import prints
+        return prints.spec_from_recipe(order.recipe).paper
+    return str(json.loads(order.recipe).get("paper", ""))
+
+
 def sku_for(shop: dict, paper: str) -> str:
     size = shop.get("sizes", {}).get(paper) or {}
     sku = size.get("prodigi_sku")
@@ -129,6 +148,8 @@ class Order:
     created: int
     product: str = "print"
     name: str = ""
+    shop: str = "footprints"
+    route: str = ""   # peaks: encoded GPX route, carried in the session's route_0, route_1, … metadata
 
 
 def load_order(http, key: str, session_id: str) -> Order:
@@ -148,7 +169,7 @@ def order_from_session(s: dict) -> Order:
         raise FulfilError("This order isn't paid")
     recipe = (s.get("metadata") or {}).get("recipe")
     if not recipe:
-        raise FulfilError("This payment isn't a footprints shop order")
+        raise FulfilError("This payment isn't a shop order")
     pi = s.get("payment_intent")
     if not isinstance(pi, dict) or not pi.get("id"):
         raise FulfilError("Stripe didn't return the payment for this order")
@@ -162,9 +183,14 @@ def order_from_session(s: dict) -> Order:
         raise FulfilError("This order has no delivery address")
     if product == "digital" and not email:
         raise FulfilError("This order has no email address")
+    meta = s.get("metadata") or {}
+    route, i = [], 0
+    while meta.get(f"route_{i}"):
+        route.append(meta[f"route_{i}"])
+        i += 1
     return Order(session_id=s["id"], pi_id=pi["id"], metadata=pi.get("metadata") or {}, recipe=recipe,
                  shipping=shipping or {}, email=email, created=int(s.get("created") or 0), product=product,
-                 name=customer_name(s))
+                 name=customer_name(s), shop=shop_name(meta), route="".join(route))
 
 
 def recipient(shipping: dict, email: str | None) -> dict:
@@ -188,7 +214,7 @@ def order_payload(order: Order, sku: str, method: str, file_url: str) -> dict:
         "shippingMethod": method,
         "recipient": recipient(order.shipping, order.email),
         "items": [{
-            "merchantReference": "footprints-print",
+            "merchantReference": f"{order.shop}-print",
             "sku": sku,
             "copies": 1,
             "sizing": "fillPrintArea",
@@ -229,6 +255,24 @@ def render(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | No
     return {k: found[k][0] for k in kinds}
 
 
+def render_peaks(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | None = None,
+                 route: str | None = None) -> dict[str, Path]:
+    """Peaks prints are drawn by the web page itself, in headless Chromium."""
+    from maps import peaks_render
+    return peaks_render.render(recipe, out, kinds, min_long_px, route=route or None)
+
+
+RENDERERS = {"footprints": render, "peaks": render_peaks}
+AUTO = object()   # pick the renderer for the order's shop
+
+
+def _render(renderer, order: Order, out: Path, kinds, min_long_px=None) -> dict[str, Path]:
+    renderer = RENDERERS[order.shop] if renderer is AUTO else renderer
+    if order.route:
+        return renderer(order.recipe, out, kinds, min_long_px, route=order.route)
+    return renderer(order.recipe, out, kinds, min_long_px) if min_long_px else renderer(order.recipe, out, kinds)
+
+
 PREVIEW_HOURS = 7 * 24   # signed preview link saved on the payment for checking before approval
 PRODIGI_HOURS = 72        # signed print-file link given to Prodigi when the order is sent
 
@@ -243,9 +287,14 @@ def signed_url(uploader, pathname: str, hours: int) -> str:
         return uploader("sign", pathname, "24")["url"]
 
 
-def download_link(pathname: str, days: int, now: float | None = None) -> str:
-    """A link to /api/download for a digital file, signed to expire after `days`."""
-    secret, site = os.environ.get("DOWNLOAD_SECRET"), os.environ.get("SITE_URL", "").rstrip("/")
+def site_url(shop: dict | None) -> str:
+    """Where a shop's emails and download links point: shop.json's site, else SITE_URL."""
+    return ((shop or {}).get("site") or os.environ.get("SITE_URL", "")).rstrip("/")
+
+
+def download_link(pathname: str, days: int, now: float | None = None, site: str | None = None) -> str:
+    """A link to the shop's /api/download for a digital file, signed to expire after `days`."""
+    secret, site = os.environ.get("DOWNLOAD_SECRET"), (site or os.environ.get("SITE_URL", "")).rstrip("/")
     if not secret or not site:
         raise FulfilError("Digital downloads aren't set up (DOWNLOAD_SECRET and SITE_URL)")
     expiry = int((now or time.time()) + days * 86400)
@@ -272,10 +321,10 @@ def first_name(full: str | None) -> str:
     return word[:40] if word and any(ch.isalpha() for ch in word) else ""
 
 
-def _letter(name: str, paras: list[str], signoff: str, site: str) -> tuple[str, str]:
+def _letter(name: str, paras: list[str], signoff: str, site: str, brand: str = "Footprints") -> tuple[str, str]:
     """Plain-text and HTML versions of a short personal email. paras are (text, html) pairs."""
     hello = f"Hi {name}," if name else "Hello,"
-    sign = [signoff, f"Footprints · {site}" if site else "Footprints"]
+    sign = [signoff, f"{brand} · {site}" if site else brand]
     text = "\n\n".join([hello] + [t for t, _ in paras] + ["\n".join(sign)])
     html = "".join([f"<p>{_esc(hello)}</p>"] + [f"<p>{h}</p>" for _, h in paras]
                    + [f"<p>{_esc(sign[0])}<br><span style=\"color:#666\">{_esc(sign[1])}</span></p>"])
@@ -284,16 +333,24 @@ def _letter(name: str, paras: list[str], signoff: str, site: str) -> tuple[str, 
 
 def _voice(shop: dict) -> tuple[str, str]:
     signoff = ((shop or {}).get("email") or {}).get("signoff") or "Tom"
-    site = os.environ.get("SITE_URL", "").replace("https://", "").rstrip("/")
+    site = site_url(shop).replace("https://", "")
     return signoff, site
+
+
+def _copy(shop: dict | None) -> dict:
+    """The words that differ between shops (shop.json "email"), with footprints' as the default."""
+    e = (shop or {}).get("email") or {}
+    return {"brand": e.get("brand") or "Footprints", "thing": e.get("thing") or "footprints map",
+            "made": e.get("made") or "made just now from every building in OpenStreetMap"}
 
 
 def digital_email(title: str, png_url: str, pdf_url: str, days: int, name: str = "", shop: dict | None = None) -> tuple[str, str, str]:
     signoff, site = _voice(shop)
-    subject = f"Your map of {title} is ready"[:150]
+    c = _copy(shop)
+    subject = (f"Your map of {title} is ready" if c["brand"] == "Footprints" else f"Your print of {title} is ready")[:150]
     text, html = _letter(first_name(name), [
-        (f"Thanks for buying a footprints map. Here's \"{title}\", made just now from every building in OpenStreetMap.",
-         f"Thanks for buying a footprints map. Here's <strong>{_esc(title)}</strong>, made just now from every building in OpenStreetMap."),
+        (f"Thanks for buying a {c['thing']}. Here's \"{title}\", {c['made']}.",
+         f"Thanks for buying a {_esc(c['thing'])}. Here's <strong>{_esc(title)}</strong>, {_esc(c['made'])}."),
         (f"The high-resolution PNG, sharp printed up to A2:\n{png_url}\n\nThe PDF, which prints sharp at any size:\n{pdf_url}",
          f'<a href="{_esc(png_url)}">Download the high-resolution PNG</a>, sharp printed up to A2.<br>'
          f'<a href="{_esc(pdf_url)}">Download the PDF</a>, which prints sharp at any size.'),
@@ -303,7 +360,7 @@ def digital_email(title: str, png_url: str, pdf_url: str, days: int, name: str =
          "please keep the small map data credit on if you share it."),
         ("If anything's not right, just reply. It comes straight to me.",
          "If anything's not right, just reply. It comes straight to me."),
-    ], signoff, site)
+    ], signoff, site, _copy(shop)["brand"])
     return subject, text, html
 
 
@@ -321,7 +378,7 @@ def received_email(title: str, paper: str, name: str = "", shop: dict | None = N
          "If you have any questions in the meantime, just reply. It comes straight to me.",
          "I'll email again with a tracking link as soon as it's on its way. "
          "If you have any questions in the meantime, just reply. It comes straight to me."),
-    ], signoff, site)
+    ], signoff, site, _copy(shop)["brand"])
     return subject, text, html
 
 
@@ -334,18 +391,24 @@ def shipped_email(title: str, tracking: str, name: str = "", shop: dict | None =
         (f"You can track it here:\n{tracking}", f'<a href="{_esc(tracking)}">Track your parcel</a>'),
         ("I hope it looks great on the wall. If anything's wrong when it arrives, just reply and I'll put it right.",
          "I hope it looks great on the wall. If anything's wrong when it arrives, just reply and I'll put it right."),
-    ], signoff, site)
+    ], signoff, site, _copy(shop)["brand"])
     return subject, text, html
 
 
 def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, stripe_url: str,
-                   ) -> tuple[str, str, str]:
+                   shop: str = "footprints") -> tuple[str, str, str]:
     """For the shop owner only: what's about to be printed, with a link to approve it."""
     title = recipe.get("title") or "(no title)"
-    rows = [("Title", title), ("Subtitle", recipe.get("subtitle") or "–"), ("Small line", recipe.get("kicker") or "–"),
-            ("Place", recipe.get("name") or "–"),
-            ("Sheet", f"{paper}, {recipe.get('orient', 'portrait')}, {recipe.get('theme', 'paper')} colours, "
-                      f"{recipe.get('width_km', '?')} km across")]
+    if shop == "peaks":
+        rows = [("Shop", "Peaks"), ("Title", title), ("Subtitle", recipe.get("subtitle") or "–"),
+                ("Style", recipe.get("style", "?")), ("Place", recipe.get("name") or "–"),
+                ("Route", f"yes, {recipe['route']} points" if recipe.get("route") else "no"),
+                ("Sheet", f"{paper}, {recipe.get('orient', 'portrait')}, {recipe.get('theme', 'paper')} colours")]
+    else:
+        rows = [("Title", title), ("Subtitle", recipe.get("subtitle") or "–"), ("Small line", recipe.get("kicker") or "–"),
+                ("Place", recipe.get("name") or "–"),
+                ("Sheet", f"{paper}, {recipe.get('orient', 'portrait')}, {recipe.get('theme', 'paper')} colours, "
+                          f"{recipe.get('width_km', '?')} km across")]
     subject = f"Approve this print? {title}, {recipe.get('paper', '')}"[:150]
     text = ("A print order is waiting for your approval.\n\n" + "\n".join(f"{k}: {v}" for k, v in rows)
             + f"\n\nPreview (link works for 7 days):\n{preview_url}\n\n"
@@ -375,12 +438,21 @@ def approval_links(pi_id: str, key: str) -> tuple[str, str]:
     return run_url, stripe_url
 
 
-def notify(http, key: str, pid: str, to: str | None, flag: str, message: tuple[str, str, str]) -> bool:
+def sender_for(shop: dict | None) -> str | None:
+    """SHOP_EMAIL_FROM with the shop's own display name (shop.json email.from_name), same address."""
+    sender, name = os.environ.get("SHOP_EMAIL_FROM"), ((shop or {}).get("email") or {}).get("from_name")
+    if not sender or not name:
+        return sender
+    address = sender[sender.find("<") + 1:sender.rfind(">")] if "<" in sender else sender.strip()
+    return f"{name} <{address}>"
+
+
+def notify(http, key: str, pid: str, to: str | None, flag: str, message: tuple[str, str, str], shop: dict | None = None) -> bool:
     """Send an order update once, noting it on the payment. A failed update never holds up the order."""
     if not to:
         return False
     try:
-        send_email(http, to, *message, idempotency=f"{flag}-{pid}")
+        send_email(http, to, *message, idempotency=f"{flag}-{pid}", sender=sender_for(shop))
     except FulfilError as e:
         print(f"{ref(pid)}: customer update not sent ({e})")
         return False
@@ -388,8 +460,8 @@ def notify(http, key: str, pid: str, to: str | None, flag: str, message: tuple[s
     return True
 
 
-def send_email(http, to: str, subject: str, text: str, html: str, idempotency: str):
-    key, sender = os.environ.get("RESEND_API_KEY"), os.environ.get("SHOP_EMAIL_FROM")
+def send_email(http, to: str, subject: str, text: str, html: str, idempotency: str, sender: str | None = None):
+    key, sender = os.environ.get("RESEND_API_KEY"), sender or os.environ.get("SHOP_EMAIL_FROM")
     if not key or not sender:
         raise FulfilError("Email isn't set up (RESEND_API_KEY and SHOP_EMAIL_FROM)")
     body = {"from": sender, "to": [to], "subject": subject, "text": text, "html": html}
@@ -403,29 +475,28 @@ def send_email(http, to: str, subject: str, text: str, html: str, idempotency: s
 
 # --- Steps -------------------------------------------------------------------
 
-def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer=render, shop=None) -> str:
+def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer=AUTO, shop=None) -> str:
     """Render and store the print. Returns 'submit', or 'skip' when nothing more is needed."""
     key = key or os.environ["STRIPE_SECRET_KEY"]
     order = load_order(http, key, session_id)
-    shop = shop or load_shop()
+    shop = shop or load_shop(SHOP_FILES[order.shop])
     if order.product == "digital":
         return deliver_digital(order, http=http, key=key, uploader=uploader, renderer=renderer, shop=shop)
     if order.metadata.get("prodigi_order"):
         print(f"{ref(order.pi_id)}: already sent to print; nothing to do")
         return "skip"
-    from maps import prints
-    sku_for(shop, prints.spec_from_recipe(order.recipe).paper)  # fail early if the size can't be printed
+    sku_for(shop, paper_of(order))  # fail early if the size can't be printed
     if not order.metadata.get("email_received"):
         recipe = json.loads(order.recipe)
         if notify(http, key, order.pi_id, order.email, "email_received",
-                  received_email(recipe.get("title") or "your map", _paper_label(recipe, shop), order.name, shop)):
+                  received_email(recipe.get("title") or "your map", _paper_label(recipe, shop), order.name, shop), shop):
             print(f"{ref(order.pi_id)}: order confirmation emailed")
     if order.metadata.get("print_file"):
         print(f"{ref(order.pi_id)}: print file already made; waiting for approval")
         return "submit"
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            files = renderer(order.recipe, Path(tmp), ("print", "web"))
+            files = _render(renderer, order, Path(tmp), ("print", "web"))
             print_path = uploader("put", str(files["print"]), f"orders/{order.pi_id}-print.png")["pathname"]
             preview_path = uploader("put", str(files["web"]), f"orders/{order.pi_id}-preview.png")["pathname"]
             preview_url = signed_url(uploader, preview_path, PREVIEW_HOURS)
@@ -440,7 +511,7 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     if owner and not order.metadata.get("email_owner"):
         recipe = json.loads(order.recipe)
         if notify(http, key, order.pi_id, owner, "email_owner",
-                  approval_email(recipe, _paper_label(recipe, shop), preview_url, *approval_links(order.pi_id, key))):
+                  approval_email(recipe, _paper_label(recipe, shop), preview_url, *approval_links(order.pi_id, key), order.shop)):
             print(f"{ref(order.pi_id)}: preview emailed to the shop owner for approval")
     return "submit"
 
@@ -455,7 +526,7 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
         png_path, pdf_path = order.metadata.get("digital_png"), order.metadata.get("digital_pdf")
         if not (png_path and pdf_path):  # a retry after a failed email reuses the stored files
             with tempfile.TemporaryDirectory() as tmp:
-                files = renderer(order.recipe, Path(tmp), ("print", "pdf"), DIGITAL_MIN_LONG_PX)
+                files = _render(renderer, order, Path(tmp), ("print", "pdf"), DIGITAL_MIN_LONG_PX)
                 png_path = uploader("put", str(files["print"]), f"digital/{order.pi_id}-print.png")["pathname"]
                 pdf_path = uploader("put", str(files["pdf"]), f"digital/{order.pi_id}-print.pdf")["pathname"]
             stripe_set_metadata(http, key, order.pi_id, {"print_status": "file made, emailing",
@@ -465,8 +536,10 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
     except Exception as e:
         raise FulfilError(f"Rendering the digital file failed ({type(e).__name__})") from None
     title = json.loads(order.recipe).get("title") or "your map"
-    png_url, pdf_url = download_link(png_path, days), download_link(pdf_path, days)
-    send_email(http, order.email, *digital_email(title, png_url, pdf_url, days, order.name, shop), idempotency=f"digital-{order.pi_id}")
+    site = site_url(shop)
+    png_url, pdf_url = download_link(png_path, days, site=site), download_link(pdf_path, days, site=site)
+    send_email(http, order.email, *digital_email(title, png_url, pdf_url, days, order.name, shop), idempotency=f"digital-{order.pi_id}",
+               sender=sender_for(shop))
     stripe_set_metadata(http, key, order.pi_id, {"print_status": "emailed", "print_error": "",
                                                  "digital_sent": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
     print(f"{ref(order.pi_id)}: digital file emailed")
@@ -486,10 +559,8 @@ def submit(session_id: str, *, http=requests, key=None, prodigi_key=None, shop=N
     if not print_path:
         raise FulfilError("No print file yet; run the prepare step first")
     file_url = signed_url(uploader, print_path, PRODIGI_HOURS)
-    shop = shop or load_shop()
-    from maps import prints
-    payload = order_payload(order, sku_for(shop, prints.spec_from_recipe(order.recipe).paper),
-                            shipping_method(shop), file_url)
+    shop = shop or load_shop(SHOP_FILES[order.shop])
+    payload = order_payload(order, sku_for(shop, paper_of(order)), shipping_method(shop), file_url)
     r = http.post(f"{prodigi_base()}/orders", json=payload, headers={"X-API-Key": prodigi_key}, timeout=120)
     body = {}
     try:
@@ -515,10 +586,17 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
     key = key or os.environ["STRIPE_SECRET_KEY"]
     prodigi_key = prodigi_key or os.environ.get("PRODIGI_API_KEY")
     now = now or time.time()
-    shop = shop or load_shop()
+    shops = {}
+
+    def shop_for(name):   # a shop passed in (tests) stands for every order
+        if name not in shops:
+            shops[name] = shop or load_shop(SHOP_FILES[name])
+        return shops[name]
+
     counts = {"in production": 0, "shipped": 0, "awaiting approval": 0, "digital emailed": 0, "needs attention": 0}
-    link_days = int((shop.get("digital") or {}).get("link_days") or 30)
-    notes = list(config_problems(shop))
+    notes = []
+    for name in (["footprints"] if shop else SHOP_FILES):
+        notes += [p if shop else f"{name}: {p}" for p in config_problems(shop_for(name))]
     params = {"limit": 100, "created[gte]": int(now - days * 86400), "expand[]": "data.payment_intent"}
     while True:
         page = stripe_get(http, key, "/checkout/sessions", params=params)
@@ -527,6 +605,13 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                 continue
             pi = s.get("payment_intent") or {}
             meta, pid = pi.get("metadata") or {}, pi.get("id", "")
+            try:
+                sh = shop_for(shop_name(s.get("metadata")))
+            except FulfilError as e:
+                counts["needs attention"] += 1
+                notes.append(f"{ref(pid)}: {e}")
+                continue
+            link_days = int((sh.get("digital") or {}).get("link_days") or 30)
             age_h = (now - int(s.get("created") or now)) / 3600
             if (s.get("metadata") or {}).get("product") == "digital":
                 if meta.get("digital_sent"):
@@ -570,7 +655,7 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                 if not meta.get("email_shipped"):
                     title = json.loads(s["metadata"]["recipe"]).get("title") or "your map"
                     notify(http, key, pid, (s.get("customer_details") or {}).get("email"), "email_shipped",
-                           shipped_email(title, tracking[0], customer_name(s), shop))
+                           shipped_email(title, tracking[0], customer_name(s), sh), sh)
                 old = [meta["print_file"], f"orders/{pid}-preview.png"] if meta.get("print_file") else []
                 if old:
                     uploader("del", *old)

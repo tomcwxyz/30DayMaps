@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look).",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline.",
  "areas": [
   {
    "slug": "helvellyn",
@@ -10,6 +10,39 @@
    "lon": -3.0164,
    "width_km": 7,
    "summit_m": 950
+  },
+  {
+   "slug": "blencathra",
+   "name": "Blencathra",
+   "title": "Blencathra",
+   "region": "Lake District",
+   "lat": 54.639,
+   "lon": -3.0458,
+   "width_km": 4.5,
+   "summit_m": 868,
+   "ridges": [
+    {
+     "name": "Sharp Edge",
+     "lat": 54.64529,
+     "lon": -3.04595
+    },
+    {
+     "name": "Hall's Fell",
+     "lat": 54.63355,
+     "lon": -3.05185
+    }
+   ],
+   "views": [
+    "blencathra-from-clough-head"
+   ],
+   "hires": {
+    "src": "hires/blencathra.png",
+    "lat": 54.64034,
+    "lon": -3.04583,
+    "halfW": 2440,
+    "halfH": 3190,
+    "res": 3
+   }
   },
   {
    "slug": "scafell",
@@ -66,6 +99,16 @@
     "dy_km": 2.0,
     "dx_km": -0.5
    }
+  },
+  {
+   "slug": "inaccessible-pinnacle",
+   "name": "In Pin",
+   "title": "Inaccessible Pinnacle",
+   "region": "Sgùrr Dearg, Black Cuillin",
+   "lat": 57.2127,
+   "lon": -6.2348,
+   "width_km": 3,
+   "summit_m": 986
   },
   {
    "slug": "yr-wyddfa",
@@ -248,6 +291,71 @@
    "reach_km": 18,
    "lift_m": 2,
    "near_km": 1.4
+  },
+  {
+   "slug": "inaccessible-pinnacle-summit",
+   "title": "From the In Pin",
+   "subtitle": "the view from the top of the Inaccessible Pinnacle",
+   "lat": 57.2127,
+   "lon": -6.2348,
+   "azimuth": 90,
+   "fov": 360,
+   "reach_km": 45,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "blencathra-from-clough-head",
+   "title": "Blencathra",
+   "subtitle": "from Clough Head, looking north",
+   "lat": 54.59326,
+   "lon": -3.03379,
+   "azimuth": 354,
+   "fov": 56,
+   "reach_km": 12,
+   "lift_m": 2,
+   "near_km": 1.5
+  },
+  {
+   "slug": "inaccessible-pinnacle-from-glen-brittle",
+   "title": "Sgùrr Dearg",
+   "subtitle": "from Glen Brittle, looking east",
+   "lat": 57.2197,
+   "lon": -6.29366,
+   "azimuth": 104,
+   "fov": 64,
+   "reach_km": 12,
+   "lift_m": 2,
+   "near_km": 0.8
+  },
+  {
+   "slug": "sharp-edge-from-bannerdale",
+   "title": "Sharp Edge",
+   "subtitle": "from below Bannerdale Crags, looking south-west",
+   "lat": 54.64998,
+   "lon": -3.0384,
+   "azimuth": 225,
+   "fov": 46,
+   "reach_km": 15,
+   "lift_m": 2,
+   "near_km": 0.08,
+   "hires": {
+    "src": "hires/blencathra.png",
+    "lat": 54.64034,
+    "lon": -3.04583,
+    "halfW": 2440,
+    "halfH": 3190,
+    "res": 3
+   },
+   "labels": [
+    {
+     "name": "Sharp Edge",
+     "lat": 54.64589,
+     "lon": -3.04334,
+     "kind": "ridge",
+     "sky": true
+    }
+   ]
   }
  ]
 }

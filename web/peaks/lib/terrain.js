@@ -22,16 +22,52 @@
   const tileCache = new Map();   // "z/x/y" -> Promise<Float32Array(256*256)>
   let tileUrl = TERRARIUM;
 
-  async function decodePNG(blob) {
+  async function decodePNG(blob, size) {
     const bmp = await createImageBitmap(blob, { colorSpaceConversion: "none", premultiplyAlpha: "none" });
-    const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(TILE, TILE)
-      : Object.assign(document.createElement("canvas"), { width: TILE, height: TILE });
+    const W = size ? bmp.width : TILE, H = size ? bmp.height : TILE;
+    const c = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(W, H)
+      : Object.assign(document.createElement("canvas"), { width: W, height: H });
     const ctx = c.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(bmp, 0, 0);
-    const px = ctx.getImageData(0, 0, TILE, TILE).data;
-    const out = new Float32Array(TILE * TILE);
+    const px = ctx.getImageData(0, 0, W, H).data;
+    const out = new Float32Array(W * H);
     for (let i = 0, j = 0; i < out.length; i++, j += 4) out[i] = px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768;
-    return out;
+    return size ? { z: out, w: W, h: H } : out;
+  }
+
+  // A finer elevation patch for a ready-made view (Environment Agency LiDAR, packed by
+  // maps/peaks_lidar.py onto this file's own local grid). meta: { src, lat, lon, halfW, halfH, res }.
+  async function hires(meta) {
+    const r = await fetch(meta.src);
+    if (!r.ok) throw new Error(`${meta.src}: HTTP ${r.status}`);
+    const { z, w, h } = await decodePNG(await r.blob(), true);
+    return { z, w, h, res: meta.res, halfW: w * meta.res / 2, halfH: h * meta.res / 2, lat: meta.lat, lon: meta.lon };
+  }
+
+  // A copy of g with a finer patch blended in where it covers (fading in over `feather`
+  // metres from the patch edge, so the two sources meet without a step).
+  function blendFine(g, f, feather = 150) {
+    const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
+    const z = Float32Array.from(g.z), mx = f.halfW - f.res, my = f.halfH - f.res;
+    for (let r = 0; r < g.h; r++) {
+      const fy = g.halfH - (r + 0.5) * g.res - dy;
+      if (fy <= -my || fy >= my) continue;
+      for (let c = 0; c < g.w; c++) {
+        const fx = -g.halfW + (c + 0.5) * g.res - dx;
+        if (fx <= -mx || fx >= mx) continue;
+        const w = Math.min(1, (mx - Math.abs(fx)) / feather, (my - Math.abs(fy)) / feather);
+        const i = r * g.w + c;
+        z[i] += w * (sample(f, fx, fy) - z[i]);
+      }
+    }
+    return Object.assign({}, g, { z, fineSrc: true });
+  }
+
+  // Let g sample from a finer patch wherever the patch covers it.
+  function withFine(g, f) {
+    const [dx, dy] = toXY(g.lat, g.lon, f.lat, f.lon);
+    g.fine = Object.assign({}, f, { dx, dy, mx: f.halfW - f.res, my: f.halfH - f.res });
+    return g;
   }
 
   function getTile(z, x, y) {
@@ -135,6 +171,17 @@
       const m = (z[i - w - 1] + z[i - w] + z[i - w + 1] + z[i - 1] + z[i + 1] + z[i + w - 1] + z[i + w] + z[i + w + 1]) / 8;
       if (Math.abs(z[i] - m) > 220) bad[i] = 1;
     }
+    // Needles a few cells wide: far above everything two cells away.
+    for (let r = 2; r < h - 2; r++) for (let c = 2; c < w - 2; c++) {
+      const i = r * w + c;
+      let m = -Infinity;
+      for (let k = -2; k <= 2; k++) {
+        m = Math.max(m, z[i - 2 * w + k], z[i + 2 * w + k]);
+        if (k > -2 && k < 2) m = Math.max(m, z[i + k * w - 2], z[i + k * w + 2]);
+      }
+      if (z[i] - m > 150) for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) bad[i + dr * w + dc] = 1;
+    }
+    flatBlocks(z, w, h, bad);
     // Fill from the edge of each bad patch inwards.
     let left = bad.reduce((a, b) => a + b, 0);
     for (let pass = 0; left && pass < 400; pass++) {
@@ -154,6 +201,45 @@
       left -= next.length / 2;
     }
     for (let i = 0; i < z.length; i++) if (z[i] < 0) z[i] = 0;
+  }
+
+  // Terrarium sometimes has blocks of a single height standing out of the sea (or out of
+  // lower ground) with cliff edges, from a coarse source tile. Lakes and tarns are flat too,
+  // but sit below their surroundings, so only patches that stand well above nearly all of
+  // their edge are marked bad (with a two-cell margin for the blurred rim).
+  function flatBlocks(z, w, h, bad) {
+    const seen = new Uint8Array(w * h), stack = [], comp = [];
+    const isFlat = i => {
+      const v = z[i];
+      return v > 3 && Math.abs(v - z[i - 1]) < 0.5 && Math.abs(v - z[i + 1]) < 0.5 && Math.abs(v - z[i - w]) < 0.5 && Math.abs(v - z[i + w]) < 0.5;
+    };
+    for (let r = 3; r < h - 3; r++) for (let c = 3; c < w - 3; c++) {
+      const start = r * w + c;
+      if (seen[start] || !isFlat(start)) continue;
+      comp.length = 0; stack.push(start); seen[start] = 1;
+      while (stack.length) {
+        const i = stack.pop(); comp.push(i);
+        const rr = (i / w) | 0, cc = i - rr * w;
+        for (const j of [i - 1, i + 1, i - w, i + w]) {
+          const jr = (j / w) | 0, jc = j - jr * w;
+          if (jr < 3 || jr >= h - 3 || jc < 3 || jc >= w - 3 || seen[j] || Math.abs(jr - rr) + Math.abs(jc - cc) !== 1) continue;
+          if (isFlat(j)) { seen[j] = 1; stack.push(j); }
+        }
+      }
+      if (comp.length < 12) continue;
+      const inComp = new Set(comp);
+      let edges = 0, above = 0;
+      for (const i of comp) for (const d of [-1, 1, -w, w]) {
+        if (inComp.has(i + d)) continue;
+        edges++;
+        if (z[i] - z[i + 3 * d] > 30) above++;
+      }
+      if (edges && above / edges >= 0.8)
+        for (const i of comp) for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+          const j = i + dr * w + dc;
+          if (j >= 0 && j < z.length && z[j] > 3) bad[j] = 1;
+        }
+    }
   }
 
   // Separable Gaussian blur, sigma in cells. Returns a new array.
@@ -182,6 +268,11 @@
 
   // Bilinear sample at local metres.
   function sample(g, x, y, z = g.z) {
+    const f = g.fine;
+    if (f && z === g.z) {
+      const fx = x - f.dx, fy = y - f.dy;
+      if (fx > -f.mx && fx < f.mx && fy > -f.my && fy < f.my) return sample(f, fx, fy);
+    }
     const cx = (x + g.halfW) / g.res - 0.5, cy = (g.halfH - y) / g.res - 0.5;
     const ix = Math.max(0, Math.min(g.w - 2, Math.floor(cx))), iy = Math.max(0, Math.min(g.h - 2, Math.floor(cy)));
     const fx = Math.max(0, Math.min(1, cx - ix)), fy = Math.max(0, Math.min(1, cy - iy));
@@ -191,6 +282,8 @@
 
   // Highest value within `rad` metres of (x, y): a summit's height even if the point is a little off.
   function localMax(g, x, y, rad) {
+    const f = g.fine;
+    if (f && Math.abs(x - f.dx) < f.mx - rad && Math.abs(y - f.dy) < f.my - rad) return localMax(f, x - f.dx, y - f.dy, rad);
     const n = Math.max(1, Math.round(rad / g.res));
     const cx = Math.round((x + g.halfW) / g.res - 0.5), cy = Math.round((g.halfH - y) / g.res - 0.5);
     let m = -Infinity;
@@ -208,7 +301,7 @@
     const w = Math.min(...ll.map(p => p[1])), e = Math.max(...ll.map(p => p[1]));
     const key = [s, w, n, e].map(v => v.toFixed(3)).join(",");
     if (nameCache.has(key)) return nameCache.get(key);
-    const q = `[out:json][timeout:40];node["natural"~"^(peak|hill|volcano)$"]["name"](${key});out;`;
+    const q = `[out:json][timeout:40];(node["natural"~"^(peak|hill|volcano)$"]["name"](${key});way["natural"~"^(arete|ridge)$"]["name"](${key}););out center;`;
     let els = null;
     for (const url of OVERPASS) {
       try {
@@ -216,18 +309,23 @@
         if (r.ok) { els = (await r.json()).elements; break; }
       } catch (e) { /* try the next server */ }
     }
-    if (!els) return [];
+    if (!els) {
+      if (root.PeaksTerrain.strict) throw new Error("summit names unavailable (Overpass)");
+      return [];
+    }
     const out = els.map(e => {
       const name = latin(e.tags.name) ? e.tags.name : e.tags["name:en"];
+      if (!name || !latin(name)) return null;
+      if (e.type === "way") return e.center ? { name, lat: e.center.lat, lon: e.center.lon, kind: "ridge" } : null;
       const ele = parseFloat(String(e.tags.ele || "").replace(/[^\d.\-]/g, ""));
-      return name && latin(name) ? { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null } : null;
+      return { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null };
     }).filter(Boolean);
     nameCache.set(key, out);
     return out;
   }
 
   root.PeaksTerrain = {
-    grid, blur, sample, localMax, summits, toXY, toLL, CREDIT, R,
+    grid, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); },
   };
 })(typeof window !== "undefined" ? window : globalThis);
