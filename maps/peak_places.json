@@ -413,6 +413,18 @@
    "name": "The Tea Round",
    "title": "The Tea Round",
    "subtitle": "Abraham's Tea Round, from Keswick"
+  },
+  {
+   "slug": "lakeland-100",
+   "name": "Lakeland 100",
+   "title": "Lakeland 100",
+   "subtitle": "105 miles around the Lake District from Coniston"
+  },
+  {
+   "slug": "utmb",
+   "name": "UTMB",
+   "title": "UTMB",
+   "subtitle": "Around Mont Blanc from Chamonix"
   }
  ]
 }
