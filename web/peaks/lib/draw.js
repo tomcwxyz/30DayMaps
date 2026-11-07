@@ -384,7 +384,7 @@
           while (e + 1 < cols && hi[e + 1] > lo[e + 1] && hi[e + 1] > -89) e++;
           const ring = [];
           for (let k = c; k <= e; k++) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(hi[k], yLo - span))));
-          for (let k = e; k >= c; k--) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(lo[k], yLo - span))));
+          for (let k = e; k >= c; k--) ring.push(X(offs[k]), Math.min(box.y + box.h + 5, Y(Math.max(lo[k], yLo - span)) + 0.4 * u));   // overlap the strip below: no seams
           if (e === c) { ring.splice(2, 0, X(offs[c]) + 0.01, ring[1]); ring.push(X(offs[c]) + 0.01, ring[ring.length - 1]); }
           items.push({ t: "path", rings: [Float32Array.from(ring)], fill: seaFill });
           c = e + 1;
