@@ -632,8 +632,10 @@ def web_places(path: Path = WEB_PLACES) -> Path:
                       "poster_view": view, "poster_crop": crop})
     views = [{**{k: x for k, x in v.items() if k != "labels"}, "names": summits(v["slug"]) + v.get("labels", [])}
              for v in PLACES["views"]]
-    path.write_text(json.dumps({"areas": areas, "views": views}, ensure_ascii=False, separators=(",", ":")))
-    print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views)")
+    # Ready-made routes: GPX files in web/peaks/routes (built by maps/peaks_routes.py).
+    routes = [r for r in PLACES.get("routes", []) if (path.parent / "routes" / f"{r['slug']}.gpx").exists()]
+    path.write_text(json.dumps({"areas": areas, "views": views, "routes": routes}, ensure_ascii=False, separators=(",", ":")))
+    print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views, {len(routes)} routes)")
     return path
 
 
