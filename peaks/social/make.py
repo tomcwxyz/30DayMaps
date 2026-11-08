@@ -34,6 +34,20 @@ DESIGNS = {
 }
 
 
+CLIPS = [
+    ("Studio.drawIn(DS.blencathra, { W: 1080, H: 1920, kicker: 'BLENCATHRA · LAKE DISTRICT', headline: ['Every contour from real data,', 'Sharp Edge from 2 m LiDAR'] })",
+     "reel-blencathra-draw.mp4"),
+    ("Studio.drawIn(DS.blencathra, { W: 1080, H: 1080, kicker: 'BLENCATHRA · LAKE DISTRICT' })",
+     "square-blencathra-draw.mp4"),
+    ("Studio.routeClip(DS.bgr, { W: 1080, H: 1920, kicker: 'THE BOB GRAHAM ROUND', stats: [{ n: 42, unit: '', label: 'summits' }, { n: 109, unit: ' km', label: 'distance' }, { s: '24 h', label: 'to do it in' }] })",
+     "reel-bob-graham-route.mp4"),
+    ("Studio.routeClip(DS.bgr, { W: 1080, H: 1080, kicker: 'THE BOB GRAHAM ROUND', stats: [] })",
+     "square-bob-graham-route.mp4"),
+    ("Studio.styles([{ d: DS['helv-poster'], label: 'Poster' }, { d: DS['helv-contours'], label: 'Contours' }, { d: DS['helv-ridges'], label: 'Ridgelines' }, { d: DS.striding, label: 'Skyline' }, { d: DS['cuillin-pano'], label: 'Panorama' }], { W: 1080, H: 1920, kicker: 'PICK A STYLE' })",
+     "reel-five-styles.mp4"),
+]
+
+
 def design(page, name):
     how, style, theme, paper, orient, size = DESIGNS[name]
     page.goto(BASE + f"?place={how.get('place', 'helvellyn')}")
@@ -128,14 +142,14 @@ def main():
                     Studio.text(ctx, 'peaks.tomcw.xyz', W / 2, H * 0.93, { size: 52 * k, weight: 600, color: Studio.ACCENT });
                   }, 1080, 1920)""", out / "story-striding-edge.jpg")
         if "clips" in what:
-            clip(page, "Studio.drawIn(DS.blencathra, { W: 1080, H: 1920, kicker: 'BLENCATHRA · LAKE DISTRICT', headline: ['Every contour from real data,', 'Sharp Edge from 2 m LiDAR'] })",
-                 out / "reel-blencathra-draw.mp4")
-            clip(page, "Studio.drawIn(DS.blencathra, { W: 1080, H: 1080, kicker: 'BLENCATHRA · LAKE DISTRICT' })", out / "square-blencathra-draw.mp4")
-            clip(page, "Studio.routeClip(DS.bgr, { W: 1080, H: 1920, kicker: 'THE BOB GRAHAM ROUND', stats: [{ n: 42, unit: '', label: 'summits' }, { n: 109, unit: ' km', label: 'distance' }, { s: '24 h', label: 'to do it in' }] })",
-                 out / "reel-bob-graham-route.mp4")
-            clip(page, "Studio.routeClip(DS.bgr, { W: 1080, H: 1080, kicker: 'THE BOB GRAHAM ROUND', stats: [] })", out / "square-bob-graham-route.mp4")
-            clip(page, "Studio.styles([{ d: DS['helv-poster'], label: 'Poster' }, { d: DS['helv-contours'], label: 'Contours' }, { d: DS['helv-ridges'], label: 'Ridgelines' }, { d: DS.striding, label: 'Skyline' }, { d: DS['cuillin-pano'], label: 'Panorama' }], { W: 1080, H: 1920, kicker: 'PICK A STYLE' })",
-                 out / "reel-five-styles.mp4")
+            for setup, name in CLIPS:
+                clip(page, setup, out / name)
+        if "frames" in what:   # a few full-size frames per clip, at the busy moments, to check before rendering
+            for setup, name in CLIPS:
+                page.evaluate(f"window.CLIP = {setup}")
+                secs = page.evaluate("CLIP.seconds")
+                for f in (0.3, 0.55, 0.75, 0.9):
+                    jpeg(page, f"CLIP.frame({secs * f})", out / f"frame-{name[:-4]}-{int(f * 100)}.jpg")
         b.close()
 
 

@@ -106,7 +106,7 @@
     const k = W / 1080;
     const pxW = Math.min(W * 0.86, (H * 0.68) * d.pw / d.ph);
     const pxH = pxW * d.ph / d.pw, x = (W - pxW) / 2, y = H * (H > W ? 0.17 : 0.1);
-    const wallC = wall(d, W, H, { span: H > W ? 1300 : 1500, focus: H > W ? 0.4 : 0.38, cx: 0.5, ...wallOpts });
+    const wallC = wall(d, W, H, { span: H > W ? 950 : 1150, focus: H > W ? 0.4 : 0.36, cx: 0.5, ...wallOpts });
     const final = sheet(d, null, pxW * 1.25);
     const T = { draw: 4.2, sky: 1.6, text: 0.8, hold: 1.0, wall: 2.6, end: 2.4 };
     const seconds = T.draw + T.sky + T.text + T.hold + T.wall + T.end;
