@@ -16,7 +16,7 @@ module.exports = makeCheckout({
     return { recipe, place: recipe.name, paper: recipe.paper, sessionMetadata: routeMetadata(body.route, recipe) };
   },
   printName: r => `Peaks print: ${r.title}`,
-  printDescription: (r, size) => `${size.label}, ${r.style === "panorama" ? "panoramic" : r.orient} · ${STYLE[r.style]} · ${r.theme} colours${r.route ? " · your route" : ""} · ${r.name}`,
+  printDescription: (r, size) => `${size.label}, ${r.style === "panorama" ? "panoramic" : r.orient} · ${STYLE[r.style]} · ${r.theme} colours${r.route ? " · your route" : ""}${r.runner ? ` · ${r.runner}` : ""} · ${r.name}`,
   digitalName: r => `Peaks digital print: ${r.title}`,
   digitalDescription: r => `High-resolution PNG (sharp printed up to A2) and a PDF that scales to any size, by email · ${STYLE[r.style]} · ${r.name}`,
 });

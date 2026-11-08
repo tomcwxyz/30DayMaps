@@ -47,6 +47,19 @@ test("polyline round-trips to about a metre", () => {
   for (let i = 0; i < round.length; i++) { assert.ok(Math.abs(back[i][0] - round[i][0]) < 1e-5); assert.ok(Math.abs(back[i][1] - round[i][1]) < 1e-5); }
 });
 
+test("recipe: the run's details ride along only with a route", () => {
+  const withRoute = { ...base, route: 400, round: "bob-graham-round", runner: "Jo Bloggs", date: "2026-06-21", time: "23:41:07", stops: true };
+  const r = validateRecipe(withRoute);
+  assert.deepStrictEqual([r.runner, r.date, r.time, r.stops], ["Jo Bloggs", "2026-06-21", "23:41:07", 1]);
+  const own = validateRecipe({ ...withRoute, round: "" });
+  assert.strictEqual(own.stops, undefined);
+  const none = validateRecipe({ ...base, runner: "Jo", date: "2026-06-21" });
+  assert.strictEqual(none.runner, undefined); assert.strictEqual(none.date, undefined);
+  assert.throws(() => validateRecipe({ ...withRoute, date: "21/06/2026" }), /date/);
+  assert.throws(() => validateRecipe({ ...withRoute, time: "<b>" }), /time/);
+  assert.throws(() => validateRecipe({ ...withRoute, runner: "x".repeat(41) }), /too long/);
+});
+
 test("fit thins a route until it fits", () => {
   const long = Array.from({ length: 20000 }, (_, i) => [54 + i * 1e-5 + 1e-4 * Math.sin(i), -3 + i * 2e-5]);
   const f = P.fit(long, 19200);

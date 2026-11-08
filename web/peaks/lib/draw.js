@@ -45,16 +45,37 @@
     const u = Math.min(pw, ph) / 297;
     if (kind === "panorama") {
       const m = 0.06 * ph;
-      const cap = (words.title ? 15 : 0) + (words.subtitle ? 6 : 0) + (words.details ? 5 : 0) + 12;
+      const cap = (words.title ? 15 : 0) + (words.subtitle ? 6 : 0) + (words.details ? 5 : 0) + (hasRun(words) ? 12 : 0) + 12;
       const map = { x: m, y: m, w: pw - 2 * m, h: ph - 2 * m - cap * u - 8 * u };
       return { u, map, align: "left", capX: m, capY: map.y + map.h + 13 * u, credit: [pw / 2, ph - m * 0.45], compass: true };
     }
     const land = pw > ph;
     const left = kind === "skyline";
     const mx = (left ? 0.06 : land ? 0.07 : 0.09) * pw, mt = (land ? 0.07 : 0.065) * ph;
-    const capH = ((words.title ? 26 : 8) + (words.subtitle ? 6 : 0) + (words.details ? 5 : 0) + 14) * u;
+    const capH = ((words.title ? 26 : 8) + (words.subtitle ? 6 : 0) + (words.details ? 5 : 0) + (hasRun(words) ? 12 : 0) + 14) * u;
     const map = { x: mx, y: mt, w: pw - 2 * mx, h: ph - mt - capH - 0.035 * ph };
     return { u, map, align: left ? "left" : "center", capX: left ? mx : pw / 2, capY: map.y + map.h + 14 * u, credit: [pw / 2, ph - 0.022 * ph] };
+  }
+
+  const hasRun = w => !!(w.run && (w.run.runner || w.run.date || w.run.time));
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const fmtDate = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : iso || ""; };
+
+  // The run, as a row of labelled columns: RUNNER / DATE / TIME.
+  function runRow(L, items, th, run, y) {
+    const u = L.u;
+    const cols = [["Runner", run.runner], ["Date", fmtDate(run.date)], ["Time", run.time]].filter(c => c[1]);
+    const cw = (cols.length === 1 ? 70 : 52) * u, left = L.align === "left";
+    const x0 = left ? L.capX : L.capX - cols.length * cw / 2;
+    cols.forEach(([label, value], i) => {
+      const x = left ? x0 + i * cw : x0 + (i + 0.5) * cw, align = left ? "left" : "center";
+      items.push({ t: "text", x, y, s: label.toUpperCase(), size: 1.9 * u, family: MONO, weight: 400, fill: th.muted, align, base: "top", spacing: 0.22 });
+      items.push({ t: "text", x, y: y + 3.1 * u, s: value, size: 4.4 * u, family: SANS, weight: 500, fill: th.text, align, base: "top", spacing: label === "Time" ? 0.04 : 0.01 });
+      if (i) {
+        const sx = left ? x - 5 * u : x0 + i * cw;
+        items.push({ t: "line", pts: [sx, y + 0.4 * u, sx, y + 8.2 * u], stroke: th.muted, w: 0.18 * u });
+      }
+    });
   }
 
   function caption(L, items, th, words) {
@@ -68,6 +89,7 @@
       items.push({ t: "text", x: L.capX, y, s: words.subtitle, size: 3.4 * u, family: MONO, weight: 400, fill: th.text, align: L.align, base: "top" });
       y += 5.6 * u;
     }
+    if (hasRun(words)) { runRow(L, items, th, words.run, y + 1.6 * u); y += 12 * u; }
     if (words.details) items.push({ t: "text", x: L.capX, y, s: words.details.toUpperCase(), size: 2.75 * u, family: MONO, weight: 400, fill: th.muted, align: L.align, base: "top", spacing: 0.04 });
   }
 
@@ -534,10 +556,42 @@
     items.push({ t: "circle", x: pts[n - 2], y: pts[n - 1], r: 1.5 * u, fill: th.accent, stroke: th.panel, w: 0.4 * u });
     const avoid = [];
     for (let i = 0; i < n; i += 8) avoid.push([pts[i], pts[i + 1], 6 * u]);
+    for (const st of route.stops || []) {
+      const x = M.x(st.x), y = M.y(st.y);
+      items.push({ t: "circle", x, y, r: 1.05 * u, fill: th.panel, stroke: th.accent, w: 0.45 * u });
+      avoid.push([x, y, 2 * u]);
+    }
     return avoid;
   }
 
-  function drawProfile(items, { route, box, th, u, labels }) {
+  // ---- the summits (or checkpoints) of a route, in order --------------------------------------
+  // Column sizes for a list of names across a width; also tells the caller how tall it is.
+  function stopsLayout(names, w, u) {
+    const longest = Math.max(...names.map(n => [...n].length));
+    const colW = Math.max(34 * u, (6 + longest * 1.12 + 9) * u);
+    let cols = Math.max(1, Math.min(names.length, Math.floor((w + 4 * u) / colW)));
+    const rows = Math.ceil(names.length / cols);
+    cols = Math.ceil(names.length / rows);
+    return { cols, rows, colW: (w + 4 * u) / cols, h: 7.2 * u + rows * 3.7 * u };
+  }
+
+  // stops = [{ n, name, d, h }], label = "summits" | "checkpoints"
+  function drawStops(items, { stops, label, box, th, u }) {
+    const S = stopsLayout(stops.map(s => s.name), box.w, u);
+    items.push({ t: "line", pts: [box.x, box.y, box.x + box.w, box.y], stroke: th.muted, w: 0.15 * u });
+    items.push({ t: "text", x: box.x, y: box.y + 1.8 * u, s: `${stops.length} ${label}, in order`.toUpperCase(), size: 1.9 * u, family: MONO, weight: 400, fill: th.muted, align: "left", base: "top", spacing: 0.22 });
+    const top = box.y + 7.2 * u;
+    stops.forEach((st, i) => {
+      const c = Math.floor(i / S.rows), r = i % S.rows;
+      const x = box.x + c * S.colW, y = top + r * 3.7 * u, right = x + S.colW - 4 * u;
+      items.push({ t: "text", x, y, s: String(st.n).padStart(2, "0"), size: 1.8 * u, family: MONO, weight: 500, fill: th.accent, align: "left", base: "top" });
+      items.push({ t: "text", x: x + 4.6 * u, y: y - 0.25 * u, s: st.name, size: 2.25 * u, family: SANS, weight: 500, fill: th.text, align: "left", base: "top" });
+      const val = label === "summits" ? (st.h != null ? `${Math.round(st.h)}` : "") : `${Math.round(st.d / 1000)} km`;
+      if (val) items.push({ t: "text", x: right, y, s: val, size: 1.8 * u, family: MONO, weight: 400, fill: th.muted, align: "right", base: "top" });
+    });
+  }
+
+  function drawProfile(items, { route, box, th, u, labels, stops }) {
     const P = route.profile, D = route.length;
     let lo = Infinity, hi = -Infinity;
     for (const [, e] of P) { lo = Math.min(lo, e); hi = Math.max(hi, e); }
@@ -557,10 +611,26 @@
         items.push({ t: "line", pts: [x, box.y + box.h, x, box.y + box.h + 1.4 * u], stroke: th.muted, w: 0.15 * u });
         items.push({ t: "text", x, y: box.y + box.h + 2 * u, s: `${k * stepKm}`, size: 1.95 * u, family: MONO, weight: 400, fill: th.muted, align: "center", base: "top" });
       }
-      const iHi = P.reduce((b, p, i) => p[1] > P[b][1] ? i : b, 0);
-      items.push({ t: "text", x: X(P[iHi][0]), y: Y(P[iHi][1]) - 1.5 * u, s: `${Math.round(P[iHi][1])} m`, size: 2 * u, family: MONO, weight: 500, fill: th.text, align: "center", base: "bottom" });
+      if (!stops || !stops.length) {
+        const iHi = P.reduce((b, p, i) => p[1] > P[b][1] ? i : b, 0);
+        items.push({ t: "text", x: X(P[iHi][0]), y: Y(P[iHi][1]) - 1.5 * u, s: `${Math.round(P[iHi][1])} m`, size: 2 * u, family: MONO, weight: 500, fill: th.text, align: "center", base: "bottom" });
+      }
+    }
+    if (stops && stops.length) {
+      // a dot on the line for each stop, numbered where there's room (two tiers before giving up)
+      const at = d => { let j = 0; while (j < P.length - 1 && P[j + 1][0] < d) j++; const a = P[j], b = P[Math.min(j + 1, P.length - 1)]; const t = b[0] > a[0] ? (d - a[0]) / (b[0] - a[0]) : 0; return a[1] + (b[1] - a[1]) * Math.max(0, Math.min(1, t)); };
+      const last = [-Infinity, -Infinity], gap = 3.4 * u;
+      for (const st of stops) {
+        const x = X(st.d), y = Y(at(st.d));
+        items.push({ t: "line", pts: [x, y, x, y - 1.6 * u], stroke: th.accent, w: 0.2 * u });
+        items.push({ t: "circle", x, y, r: 0.55 * u, fill: th.accent });
+        const tier = x - last[0] >= gap ? 0 : x - last[1] >= gap ? 1 : -1;
+        if (tier < 0) continue;
+        last[tier] = x;
+        items.push({ t: "text", x, y: y - 1.9 * u - tier * 2.3 * u, s: String(st.n), size: 1.6 * u, family: MONO, weight: 500, fill: th.text, align: "center", base: "bottom" });
+      }
     }
   }
 
-  root.PeaksDraw = { THEMES, layout, caption, credit, contourGeometry, drawContours, drawRidgelines, skyline, drawSkyline, drawProfile, nice, ll, fmtKm, mix };
+  root.PeaksDraw = { THEMES, layout, caption, credit, stopsLayout, drawStops, fmtDate, contourGeometry, drawContours, drawRidgelines, skyline, drawSkyline, drawProfile, nice, ll, fmtKm, mix };
 })(typeof window !== "undefined" ? window : globalThis);

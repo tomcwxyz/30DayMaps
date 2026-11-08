@@ -84,6 +84,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 .hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.4; }
 .rounds { display: grid; gap: 6px; margin-top: 10px; }
+.run { display: grid; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line, rgba(127,127,127,.25)); }
 .gpx { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 8px; padding: 10px; }
 .gpx input[type=file] { font: 13px var(--display); color: var(--muted); max-width: 100%; }
 .status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
@@ -210,6 +211,15 @@ button.order { min-height: 48px; padding: 12px 22px; font-size: 16px; flex: 0 1 
       <label for="title">Title<input type="text" id="title" value="" maxlength="60"></label>
       <label for="subtitle">Subtitle<input type="text" id="subtitle" value="" maxlength="140"></label>
       <label class="check"><input type="checkbox" id="details" checked> Small print line (heights, scale, view)</label>
+      <div class="run" id="runSet" hidden>
+        <span class="hint">Your run (all optional)</span>
+        <label for="runner">Runner<input type="text" id="runner" maxlength="40" placeholder="Your name"></label>
+        <div class="row">
+          <label for="runDate">Date<input type="date" id="runDate"></label>
+          <label for="runTime">Time<input type="text" id="runTime" maxlength="12" placeholder="23:41:07" inputmode="numeric"></label>
+        </div>
+        <label class="check" id="stopsRow" hidden><input type="checkbox" id="stops" checked> <span id="stopsLabel">List the summits, in order</span></label>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -502,7 +512,32 @@ function routeOnGrid(g) {
 
 // ---- composing the sheet ---------------------------------------------------------------------
 function wordsNow(details) {
-  return { title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), details: $("details").checked ? details : "" };
+  const run = state.route ? { runner: $("runner").value.trim(), date: $("runDate").value, time: runTime() } : null;
+  return { title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), details: $("details").checked ? details : "", run };
+}
+function runTime() { const t = $("runTime").value.trim(); return /^[0-9hms:. ]+$/i.test(t) ? t : ""; }
+
+// The route's summits (or checkpoints) to list, when it's a ready-made round and the box is ticked.
+function wantStops() {
+  const r = state.route;
+  return r && r.stops && r.stops.length && $("stops").checked && (state.style === "poster" || state.style === "contours") ? r.stops : null;
+}
+// Where each stop falls along the route: the nearest point after the last stop's.
+function placeStops(route, g) {
+  const list = wantStops();
+  if (!list) return null;
+  let from = 0;
+  return list.map(([name, lat, lon], k) => {
+    const [x, y] = T.toXY(g.lat, g.lon, lat, lon);
+    let best = from, bd = Infinity;
+    for (let i = from; i < route.pts.length; i++) {
+      const dd = Math.hypot(route.pts[i][0] - x, route.pts[i][1] - y);
+      if (dd < bd) { bd = dd; best = i; }
+      if (bd < 300 && dd > bd + 2000) break;   // found it; don't run on to a later pass nearby
+    }
+    from = best;
+    return { n: k + 1, name, x, y, d: route.profile[best][0], h: T.sample(g, x, y) };
+  });
 }
 
 let runId = 0;
@@ -540,8 +575,11 @@ async function compose(run, draft) {
     let details = "", creditText = T.CREDIT, lidar = false;
     const names = state.place && state.place.names;
 
+    const stopList = wantStops();
+    const SL = stopList ? D.stopsLayout(stopList.map(s => s[0]), L.map.w, u) : null;
+    const area = SL ? { ...L.map, h: L.map.h - SL.h - 5 * u } : L.map;   // the list sits under the map (and profile)
     if (style === "contours" || style === "ridgelines" || style === "poster") {
-      const box = style === "poster" ? { ...L.map, h: L.map.h * 0.72 } : L.map;
+      const box = style === "poster" ? { ...area, h: area.h * 0.72 } : style === "ridgelines" ? L.map : area;
       const fr = areaFrame(box);
       // a poster's skyline needs its own elevation: fetch both at once
       const pv = style === "poster" && !state.route ? skylineView(fr) : null;
@@ -552,6 +590,8 @@ async function compose(run, draft) {
       mark("elevation");
       lidar = !!g.fineSrc;
       const route = state.route ? routeOnGrid(g) : null;
+      const stops = route && SL && style !== "ridgelines" ? placeStops(route, g) : null;
+      if (stops) route.stops = stops;
       if (style === "ridgelines") {
         const rows = D.drawRidgelines(items, { g, frame: fr, box, th, u, rows: +$("rows").value });
         details = `${rows} west–east profiles   ·   ${D.fmtKm(fr.x1 - fr.x0)} across   ·   north at the back`;
@@ -571,9 +611,9 @@ async function compose(run, draft) {
         details = route ? `${D.fmtKm(route.length)}   ·   ${Math.round(route.ascent).toLocaleString("en-GB")} m of climbing   ·   high point ${Math.round(route.high)} m`
                         : `${top} m   ·   ${state.place.region ? state.place.region + "   ·   " : ""}contours every ${geo.step} m`;
         if (style === "poster") {
-          const strip = { x: L.map.x, y: L.map.y + L.map.h * 0.76, w: L.map.w, h: L.map.h * 0.24 };
+          const strip = { x: area.x, y: area.y + area.h * 0.76, w: area.w, h: area.h * 0.24 };
           if (route) {
-            D.drawProfile(items, { route, box: { ...strip, h: strip.h * 0.84 }, th, u, labels });
+            D.drawProfile(items, { route, box: { ...strip, h: strip.h * 0.84 }, th, u, labels, stops });
             details += "   ·   profile in km";
           } else {
             const v = pv;
@@ -593,6 +633,7 @@ async function compose(run, draft) {
           }
         }
       }
+      if (stops) D.drawStops(items, { stops, label: state.route.stopsLabel || "summits", box: { x: area.x, y: area.y + area.h + 5 * u, w: area.w, h: SL.h }, th, u });
       if (!state.route || style !== "ridgelines") creditText += "  ·  summits © OpenStreetMap contributors";
     } else {
       const v = style === "panorama" ? panoramaView() : skylineView(null);
@@ -680,6 +721,9 @@ function showFor() {
   if (!$("seenRow").hidden) $("distRow").hidden = $("seenFrom").value.startsWith("view:");
   $("facingRow").hidden = $("fovRow").hidden = $("reachRow").hidden = s !== "panorama";
   $("labelsRow").hidden = s === "ridgelines";
+  $("runSet").hidden = !route;
+  $("stopsRow").hidden = !(route && state.route.stops && (s === "poster" || s === "contours"));
+  if (route && state.route.stops) $("stopsLabel").textContent = `List the ${state.route.stopsLabel || "summits"}, in order`;
   for (const b of $("styles").children) b.disabled = route && b.dataset.style === "skyline";
   // paper list
   const pano = s === "panorama", sel = $("paper"), want = pano ? Object.keys(PANOS) : Object.keys(PAPERS);
@@ -796,6 +840,7 @@ async function loadGPX(file, meta) {
   try {
     const r = parseGPX(await file.text(), file.name);
     r.ready = meta ? meta.slug : "";
+    r.stops = meta && meta.stops || null; r.stopsLabel = meta && meta.stops_label || "summits";
     state.route = r;
     prepareRoute(r);
     r.high = r.pts[0];   // replaced by the true high point once the terrain is in
@@ -994,6 +1039,7 @@ function recipe() {
     width: +$("width").value, detail: +$("detail").value, rows: +$("rows").value, seen: $("seenFrom").value || "S",
     dist: +$("dist").value, facing: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value,
     route: state.route ? state.route.pts.length : 0, round: state.route && state.route.ready || "",
+    ...(state.route ? { runner: $("runner").value.trim(), date: $("runDate").value, time: runTime(), stops: wantStops() ? 1 : 0 } : {}),
   };
 }
 async function order() {
@@ -1017,6 +1063,8 @@ async function applyRecipe(rc, encodedRoute) {
     const r = { name: rc.name, date: null, raw: Polyline.decode(encodedRoute || "") };
     if (r.raw.length !== rc.route) throw new Error("route doesn't match the recipe");
     r.ready = rc.round || "";
+    const meta = r.ready && (PLACES.routes || []).find(x => x.slug === r.ready);
+    r.stops = meta && meta.stops || null; r.stopsLabel = meta && meta.stops_label || "summits";
     state.route = r; prepareRoute(r); r.high = r.pts[0];
     state.place = { lat: r.bbox.lat, lon: r.bbox.lon, name: rc.name, region: "" };
   } else {
@@ -1033,6 +1081,7 @@ async function applyRecipe(rc, encodedRoute) {
   for (const k of ["width", "detail", "rows", "dist", "facing", "fov", "reach"]) $(k).value = rc[k];
   $("labels").checked = !!rc.labels; $("details").checked = !!rc.details;
   $("title").value = rc.title; $("subtitle").value = rc.subtitle; $("paper").value = rc.paper;
+  $("runner").value = rc.runner || ""; $("runDate").value = rc.date || ""; $("runTime").value = rc.time || ""; $("stops").checked = !!rc.stops;
   showFor(); syncOutputs();
   if (state.route) await findHighPoint(state.route);
   clearTimeout(timer);
@@ -1075,7 +1124,8 @@ function build() {
   for (const id of ["labels", "details", "orient"]) $(id).addEventListener("change", () => schedule(0));
   $("paper").addEventListener("change", () => { if (state.style !== "panorama") state.paperStd = $("paper").value; schedule(0); });
   $("seenFrom").addEventListener("change", () => { showFor(); schedule(0); });
-  for (const id of ["title", "subtitle"]) $(id).addEventListener("input", () => schedule(120));
+  for (const id of ["title", "subtitle", "runner", "runTime"]) $(id).addEventListener("input", () => schedule(120));
+  for (const id of ["runDate", "stops"]) $(id).addEventListener("change", () => schedule(0));
   $("find").onclick = search;
   $("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); search(); } });
   $("gpxFile").addEventListener("change", e => e.target.files[0] && loadGPX(e.target.files[0]));

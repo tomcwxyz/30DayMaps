@@ -410,6 +410,7 @@ def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, str
         rows = [("Shop", "Peaks"), ("Title", title), ("Subtitle", recipe.get("subtitle") or "–"),
                 ("Style", recipe.get("style", "?")), ("Place", recipe.get("name") or "–"),
                 ("Route", f"yes, {recipe['route']} points" if recipe.get("route") else "no"),
+                ("Run", " · ".join(x for x in (recipe.get("runner"), recipe.get("date"), recipe.get("time")) if x) or "–"),
                 ("Sheet", f"{paper}, {recipe.get('orient', 'portrait')}, {recipe.get('theme', 'paper')} colours")]
     else:
         rows = [("Title", title), ("Subtitle", recipe.get("subtitle") or "–"), ("Small line", recipe.get("kicker") or "–"),
