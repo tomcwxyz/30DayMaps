@@ -9,7 +9,7 @@ const PANOS = ["pano75", "pano90"];
 const THEMES = ["paper", "white", "navy", "oxblood", "night", "moss", "bands"];
 const STYLES = ["poster", "contours", "ridgelines", "skyline", "panorama"];
 const DIRS = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"];
-const LIMITS = { name: 60, region: 40, title: 60, subtitle: 140 };
+const LIMITS = { name: 60, region: 40, title: 60, subtitle: 140, runner: 40, time: 12 };
 const MAX_JSON = 500;
 const ROUTE_CHUNK = 480, ROUTE_CHUNKS = 40, ROUTE_MAX_POINTS = 5000, ROUTE_MAX_KM = 150;
 
@@ -59,12 +59,23 @@ function validateRecipe(input) {
     route: Math.round(num(input.route || 0, 0, ROUTE_MAX_POINTS, "Route")),
     round: /^[a-z0-9-]{1,40}$/.test(String(input.round || "")) ? String(input.round) : "",   // a ready-made route, for its credit
   };
+  // the run itself, all optional: who, when (yyyy-mm-dd), how long, and whether to list the summits
+  const runner = cleanText(input.runner, LIMITS.runner), time = cleanText(input.time, LIMITS.time);
+  const date = String(input.date || "");
+  if (time && !/^[0-9hms:. ]+$/i.test(time)) throw new Error("Write the time like 23:41:07");
+  if (date && !(/^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(Date.parse(date)))) throw new Error("That date isn't valid");
+  if (r.route) {
+    if (runner) r.runner = runner;
+    if (date) r.date = date;
+    if (time) r.time = time;
+    if (input.stops && r.round) r.stops = 1;
+  }
   if (!r.route) r.round = "";
   if (!r.title) throw new Error("Add a title");
   if (!THEMES.includes(r.theme)) throw new Error("Unknown colours");
   if (style === "panorama" ? !PANOS.includes(r.paper) : !PAPERS.includes(r.paper)) throw new Error("Unknown paper size");
   if (r.route && style === "skyline") throw new Error("Routes can't be drawn as a skyline");
-  if (JSON.stringify(r).length > MAX_JSON) throw new Error("Design text is too long; shorten the title or subtitle");
+  if (JSON.stringify(r).length > MAX_JSON) throw new Error("Design text is too long; shorten the subtitle or the runner's name");
   return r;
 }
 
