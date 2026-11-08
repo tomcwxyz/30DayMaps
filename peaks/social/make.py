@@ -140,7 +140,7 @@ def main():
                     Studio.text(ctx, 'The Tea Round', W / 2, y + pxH + 100 * k, { size: 46 * k, weight: 500 });
                     Studio.text(ctx, '48 km of Lakeland fells, from Keswick', W / 2, y + pxH + 156 * k, { size: 30 * k, family: 'IBM Plex Mono', color: Studio.MUTED });
                     Studio.text(ctx, 'peaks.tomcw.xyz', W / 2, H * 0.93, { size: 52 * k, weight: 600, color: Studio.ACCENT });
-                  }, 1080, 1920)""", out / "story-striding-edge.jpg")
+                  }, 1080, 1920)""", out / "story-tea-round.jpg")
         if "clips" in what:
             for setup, name in CLIPS:
                 clip(page, setup, out / name)

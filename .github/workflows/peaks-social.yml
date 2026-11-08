@@ -21,4 +21,4 @@ jobs:
       - name: Commit outputs
         run: |
           git config user.name "peaks-bot"; git config user.email "actions@github.com"
-          git add peaks/previews/social && git commit -qm "Social renders [skip ci]" && git pull -q --rebase && git push -q || echo nothing
+          git add peaks/previews/social && git commit -qm "Social renders [skip ci]" && git stash -q -u; git pull -q --rebase && git push -q || echo nothing
