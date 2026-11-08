@@ -72,11 +72,38 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 20px 32px;
 }
-.app { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; align-items: start; }
-@media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
-header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+/* Controls | sheet | order on wide screens; order drops under the sheet on mid widths;
+   on phones the sheet comes first, then the controls, then ordering. */
+.app { display: grid; gap: 24px; max-width: 1440px; margin: 0 auto; align-items: start;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-areas: "head head" "panel stage" "panel order" "foot foot"; }
+@media (min-width: 1240px) {
+  .app { grid-template-columns: minmax(280px, 340px) 1fr 300px; grid-template-areas: "head head head" "panel stage order" "foot foot foot"; }
+  .order { position: sticky; top: 16px; }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; grid-template-areas: "head" "stage" "panel" "order" "foot"; gap: 18px; }
+}
+header.top { grid-area: head; display: grid; gap: 8px; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
 h1 { font-weight: 800; font-size: 26px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
-.lede { color: var(--muted); margin: 0; }
+.lede { color: var(--muted); margin: 0; max-width: 62ch; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font: 500 12px/1.4 var(--mono); color: var(--muted); }
+.steps li { display: flex; align-items: center; gap: 7px; }
+.steps b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); font-weight: 500; font-size: 11px; }
+#controls { grid-area: panel; }
+.stage { grid-area: stage; }
+.order { grid-area: order; display: grid; gap: 14px; align-content: start; }
+.order[hidden] { display: none !important; }
+.order .panel { gap: 12px; }
+.ordertitle { font-weight: 800; font-size: 19px; margin: 0; }
+.included { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.included li { padding-left: 20px; position: relative; }
+.included li::before { content: ""; position: absolute; left: 2px; top: .5em; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+.included strong { color: var(--fg); font-weight: 600; }
+.jump { display: none; font: 600 14px var(--display); color: var(--accent); text-decoration: none; padding: 6px 10px; }
+@media (max-width: 860px) { .jump:not([hidden]) { display: inline-block; } }
+.foot { grid-area: foot; display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 14px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 18px; min-width: 0; }
 fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
 legend { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; padding: 0; }
@@ -94,6 +121,7 @@ button {
   border: 1px solid var(--line); background: var(--bg); color: var(--fg);
 }
 button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+#order { padding: 14px 16px; font-size: 15px; }
 button:disabled { opacity: .5; cursor: progress; }
 .results { display: grid; gap: 4px; }
 .results button { text-align: left; font-weight: 500; line-height: 1.3; padding: 8px 10px; }
@@ -113,7 +141,7 @@ button:disabled { opacity: .5; cursor: progress; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 .status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
 .status.warn { color: var(--warn); }
-.stage { min-width: 0; display: grid; gap: 10px; justify-items: center; position: sticky; top: 16px; }
+.stage { min-width: 0; display: grid; gap: 10px; justify-items: center; }
 .sheet { max-width: 100%; box-shadow: 0 10px 40px var(--sheet-shadow); background: #fff; }
 .sheet canvas { display: block; width: 100%; height: auto; }
 .meta { font: 12px/1.4 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
@@ -124,7 +152,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .choice input { accent-color: var(--accent); margin: 0; }
 .choice span { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; flex: 1; }
 .choice .price { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); }
-.credit { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
+.credit { font-size: 12px; color: var(--muted); margin: 0; }
 .credit a { color: inherit; }
 @media (prefers-reduced-motion: no-preference) { button { transition: background .15s, border-color .15s; } }
 </style>
@@ -132,8 +160,15 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 <body>
 <div class="app">
   <header class="top">
-    <h1>Footprints Print Maker</h1>
-    <p class="lede">Any place, drawn as buildings and nothing else.</p>
+    <div class="brand">
+      <h1>Footprints</h1>
+      <p class="lede">Any place in the world, drawn as its buildings and nothing else. Printed and posted, or as a high-resolution file.</p>
+    </div>
+    <ol class="steps" aria-label="How it works">
+      <li><b>1</b>Pick a city or search anywhere</li>
+      <li><b>2</b>Add your own words and colours</li>
+      <li><b>3</b>Order a print or the file</li>
+    </ol>
   </header>
 
   <form class="panel" id="controls" autocomplete="off">
@@ -179,27 +214,42 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       <div class="status" id="status" role="status"></div>
     </fieldset>
 
-    <fieldset id="shop" hidden>
-      <legend>Order</legend>
-      <div class="choices" role="radiogroup" aria-label="What to order">
-        <label class="choice" id="choicePrint"><input type="radio" name="product" value="print" id="prodPrint" checked>
-          <span><strong>Printed and posted</strong><span class="price" id="printPrice"></span></span></label>
-        <label class="choice" id="choiceDigital"><input type="radio" name="product" value="digital" id="prodDigital">
-          <span><strong>Digital file by email</strong><span class="price" id="digitalPrice"></span></span></label>
-      </div>
-      <p class="shopnote" id="shopPrice"></p>
-      <button type="button" class="primary" id="order" disabled>Order this print</button>
-      <div class="status" id="orderStatus" role="status"></div>
-    </fieldset>
 
   </form>
 
   <section class="stage" aria-label="Preview">
     <div class="sheet" id="sheet"><canvas id="preview" width="600" height="848"></canvas></div>
     <div class="meta" id="meta">Example sheet. Pick a place, then Draw buildings.</div>
+    <a class="jump" id="jump" href="#orderCol" hidden>Order this map ↓</a>
   </section>
 
+  <aside class="order" id="orderCol" aria-label="Order" hidden>
+      <div class="panel" id="shop">
+        <h2 class="ordertitle">Order this map</h2>
+        <div class="choices" role="radiogroup" aria-label="What to order">
+          <label class="choice" id="choicePrint"><input type="radio" name="product" value="print" id="prodPrint" checked>
+            <span><strong>Printed and posted</strong><span class="price" id="printPrice"></span></span></label>
+          <label class="choice" id="choiceDigital"><input type="radio" name="product" value="digital" id="prodDigital">
+            <span><strong>Digital file by email</strong><span class="price" id="digitalPrice"></span></span></label>
+        </div>
+        <p class="shopnote" id="shopPrice"></p>
+        <button type="button" class="primary" id="order" disabled>Order this print</button>
+        <div class="status" id="orderStatus" role="status"></div>
+      </div>
+    <div class="panel">
+      <ul class="included" aria-label="What you get">
+        <li><strong>Archival matte art paper</strong>, 200gsm, printed in the UK by Prodigi. Sent unframed.</li>
+        <li><strong>Free tracked UK delivery.</strong> Made to order and usually with you within a week. UK addresses only for now.</li>
+        <li><strong>Digital file:</strong> a PNG sharp up to A2 and a PDF that prints at any size, emailed within about 10 minutes.</li>
+        <li><strong>Made just for you</strong>, so no returns, but anything that arrives damaged or faulty gets replaced.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <footer class="foot">
   <p class="credit">Buildings from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL), via <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> tiles served by <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>; search by Nominatim. The credit line on each print is required by the licence. Big areas can take a minute to load.</p>
+  <p class="credit">Made in the North East of England by <a href="https://tomcw.xyz/" target="_blank" rel="noopener">Tom Campbell Watson</a>.</p>
+  </footer>
 </div>
 
 <script src="lib/footprints-data.js"></script>
@@ -517,7 +567,7 @@ async function loadShop() {
       const canPrint = Object.keys(c.sizes || {}).length > 0 && c.shipping;
       $("choicePrint").hidden = !canPrint; $("choiceDigital").hidden = !c.digital;
       $(canPrint ? "prodPrint" : "prodDigital").checked = true;
-      $("shop").hidden = false; render();
+      $("orderCol").hidden = false; $("jump").hidden = false; render();
     }
   } catch { /* no order API here: the page still works as a free tool */ }
 }
@@ -526,7 +576,7 @@ function updateShop(ready) {
   if (!shop) return;
   const size = shop.sizes[$("paper").value];
   const post = shop.shipping.price ? `+ ${money(shop.shipping.price)} delivery` : "free UK delivery";
-  $("printPrice").textContent = size ? `${money(size.price)}, ${post}` : "not in this size";
+  $("printPrice").textContent = size ? (shop.shipping.price ? `${money(size.price)} ${post}` : money(size.price)) : "not in this size";
   if (shop.digital) $("digitalPrice").textContent = money(shop.digital.price);
   let sellable = true;
   if (product() === "digital") {
@@ -537,7 +587,7 @@ function updateShop(ready) {
     $("shopPrice").textContent = shop.shipping.price
       ? `${size.label}: ${money(size.price)} + ${money(shop.shipping.price)} ${shop.shipping.label}.`
       : `${size.label}: ${money(size.price)}. ${shop.shipping.label}.`;
-    $("order").textContent = "Order this print";
+    $("order").textContent = `Order this print · ${money(size.price)}`;
   } else {
     $("shopPrice").textContent = "This paper size isn't for sale as a print. Choose another size, or the digital file.";
     $("order").textContent = "Order this print"; sellable = false;
