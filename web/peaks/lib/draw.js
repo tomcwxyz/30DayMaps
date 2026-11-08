@@ -301,11 +301,16 @@
       items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: th.fills[0] });
       geo.levels.forEach((lv, i) => items.push({ t: "path", rings: ringsToMM(lv.polys, M), fill: th.fills[(i + 1) % th.fills.length], rule: "evenodd" }));
     }
-    const minor = [], major = [];
-    for (const lv of geo.levels) (lv.major ? major : minor).push(...ringsToMM(lv.polys, M));
-    items.push({ t: "path", rings: minor, stroke: th.line, w: lw, alpha: 0.78 });
+    // each ring's height rides along (heights), for anything that wants to show the lines by level
+    const minor = [], major = [], minorH = [], majorH = [];
+    for (const lv of geo.levels) {
+      const rings = ringsToMM(lv.polys, M);
+      (lv.major ? major : minor).push(...rings);
+      for (let i = 0; i < rings.length; i++) (lv.major ? majorH : minorH).push(lv.level);
+    }
+    items.push({ t: "path", rings: minor, heights: minorH, stroke: th.line, w: lw, alpha: 0.78 });
     if (geo.coast) items.push({ t: "path", rings: ringsToMM(geo.coast, M), stroke: th.line, w: lw * 1.7 });
-    items.push({ t: "path", rings: major, stroke: th.line, w: lw * 2.3 });
+    items.push({ t: "path", rings: major, heights: majorH, stroke: th.line, w: lw * 2.3 });
     let avoid = [];
     if (route) avoid = drawRoute(items, route, M, th, u);
     if (labels) {
@@ -474,7 +479,7 @@
       const pts = new Float32Array(cols * 2 + 4);
       for (let c = 0; c < cols; c++) { pts[2 * c] = X(offs[c]); pts[2 * c + 1] = Math.min(box.y + box.h + 5, Y(Math.max(L[i][c], yLo - span))); }
       pts[2 * cols] = box.x + box.w; pts[2 * cols + 1] = box.y + box.h + 5; pts[2 * cols + 2] = box.x; pts[2 * cols + 3] = box.y + box.h + 5;
-      items.push({ t: "path", rings: [pts], fill });
+      items.push({ t: "path", rings: [pts], fill, layer: n - 1 - i });
       // open sea in this band, in front of anything further away
       const hi = sd.seaHi && sd.seaHi[i].subarray(x0, x1 + 1), lo = sd.seaLo && sd.seaLo[i].subarray(x0, x1 + 1);
       if (hi) {
@@ -527,8 +532,8 @@
   function drawRoute(items, route, M, th, u) {
     const pts = new Float32Array(route.pts.length * 2);
     route.pts.forEach((p, i) => { pts[2 * i] = M.x(p[0]); pts[2 * i + 1] = M.y(p[1]); });
-    items.push({ t: "path", rings: [pts], stroke: th.panel, w: 1.9 * u, open: true, alpha: 0.85 });
-    items.push({ t: "path", rings: [pts], stroke: th.accent, w: 0.85 * u, open: true });
+    items.push({ t: "path", rings: [pts], stroke: th.panel, w: 1.9 * u, open: true, alpha: 0.85, route: true });
+    items.push({ t: "path", rings: [pts], stroke: th.accent, w: 0.85 * u, open: true, route: true });
     const n = pts.length;
     items.push({ t: "circle", x: pts[0], y: pts[1], r: 1.5 * u, fill: th.panel, stroke: th.accent, w: 0.6 * u });
     items.push({ t: "circle", x: pts[n - 2], y: pts[n - 1], r: 1.5 * u, fill: th.accent, stroke: th.panel, w: 0.4 * u });
@@ -547,8 +552,8 @@
     P.forEach(([d, e], i) => { pts[2 * i] = X(d); pts[2 * i + 1] = Y(e); });
     pts[2 * P.length] = box.x + box.w; pts[2 * P.length + 1] = box.y + box.h; pts[2 * P.length + 2] = box.x; pts[2 * P.length + 3] = box.y + box.h;
     const ink = th.panel !== th.page ? th.panel : th.line;
-    items.push({ t: "path", rings: [pts], fill: mix(th.page, ink, 0.22) });
-    items.push({ t: "path", rings: [pts.subarray(0, P.length * 2)], stroke: ink, w: 0.45 * u, open: true });
+    items.push({ t: "path", rings: [pts], fill: mix(th.page, ink, 0.22), profile: true });
+    items.push({ t: "path", rings: [pts.subarray(0, P.length * 2)], stroke: ink, w: 0.45 * u, open: true, profile: true });
     items.push({ t: "line", pts: [box.x, box.y + box.h, box.x + box.w, box.y + box.h], stroke: ink, w: 0.3 * u });
     if (labels) {
       const stepKm = [1, 2, 5, 10, 20, 50].find(s => D / 1000 / s <= 12) || 100;
