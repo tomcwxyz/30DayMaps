@@ -292,9 +292,16 @@ def site_url(shop: dict | None) -> str:
     return ((shop or {}).get("site") or os.environ.get("SITE_URL", "")).rstrip("/")
 
 
-def download_link(pathname: str, days: int, now: float | None = None, site: str | None = None) -> str:
+def download_secret(shop_name: str = "footprints") -> str | None:
+    """The key a shop's download links are signed with: <SHOP>_DOWNLOAD_SECRET if set, else DOWNLOAD_SECRET.
+    It must match DOWNLOAD_SECRET on that shop's Vercel project."""
+    return os.environ.get(f"{shop_name.upper()}_DOWNLOAD_SECRET") or os.environ.get("DOWNLOAD_SECRET")
+
+
+def download_link(pathname: str, days: int, now: float | None = None, site: str | None = None,
+                  shop_name: str = "footprints") -> str:
     """A link to the shop's /api/download for a digital file, signed to expire after `days`."""
-    secret, site = os.environ.get("DOWNLOAD_SECRET"), (site or os.environ.get("SITE_URL", "")).rstrip("/")
+    secret, site = download_secret(shop_name), (site or os.environ.get("SITE_URL", "")).rstrip("/")
     if not secret or not site:
         raise FulfilError("Digital downloads aren't set up (DOWNLOAD_SECRET and SITE_URL)")
     expiry = int((now or time.time()) + days * 86400)
@@ -537,7 +544,7 @@ def deliver_digital(order: Order, *, http, key, uploader, renderer, shop) -> str
         raise FulfilError(f"Rendering the digital file failed ({type(e).__name__})") from None
     title = json.loads(order.recipe).get("title") or "your map"
     site = site_url(shop)
-    png_url, pdf_url = download_link(png_path, days, site=site), download_link(pdf_path, days, site=site)
+    png_url, pdf_url = (download_link(p, days, site=site, shop_name=order.shop) for p in (png_path, pdf_path))
     send_email(http, order.email, *digital_email(title, png_url, pdf_url, days, order.name, shop), idempotency=f"digital-{order.pi_id}",
                sender=sender_for(shop))
     stripe_set_metadata(http, key, order.pi_id, {"print_status": "emailed", "print_error": "",

@@ -52,6 +52,7 @@ jobs:
           # Email links point at the shop's /api/download, signed with this shared secret.
           # SITE_URL is footprints' site; peaks orders use the site in web/peaks/shop.json.
           DOWNLOAD_SECRET: ${{ secrets.DOWNLOAD_SECRET }}
+          PEAKS_DOWNLOAD_SECRET: ${{ secrets.PEAKS_DOWNLOAD_SECRET }}
           SITE_URL: ${{ vars.SITE_URL }}
         run: python -u -m maps.fulfil prepare --session "$SESSION" --github-output "$GITHUB_OUTPUT"
 

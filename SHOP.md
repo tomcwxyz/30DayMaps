@@ -85,7 +85,7 @@ The Peaks print maker (`web/peaks`) sells through the same system: same Stripe a
 **Setting it up** (on top of the footprints setup above)
 1. **Vercel**: the `30daymaps-peaks` project with **Root Directory** `web/peaks`. Keep **Settings → Build → Include files outside the root directory** on (the default): the functions use `web/shop/`.
 2. Connect the **same private Blob store** as footprints to this project (Storage tab), so digital download links work here too.
-3. Environment variables: `STRIPE_SECRET_KEY` (same as footprints), `DOWNLOAD_SECRET` (same value as footprints and GitHub), `SITE_URL` = `https://peaks.tomcw.xyz`. No `GITHUB_TOKEN`: Peaks has no webhook of its own.
+3. Environment variables: `STRIPE_SECRET_KEY` (same Stripe account as footprints; a separate restricted key with Checkout Sessions write is fine), `DOWNLOAD_SECRET` (its own random value, also added in GitHub as the secret `PEAKS_DOWNLOAD_SECRET`; without that GitHub secret the workflow signs Peaks links with the shared `DOWNLOAD_SECRET`, so the values must then match), `SITE_URL` = `https://peaks.tomcw.xyz`. No `GITHUB_TOKEN`: Peaks has no webhook of its own.
 4. **Stripe, GitHub, Resend, Prodigi**: nothing new. The footprints webhook already receives Peaks payments (same Stripe account) and starts the same workflow. Emails come from `SHOP_EMAIL_FROM`'s address with the name "Peaks".
 
 **Testing:** as for footprints, with Stripe's test card, one print (with and without a GPX route) and one digital file. `node --test web/peaks/test/*.test.js`; `python web/peaks/test/harness.py suite OUT` drives the page offline; `python -m maps.peaks_render recipe.json OUT [--route …]` re-draws a recipe by hand.

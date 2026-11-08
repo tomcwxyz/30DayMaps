@@ -509,3 +509,15 @@ def test_peaks_shop_json_is_valid_and_sells_both_panoramas():
     assert set(p for p in shop["sizes"] if p.startswith("pano")) == {"pano75", "pano90"}
     assert fulfil.sku_for(shop, "pano75") == "GLOBAL-FAP-10X30" and fulfil.sku_for(shop, "pano90") == "GLOBAL-FAP-12X36"
     assert shop["sizes"]["A3"]["prodigi_sku"] == fulfil.load_shop()["sizes"]["A3"]["prodigi_sku"]
+
+
+def test_download_secret_per_shop(monkeypatch):
+    monkeypatch.setenv("DOWNLOAD_SECRET", "shared")
+    monkeypatch.delenv("PEAKS_DOWNLOAD_SECRET", raising=False)
+    assert fulfil.download_secret("peaks") == "shared"
+    monkeypatch.setenv("PEAKS_DOWNLOAD_SECRET", "peaks-only")
+    assert fulfil.download_secret("peaks") == "peaks-only"
+    assert fulfil.download_secret("footprints") == "shared"
+    a = fulfil.download_link("digital/x.png", 30, now=1700000000, site="https://p.example", shop_name="peaks")
+    b = fulfil.download_link("digital/x.png", 30, now=1700000000, site="https://p.example")
+    assert a != b
