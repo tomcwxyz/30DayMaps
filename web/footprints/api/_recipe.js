@@ -3,7 +3,7 @@
 "use strict";
 
 const PAPERS = ["A4", "A3", "A2", "A1", "50x70", "square"];
-const THEMES = ["paper", "night", "blue", "ink"];
+const THEMES = ["paper", "night", "blue", "teal", "red", "ink"];
 const LIMITS = { name: 60, title: 60, subtitle: 140, kicker: 40 };
 const MAX_JSON = 500;
 

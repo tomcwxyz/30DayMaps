@@ -42,6 +42,8 @@ THEMES = {  # buildings, background, secondary text
     "paper": ("#1E353B", "#F7F6F0", "#8A9B9B"),
     "night": ("#EDE6D6", "#17252B", "#7F9399"),
     "blue": ("#F1F5F7", "#1F4A66", "#9DB5C4"),
+    "teal": ("#EAF4F1", "#145C5E", "#8EBDB9"),
+    "red": ("#FCEFE6", "#9A2C25", "#E2A497"),
     "ink": ("#111111", "#FFFFFF", "#888888"),
 }
 CREDITS = {

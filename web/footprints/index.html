@@ -261,6 +261,8 @@ const THEMES = {
   paper: { ink: "#1E353B", bg: "#F7F6F0", muted: "#8A9B9B", label: "Paper" },
   night: { ink: "#EDE6D6", bg: "#17252B", muted: "#7F9399", label: "Night" },
   blue:  { ink: "#F1F5F7", bg: "#1F4A66", muted: "#9DB5C4", label: "Blueprint" },
+  teal:  { ink: "#EAF4F1", bg: "#145C5E", muted: "#8EBDB9", label: "Teal" },
+  red:   { ink: "#FCEFE6", bg: "#9A2C25", muted: "#E2A497", label: "Red" },
   ink:   { ink: "#111111", bg: "#FFFFFF", muted: "#888888", label: "Ink" },
 };
 const PRESETS = [
@@ -276,7 +278,7 @@ const PRESETS = [
 const FD = window.FootprintsData;
 const CREDIT = FD.CREDIT;
 
-const state = { lat: 54.9738, lon: -1.6132, place: "Newcastle and Gateshead", theme: "paper", rings: null, loaded: null };
+const state = { lat: 54.9738, lon: -1.6132, place: "Newcastle and Gateshead", theme: "blue", rings: null, loaded: null };
 const START = { lat: state.lat, lon: state.lon };   // still here means nobody has picked a place yet
 const $ = id => document.getElementById(id);
 
