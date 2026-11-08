@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /thanks.html
+
+Sitemap: https://peaks.tomcw.xyz/sitemap.xml
