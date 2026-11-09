@@ -129,14 +129,21 @@
   }
   async function fetchTile(fetchFn, url, headers) {
     for (let attempt = 0; ; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
       try {
-        const r = await fetchFn(url, { headers });
+        const r = await fetchFn(url, { headers, signal: controller.signal });
         if (r.status === 404) return new Uint8Array(0);  // open sea beyond the data
         if (!r.ok) throw new Error(`error ${r.status}`);
         return new Uint8Array(await r.arrayBuffer());
       } catch (e) {
-        if (attempt >= 2) throw e;
+        if (attempt >= 2) {
+          if (controller.signal.aborted) throw new Error("A map tile timed out. Please try again.");
+          throw e;
+        }
         await new Promise(res => setTimeout(res, 1500 * (attempt + 1)));
+      } finally {
+        clearTimeout(timeout);
       }
     }
   }
