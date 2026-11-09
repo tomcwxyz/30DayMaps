@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f3f0e7">
+<meta name="description" content="What if everyone could walk to somewhere wild? A North East mapping experiment using Forestry Commission woodland access evidence.">
+<title>A wild place within ten minutes · Day 08 / Utopia</title>
+<link rel="stylesheet" href="../shared/map-challenge.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="./geo.js"></script><script defer src="./app.js"></script>
+</head>
+<body>
+<header><div class="meta"><span>30 Day Map Challenge / November 2026</span><span>08 — Utopia</span></div>
+<p class="eyebrow">A different future for the North East</p>
+<h1>A wild place within ten minutes.</h1>
+<p class="intro">Imagine being able to step outside and reach woodland within ten minutes. Where do we already have mapped access — and what might change if we opened more woods and connected them?</p>
+</header>
+<main>
+<aside class="panel">
+<section><h2>What's there now?</h2>
+<p>The Forestry Commission maps woodlands with <strong>public access</strong> and woods with <strong>no known public access</strong>. Select a place on the map to explore its surroundings.</p>
+<div class="legend-row"><span class="swatch green"></span> Public access indicated</div>
+<div class="legend-row"><span class="swatch pale"></span> No known public access</div>
+<div class="legend-row"><span class="swatch link"></span> Hypothetical connection</div>
+<p class="small">A 10-minute walk is roughly 800 m at 4.8 km/h. The circle is straight-line proximity, <strong>not</strong> a route-based ten-minute catchment.</p>
+</section>
+<section><p class="eyebrow">Choose a starting point</p>
+<div class="controls" id="places">
+<button type="button" data-place="newcastle">Newcastle</button>
+<button type="button" data-place="chester">Chester-le-Street</button>
+<button type="button" data-place="durham" class="active">Durham</button>
+<button type="button" data-place="bishop">Bishop Auckland</button>
+<button type="button" data-place="hamsterley">Hamsterley</button></div>
+<p class="small">Or click anywhere on the map.</p></section>
+<section><p class="eyebrow">Explore the alternative</p>
+<div class="controls">
+<button type="button" id="now" class="active" aria-pressed="true">Today</button>
+<button type="button" id="future" aria-pressed="false">What if?</button>
+</div><p id="interpretation" style="margin-top:14px">Select a place to compare mapped woodland access in its immediate surroundings.</p>
+<p class="stat" id="distance">—</p><p class="small" id="distance-label">Nearest mapped accessible woodland</p>
+<p class="small" id="status" role="status" aria-live="polite">Loading Forestry Commission woodland polygons…</p>
+</section>
+</aside>
+<div class="mapwrap">
+<div id="map" role="region" aria-label="Interactive North East woodland access map"></div>
+<div class="mapinfo"><div><strong id="map-title">Durham</strong><div id="map-subtitle">Click anywhere to explore an 800 m radius</div></div></div>
+<div class="mapkey">Green: known public access to woodland · Ochre: no known public access · Dashed orange: hypothetical link. Map layers update as you pan or zoom.</div>
+</div>
+</main>
+<footer>
+<p><strong>This is a thought experiment, not an access map or planning proposal.</strong> “No known public access” does not mean legally closed, and “public access” does not guarantee access or accessibility at any particular entrance. The woodland layer also includes narrow corridors along public paths; it must not be read as access to an entire woodland. The 800 m circle is a straight-line illustration: no road/path routing, entrances, barriers, slope, population distribution, habitat quality or landowner consent has been assessed. Hypothetical links are straight lines, not proposed footpaths. No statement about “everyone” or regional coverage is calculated here.</p>
+<p>Woodland data: <a href="https://services2.arcgis.com/mHXjwgl3OARRqqD4/ArcGIS/rest/services/Woods_For_All/FeatureServer/0" target="_blank" rel="noopener">Forestry Commission, Woods for All (2025)</a>, based mainly on National Forest Inventory 2022 and other access sources; contains Forestry Commission information licensed under the Open Government Licence v3.0. Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. <a href="../day09-urban-rural/">Next: Day 09 — Urban–Rural</a>.</p>
+</footer></body></html>
