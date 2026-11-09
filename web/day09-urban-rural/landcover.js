@@ -39,27 +39,16 @@
     if(!global.GeoTIFF||typeof global.GeoTIFF.fromUrl!=="function")
       throw Error("GeoTIFF reader unavailable");
     const tiff=await global.GeoTIFF.fromUrl(URL);
-    const img=await tiff.getImage();
-    const origin=img.getOrigin(),res=img.getResolution();
-    if(!(res[0]>0&&res[1]<0))throw Error("Unexpected raster orientation");
-    // 2021 3° WorldCover tile N54W003. Read only the corridor's window,
-    // downsampled to ~65m for local percentages; do not fetch the whole tile.
-    const target=[-1.89,54.65,-1.59,55.005];
-    const window=[
-      Math.max(0,Math.floor((target[0]-origin[0])/res[0])),
-      Math.max(0,Math.floor((target[3]-origin[1])/res[1])),
-      Math.min(img.getWidth(),Math.ceil((target[2]-origin[0])/res[0])),
-      Math.min(img.getHeight(),Math.ceil((target[1]-origin[1])/res[1]))
-    ];
-    if(window[2]<=window[0]||window[3]<=window[1])throw Error("Raster window outside source extent");
+    // GeoTIFF.readRasters picks a suitable internal overview for the requested
+    // output resolution. This avoids decoding full-resolution blocks unnecessarily.
+    const bounds={west:-1.89,south:54.65,east:-1.59,north:55.005};
     const width=560,height=740;
-    const image=await img.readRasters({window,width,height,samples:[0],resampleMethod:"nearest"});
+    const image=await tiff.readRasters({
+      bbox:[bounds.west,bounds.south,bounds.east,bounds.north],
+      width,height,samples:[0],resampleMethod:"nearest"
+    });
     const values=image[0];
     if(!values||values.length!==width*height)throw Error("Incomplete raster data");
-    const bounds={
-      west:origin[0]+window[0]*res[0],east:origin[0]+window[2]*res[0],
-      north:origin[1]+window[1]*res[1],south:origin[1]+window[3]*res[1]
-    };
     function codeAt(lng,lat){
       const x=Math.floor((lng-bounds.west)/(bounds.east-bounds.west)*width);
       const y=Math.floor((bounds.north-lat)/(bounds.north-bounds.south)*height);
