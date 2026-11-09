@@ -12,8 +12,11 @@
   const $=id=>document.getElementById(id);
   const map=L.map("map",{scrollWheelZoom:false,zoomControl:false}).setView([PLACES.durham.lat,PLACES.durham.lng],12);
   L.control.zoom({position:"bottomright"}).addTo(map);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{
-    subdomains:"abcd",maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  // The community OpenStreetMap standard raster tiles are key-free.
+  // Browser HTTP caching and referer headers are left intact per OSMF's tile policy.
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
   }).addTo(map);
   const woodland=L.geoJSON(null,{style:styleFeature,onEachFeature(feature,layer){
     const p=feature.properties||{};
