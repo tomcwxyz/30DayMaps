@@ -266,11 +266,26 @@ RENDERERS = {"footprints": render, "peaks": render_peaks}
 AUTO = object()   # pick the renderer for the order's shop
 
 
+RENDER_ATTEMPTS = 3
+RENDER_WAIT = 30   # seconds before the 2nd try, doubling after; outside data (tiles, summit names) can be slow for a while
+
+
 def _render(renderer, order: Order, out: Path, kinds, min_long_px=None) -> dict[str, Path]:
+    """Draws the order's files, trying again a couple of times: a print job has nobody to press retry."""
     renderer = RENDERERS[order.shop] if renderer is AUTO else renderer
-    if order.route:
-        return renderer(order.recipe, out, kinds, min_long_px, route=order.route)
-    return renderer(order.recipe, out, kinds, min_long_px) if min_long_px else renderer(order.recipe, out, kinds)
+    for attempt in range(1, RENDER_ATTEMPTS + 1):
+        try:
+            if order.route:
+                return renderer(order.recipe, out, kinds, min_long_px, route=order.route)
+            return renderer(order.recipe, out, kinds, min_long_px) if min_long_px else renderer(order.recipe, out, kinds)
+        except FulfilError:
+            raise
+        except Exception as e:
+            if attempt == RENDER_ATTEMPTS:
+                raise
+            wait = RENDER_WAIT * 2 ** (attempt - 1)
+            print(f"{ref(order.pi_id)}: render attempt {attempt} failed ({type(e).__name__}); trying again in {wait} s")
+            time.sleep(wait)
 
 
 PREVIEW_HOURS = 7 * 24   # signed preview link saved on the payment for checking before approval

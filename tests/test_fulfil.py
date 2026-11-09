@@ -521,3 +521,19 @@ def test_download_secret_per_shop(monkeypatch):
     a = fulfil.download_link("digital/x.png", 30, now=1700000000, site="https://p.example", shop_name="peaks")
     b = fulfil.download_link("digital/x.png", 30, now=1700000000, site="https://p.example")
     assert a != b
+
+
+def test_render_tries_again_before_giving_up(monkeypatch):
+    monkeypatch.setattr(fulfil, "RENDER_WAIT", 0)
+    calls = []
+    def flaky(recipe, out, kinds):
+        calls.append(1)
+        if len(calls) < 3: raise RuntimeError("slow")
+        return {"web": out}
+    order = fulfil.Order(session_id="cs_x", pi_id="pi_123", metadata={}, recipe="{}", shipping={}, email=None, created=0)
+    assert fulfil._render(flaky, order, Path("."), ("web",)) == {"web": Path(".")}
+    assert len(calls) == 3
+    calls.clear()
+    def broken(recipe, out, kinds): calls.append(1); raise RuntimeError("down")
+    with pytest.raises(RuntimeError): fulfil._render(broken, order, Path("."), ("web",))
+    assert len(calls) == fulfil.RENDER_ATTEMPTS
