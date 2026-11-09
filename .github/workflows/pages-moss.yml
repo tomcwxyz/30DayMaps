@@ -12,6 +12,7 @@ on:
       - 'web/day09-urban-rural/**'
       - 'web/shared/**'
       - 'tests/day08-day09.test.cjs'
+      - 'scripts/check_day08_day09_sources.cjs'
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
       - 'maps/dale_head_panorama.py'
@@ -31,6 +32,7 @@ on:
       - 'web/day09-urban-rural/**'
       - 'web/shared/**'
       - 'tests/day08-day09.test.cjs'
+      - 'scripts/check_day08_day09_sources.cjs'
       - '.github/workflows/pages-moss.yml'
   workflow_dispatch:
 
@@ -80,6 +82,10 @@ jobs:
               assert len(p["grid_refs"]) == p["cell_count"]
           print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
           PY
+
+      - name: Verify Day 08 and Day 09 live mapping sources
+        continue-on-error: true
+        run: node scripts/check_day08_day09_sources.cjs
 
       - name: Restore any already-calculated, reproducible Dale Head data
         id: viewshed-cache
