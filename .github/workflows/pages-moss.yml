@@ -8,6 +8,10 @@ on:
       - 'web/day05-wildlife/**'
       - 'tests/day05-media.test.cjs'
       - 'web/day05-dale-head/**'
+      - 'web/day08-utopia/**'
+      - 'web/day09-urban-rural/**'
+      - 'web/shared/**'
+      - 'tests/day08-day09.test.cjs'
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
       - 'maps/dale_head_panorama.py'
@@ -23,6 +27,10 @@ on:
       - 'web/moss/**'
       - 'web/day05-wildlife/**'
       - 'web/day05-dale-head/**'
+      - 'web/day08-utopia/**'
+      - 'web/day09-urban-rural/**'
+      - 'web/shared/**'
+      - 'tests/day08-day09.test.cjs'
       - '.github/workflows/pages-moss.yml'
   workflow_dispatch:
 
@@ -49,6 +57,11 @@ jobs:
           node --test tests/day05-geo.test.cjs tests/day05-media.test.cjs
           node --check web/day05-dale-head/app.js
           node --check web/day05-dale-head/panorama.js
+          node --check web/day08-utopia/geo.js
+          node --check web/day08-utopia/app.js
+          node --check web/day09-urban-rural/landcover.js
+          node --check web/day09-urban-rural/app.js
+          node --test tests/day08-day09.test.cjs
           python - <<'PY'
           import json
           from pathlib import Path
@@ -169,6 +182,10 @@ jobs:
           cp -a web/day05-dale-head/. _site/day05-dale-head/
           mkdir -p _site/day05-wildlife/fonts
           cp -a web/peaks/fonts/. _site/day05-wildlife/fonts/
+          mkdir -p _site/day08-utopia _site/day09-urban-rural _site/shared
+          cp -a web/day08-utopia/. _site/day08-utopia/
+          cp -a web/day09-urban-rural/. _site/day09-urban-rural/
+          cp -a web/shared/. _site/shared/
           touch _site/.nojekyll
           for file in index.html app.js style.css moss.geojson moss-manifest.json moss-clusters.geojson moss-clusters-manifest.json; do
             test -s "_site/$file"
@@ -183,6 +200,14 @@ jobs:
           test -s _site/day05-wildlife/fonts/jost-latin-400-normal.woff2
           test -s _site/day05-wildlife/fonts/ibm-plex-mono-latin-400-normal.woff2
           test -s _site/day05-dale-head/panorama.js
+          for app in day08-utopia day09-urban-rural; do
+            for file in index.html app.js; do
+              test -s "_site/$app/$file"
+            done
+          done
+          test -s _site/day08-utopia/geo.js
+          test -s _site/day09-urban-rural/landcover.js
+          test -s _site/shared/map-challenge.css
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
         run: |
