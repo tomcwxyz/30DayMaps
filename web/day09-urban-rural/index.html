@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en-GB"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f3f0e7"><meta name="description" content="Where does the city end? A satellite land-cover cross-section from Newcastle to Hamsterley Forest.">
+<title>Where does the city end? · Day 09 / Urban–Rural</title>
+<link rel="stylesheet" href="../shared/map-challenge.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
+<script defer src="./landcover.js"></script><script defer src="./app.js"></script>
+</head>
+<body>
+<header><div class="meta"><span>30 Day Map Challenge / November 2026</span><span>09 — Urban–Rural</span></div>
+<p class="eyebrow">A transect across the North East</p>
+<h1>Where does the city end?</h1>
+<p class="intro">Follow a straight line from Newcastle towards Hamsterley Forest. The landscape doesn't switch neatly from urban to rural: built-up ground, trees, fields and grassland mix and change along the way.</p>
+</header>
+<main>
+<aside class="panel">
+<section><h2>A landscape, not a boundary.</h2>
+<p>This is a cross-section across <strong>real satellite-derived land cover</strong>. The colours represent the predominant land-cover class in each mapped pixel, not a judgement about whether a place is “urban” or “rural”.</p>
+<div class="legend-row"><span class="swatch" style="background:#ed564b"></span> Built-up land</div>
+<div class="legend-row"><span class="swatch" style="background:#317447"></span> Tree cover</div>
+<div class="legend-row"><span class="swatch" style="background:#e5ca55"></span> Cropland / grassland</div>
+<div class="legend-row"><span class="swatch" style="background:#459db2"></span> Water and other cover</div>
+</section>
+<section><p class="eyebrow">Explore the section</p>
+<p>Newcastle city centre → Hamsterley Forest, following a <strong>straight transect</strong>, not a road or running route.</p>
+<p class="small">Point to, click, or use arrow keys on the chart to inspect a part of the transect.</p>
+<svg id="profile" tabindex="0" role="img" aria-label="Built-up share along the Newcastle to Hamsterley transect" viewBox="0 0 320 150"></svg>
+<div class="barlabels"><span>Newcastle</span><span>Hamsterley Forest</span></div>
+<p class="stat" id="built-up">—</p>
+<p class="small" id="point-description">Approximate percentage of classified land that is built-up within 500 m of the selected transect point.</p>
+<p id="status" class="small" role="status" aria-live="polite">Reading WorldCover classification data…</p>
+</section>
+<section><p class="eyebrow">Inspect the map</p>
+<div class="controls"><button id="satellite" class="active" type="button" aria-pressed="true">Land cover</button>
+<button id="outline" type="button" aria-pressed="false">Base map</button>
+<button id="reset" type="button">Reset view</button></div>
+<p class="small" style="margin-top:12px">The map uses ESA WorldCover 2021; it is <strong>not</strong> a 2026 development or change map.</p></section>
+</aside>
+<div class="mapwrap">
+<div id="map" role="region" aria-label="Actual satellite-derived land cover from Newcastle to Hamsterley Forest"></div>
+<div class="mapinfo"><div><strong>Newcastle → Hamsterley</strong><div>Land cover, not settlement classifications</div></div></div>
+<div class="mapkey">ESA WorldCover · 10 m source classification (2021) · the profile is sampled and smoothed to illustrate a local gradient.</div>
+</div>
+</main>
+<footer>
+<p><strong>What this shows.</strong> Land-cover classes observed in 2021, not land ownership, accessibility, actual population, planning designations or an official rural–urban classification. The transect is a straight geographical line; sample points use a roughly 500 m surrounding radius and a downsampled satellite classification. Local percentages are indicative, not survey-grade estimates. If the classification file cannot be accessed, the profile is withheld rather than fabricated.</p>
+<p>Source: <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover 2021 v200</a>. © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium. Basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> and CARTO. <a href="../day08-utopia/">Previous: Day 08 — Utopia</a>.</p>
+</footer></body></html>
