@@ -331,12 +331,28 @@
   // ---- named summits --------------------------------------------------------------
   const latin = t => !!t && [...t].every(ch => ch.codePointAt(0) < 0x250 || "’‘·".includes(ch));
   const nameCache = new Map();
+  // Names baked for the regions of the ready-made places (names.json, from maps/peaks_names.py),
+  // so those frames, and every print of them, need no Overpass at all.
+  let packed = null;
+  function namePack() {
+    if (!packed) packed = (typeof fetch === "undefined" ? Promise.resolve(null)
+      : fetch("names.json").then(r => r.ok ? r.json() : null).catch(() => null));
+    return packed;
+  }
+  async function bakedNames(s, w, n, e) {
+    const pack = await namePack();
+    if (!pack || !pack.regions.some(([S, W, N, E]) => s >= S && w >= W && n <= N && e <= E)) return null;
+    return pack.items.filter(([, la, lo]) => la >= s && la <= n && lo >= w && lo <= e)
+      .map(([name, la, lo, ele, ridge]) => ridge ? { name, lat: la, lon: lo, kind: "ridge" } : { name, lat: la, lon: lo, ele });
+  }
   async function summits(lat, lon, halfW, halfH) {
     const ll = [[-halfW, -halfH], [halfW, halfH], [-halfW, halfH], [halfW, -halfH]].map(([x, y]) => toLL(lat, lon, x, y));
     const s = Math.min(...ll.map(p => p[0])), n = Math.max(...ll.map(p => p[0]));
     const w = Math.min(...ll.map(p => p[1])), e = Math.max(...ll.map(p => p[1]));
     const key = [s, w, n, e].map(v => v.toFixed(3)).join(",");
     if (nameCache.has(key)) return nameCache.get(key);
+    const baked = await bakedNames(s, w, n, e);
+    if (baked) { nameCache.set(key, baked); return baked; }
     // names change rarely: keep each answer between visits too
     const memoUrl = `https://names.peaks.invalid/v1/${key}`;
     const store = typeof caches !== "undefined" ? await caches.open("peaks-names-v1").catch(() => null) : null;
