@@ -60,6 +60,13 @@ test("recipe: the run's details ride along only with a route", () => {
   assert.throws(() => validateRecipe({ ...withRoute, runner: "x".repeat(41) }), /too long/);
 });
 
+test("recipe: every drawing theme can be ordered, and contrast is kept", () => {
+  require("../lib/terrain.js"); require("../lib/draw.js");
+  for (const theme of Object.keys(globalThis.PeaksDraw.THEMES)) assert.strictEqual(validateRecipe({ ...base, theme }).theme, theme);
+  assert.strictEqual(validateRecipe({ ...base, contrast: "bold" }).contrast, "bold");
+  assert.strictEqual(validateRecipe({ ...base, contrast: "loud" }).contrast, undefined);
+});
+
 test("fit thins a route until it fits", () => {
   const long = Array.from({ length: 20000 }, (_, i) => [54 + i * 1e-5 + 1e-4 * Math.sin(i), -3 + i * 2e-5]);
   const f = P.fit(long, 19200);

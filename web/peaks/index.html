@@ -97,6 +97,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .seg button { padding: 8px 6px; font-size: 14px; display: grid; justify-items: center; gap: 4px; }
 .seg svg { width: 34px; height: 22px; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.swgroup { display: grid; gap: 6px; margin-bottom: 10px; }
+.swgroup > span { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.seg { display: flex; margin-top: 4px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { flex: 1; border: 0; border-radius: 0; padding: 8px 6px; background: transparent; color: var(--fg); font: inherit; font-size: 14px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
 .swatch { width: 44px; height: 44px; border-radius: 50%; padding: 0; position: relative; border: 2px solid var(--line); overflow: hidden; }
 .swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .swatch span { position: absolute; inset: 0; }
@@ -245,7 +251,12 @@ button.order { min-height: 48px; padding: 12px 22px; font-size: 16px; flex: 0 1 
 
     <fieldset>
       <legend>Colours and sheet</legend>
-      <div class="swatches" id="themes" role="group" aria-label="Colours"></div>
+      <div id="themes" role="group" aria-label="Colours"></div>
+      <div class="seg" id="contrast" role="group" aria-label="Contrast">
+        <button type="button" data-c="soft" aria-pressed="false">Soft</button>
+        <button type="button" data-c="" aria-pressed="true">Standard</button>
+        <button type="button" data-c="bold" aria-pressed="false">Bold</button>
+      </div>
       <div class="row">
         <label for="paper">Paper<select id="paper"></select></label>
         <label for="orient">Orientation
@@ -330,7 +341,7 @@ let PLACES = { areas: [], views: [] };
 const state = {
   place: null,          // { lat, lon, name, region, widthKm, area?, names? }
   route: null,          // { name, date, raw: [[lat, lon, ele]] }
-  style: "poster", theme: "paper", paperStd: "A3",
+  style: "poster", theme: "paper", contrast: "", paperStd: "A3",
   composed: null,       // last { items, pw, ph }
   wordsFor: null,       // place key the title/subtitle defaults were set for
 };
@@ -586,7 +597,7 @@ async function compose(run, draft) {
   if (!draft) { lastMark = t0; marks = []; }
   try {
     const [pw, ph] = paperMM();
-    const th = D.THEMES[state.theme];
+    const th = D.withContrast(D.THEMES[state.theme], state.contrast);
     const style = state.style, kind = kindOf(style);
     const labels = $("labels").checked;
     // A first layout to find the map box (the caption height depends only on which words exist).
@@ -627,7 +638,7 @@ async function compose(run, draft) {
         if (!cache.has(gkey)) cache.set(gkey, D.contourGeometry(g, fr, { lines: +$("detail").value, smooth: a && a.smooth_m || 14 }));
         const geo = cache.get(gkey);
         mark("contour lines");
-        D.drawContours(items, { g, geo, frame: fr, box, th, u, labels, names: nm, filled: state.theme === "bands", route });
+        D.drawContours(items, { g, geo, frame: fr, box, th, u, labels, names: nm, filled: !!th.fills, route });
         const top = state.place && state.place.area ? state.place.area.summit_m : Math.round(geo.hi);
         details = route ? `${D.fmtKm(route.length)}   ·   ${Math.round(route.ascent).toLocaleString("en-GB")} m of climbing   ·   high point ${Math.round(route.high)} m`
                         : `${top} m   ·   ${state.place.region ? state.place.region + "   ·   " : ""}contours every ${geo.step} m`;
@@ -1055,7 +1066,7 @@ function recipe() {
   return {
     v: 1, place: !state.route && p.area ? p.area.slug : "", lat: r5(p.lat), lon: r5(p.lon),
     name: [...(p.name || "Mountain")].slice(0, 60).join(""), region: [...(p.region || "")].slice(0, 40).join("").trim(),
-    style: state.style, theme: state.theme, labels: $("labels").checked ? 1 : 0, details: $("details").checked ? 1 : 0,
+    style: state.style, theme: state.theme, ...(state.contrast ? { contrast: state.contrast } : {}), labels: $("labels").checked ? 1 : 0, details: $("details").checked ? 1 : 0,
     title: $("title").value.trim(), subtitle: $("subtitle").value.trim(), paper: $("paper").value, orient: $("orient").value,
     width: +$("width").value, detail: +$("detail").value, rows: +$("rows").value, seen: $("seenFrom").value || "S",
     dist: +$("dist").value, facing: +$("facing").value, fov: +$("fov").value, reach: +$("reach").value,
@@ -1093,8 +1104,10 @@ async function applyRecipe(rc, encodedRoute) {
     choosePlace(a ? { lat: a.lat, lon: a.lon, name: a.title, region: a.region, area: a, names: a.names }
                   : { lat: rc.lat, lon: rc.lon, name: rc.name, region: rc.region });
   }
-  state.style = rc.style; state.theme = rc.theme;
+  state.style = rc.style; state.theme = rc.theme; state.contrast = rc.contrast || "";
   for (const b of $("styles").children) b.setAttribute("aria-pressed", String(b.dataset.style === rc.style));
+  for (const b of $("themes").querySelectorAll(".swatch")) b.setAttribute("aria-pressed", String(b.dataset.theme === rc.theme));
+  for (const b of $("contrast").children) b.setAttribute("aria-pressed", String(b.dataset.c === state.contrast));
   if (rc.style !== "panorama") state.paperStd = rc.paper;
   $("orient").value = rc.orient;
   showFor();
@@ -1125,14 +1138,24 @@ function build() {
   $("styles").innerHTML = Object.entries(STYLES).map(([k, s]) =>
     `<button type="button" data-style="${k}" aria-pressed="${k === state.style}"><svg viewBox="0 0 34 22" aria-hidden="true">${s.icon}</svg>${s.label}</button>`).join("");
   $("styles").onclick = e => { const b = e.target.closest("button"); if (b) setStyle(b.dataset.style); };
-  $("themes").innerHTML = Object.entries(D.THEMES).map(([k, t]) => {
-    const bg = t.fills ? `conic-gradient(${t.fills.slice(0, 5).join(",")})` : `linear-gradient(135deg, ${t.panel} 0 55%, ${t.line} 55% 62%, ${t.page} 62%)`;
+  const GROUPS = [["light", "Light"], ["dark", "Dark"], ["duo", "Two-tone"], ["filled", "Filled"]];
+  const swatch = (k, t) => {
+    const bg = t.fills ? (t.ramp ? `linear-gradient(160deg, ${t.fills.join(",")})` : `conic-gradient(${t.fills.slice(0, 5).join(",")})`)
+      : `linear-gradient(135deg, ${t.panel} 0 55%, ${t.line} 55% 62%, ${t.page} 62%)`;
     return `<button type="button" class="swatch" data-theme="${k}" aria-pressed="${k === state.theme}" aria-label="${t.label}" title="${t.label}"><span style="background:${bg}"></span></button>`;
-  }).join("");
+  };
+  $("themes").innerHTML = GROUPS.map(([g, label]) => `<div class="swgroup"><span>${label}</span><div class="swatches">${
+    Object.entries(D.THEMES).filter(([, t]) => t.group === g).map(([k, t]) => swatch(k, t)).join("")}</div></div>`).join("");
   $("themes").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
     state.theme = b.dataset.theme;
-    for (const x of $("themes").children) x.setAttribute("aria-pressed", String(x === b));
+    for (const x of $("themes").querySelectorAll(".swatch")) x.setAttribute("aria-pressed", String(x === b));
+    schedule(0);
+  };
+  $("contrast").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.contrast = b.dataset.c;
+    for (const x of $("contrast").children) x.setAttribute("aria-pressed", String(x === b));
     schedule(0);
   };
   $("presets").innerHTML = PLACES.areas.map(a => `<button type="button" data-slug="${a.slug}" aria-pressed="false">${a.name}</button>`).join("");

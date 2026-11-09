@@ -47,7 +47,7 @@
       switch (it.t) {
         case "rect":
           if (it.fill) { ctx.fillStyle = it.fill; ctx.fillRect(it.x, it.y, it.w, it.h); }
-          if (it.stroke) { ctx.strokeStyle = it.stroke; ctx.lineWidth = it.w; ctx.strokeRect(it.x, it.y, it.w, it.h); }
+          if (it.stroke) { ctx.strokeStyle = it.stroke; ctx.lineWidth = it.sw || 1; ctx.strokeRect(it.x, it.y, it.w, it.h); }
           break;
         case "clip":
           ctx.save(); ctx.beginPath(); ctx.rect(it.x, it.y, it.w, it.h); ctx.clip(); break;
@@ -110,7 +110,7 @@
     for (const it of items) {
       switch (it.t) {
         case "rect":
-          out.push(`<rect x="${f2(it.x)}" y="${f2(it.y)}" width="${f2(it.w)}" height="${f2(it.h)}" fill="${it.fill || "none"}"${it.stroke ? ` stroke="${it.stroke}" stroke-width="${f2(it.w)}"` : ""}/>`);
+          out.push(`<rect x="${f2(it.x)}" y="${f2(it.y)}" width="${f2(it.w)}" height="${f2(it.h)}" fill="${it.fill || "none"}"${it.stroke ? ` stroke="${it.stroke}" stroke-width="${f2(it.sw || 1)}"` : ""}/>`);
           break;
         case "clip":
           defs.push(`<clipPath id="c${++clip}"><rect x="${f2(it.x)}" y="${f2(it.y)}" width="${f2(it.w)}" height="${f2(it.h)}"/></clipPath>`);
