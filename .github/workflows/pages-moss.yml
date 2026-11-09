@@ -39,8 +39,9 @@ on:
 permissions:
   contents: read
 
+# Do not let pull-request / feature-branch validations cancel a production Pages deploy.
 concurrency:
-  group: day04-github-pages
+  group: day04-github-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
