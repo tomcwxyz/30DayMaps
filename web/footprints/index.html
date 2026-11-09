@@ -141,6 +141,15 @@ button:disabled { opacity: .5; cursor: progress; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 .status { font: 13px/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
 .status.warn { color: var(--warn); }
+.load-progress { padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); display: grid; gap: 8px; }
+.load-progress[hidden] { display: none; }
+.load-progress strong { font-size: 14px; font-weight: 600; }
+.load-progress p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.load-track { height: 6px; border-radius: 20px; background: var(--line); overflow: hidden; }
+.load-fill { display: block; width: 100%; height: 100%; background: var(--accent); transform-origin: left; transform: scaleX(.04); transition: transform .2s ease; }
+.load-track:not(.determinate) .load-fill { width: 32%; animation: load-sweep 1.8s ease-in-out infinite alternate; transform: none; }
+@keyframes load-sweep { from { transform: translateX(0); } to { transform: translateX(210%); } }
+@media (prefers-reduced-motion: reduce) { .load-track:not(.determinate) .load-fill { animation: none; } }
 .stage { min-width: 0; display: grid; gap: 10px; justify-items: center; }
 .sheet { max-width: 100%; box-shadow: 0 10px 40px var(--sheet-shadow); background: #fff; }
 .sheet canvas { display: block; width: 100%; height: auto; }
@@ -212,6 +221,11 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       </div>
       <button type="button" class="primary" id="load">Draw buildings</button>
       <div class="status" id="status" role="status"></div>
+      <div class="load-progress" id="loadProgress" hidden aria-label="Map loading progress">
+        <strong id="loadHeading">Preparing your map…</strong>
+        <div class="load-track" id="loadTrack" role="progressbar" aria-label="Map tiles processed" aria-valuemin="0" aria-valuemax="100"><span class="load-fill" id="loadFill"></span></div>
+        <p id="loadDetail">New places can take a minute or more. Your map is being built.</p>
+      </div>
     </fieldset>
 
 
@@ -450,11 +464,43 @@ function countBuildings(rings, g) {
   return n;
 }
 
+let loadTicker = null;
+function showLoading(heading, detail, done, total) {
+  const panel = $("loadProgress"), track = $("loadTrack");
+  panel.hidden = false;
+  $("loadHeading").textContent = heading;
+  $("loadDetail").textContent = detail;
+  const known = Number.isFinite(total) && total > 0;
+  track.classList.toggle("determinate", known);
+  if (known) {
+    const percentage = Math.round(100 * done / total);
+    $("loadFill").style.transform = `scaleX(${Math.max(.04, done / total)})`;
+    track.setAttribute("aria-valuenow", String(percentage));
+  } else {
+    track.removeAttribute("aria-valuenow");
+    $("loadFill").style.transform = "";
+  }
+}
+function finishLoading() {
+  clearInterval(loadTicker);
+  loadTicker = null;
+  $("loadProgress").hidden = true;
+}
 async function load() {
   const g = currentWindow();
   $("load").disabled = true;
   const t0 = performance.now(), secs = () => ((performance.now() - t0) / 1000).toFixed(0);
-  let from = null;
+  let from = null, tileDone = 0, tileTotal = 0;
+  const elapsed = () => Math.floor((performance.now() - t0) / 1000);
+  const tileDetail = () => tileTotal
+    ? `${tileDone} of ${tileTotal} tiles processed · ${elapsed()}s elapsed. New places may take a minute or more.`
+    : `Checking available map data · ${elapsed()}s elapsed. New places may take a minute or more.`;
+  showLoading(`Preparing ${state.place}…`, "Checking for a prepared or saved map.");
+  clearInterval(loadTicker);
+  loadTicker = setInterval(() => {
+    if (tileTotal) showLoading(`Drawing buildings in ${state.place}…`, tileDetail(), tileDone, tileTotal);
+    else showLoading(`Preparing ${state.place}…`, `${tileDetail()}${elapsed() > 20 ? " Still working; this is taking longer than usual." : ""}`);
+  }, 1000);
   try {
     // 1. A prepared city covering this window
     const city = state.city && packFit(state.city, g);
@@ -478,8 +524,12 @@ async function load() {
     // 3. OpenFreeMap tiles, then save the place for the next person
     if (!from) {
       setStatus("Loading OpenStreetMap buildings…");
+      showLoading(`Drawing buildings in ${state.place}…`, tileDetail());
       const result = await FD.buildFromTiles(state.lat, state.lon, g.w, g.h,
-        { onProgress: (done, total) => setStatus(`Loading map tiles: ${done} of ${total}…`) });
+        { onProgress: (done, total) => {
+          tileDone = done; tileTotal = total;
+          showLoading(`Drawing buildings in ${state.place}…`, tileDetail(), done, total);
+        } });
       state.rings = result.rings;
       state.loaded = { lat: state.lat, lon: state.lon, w: g.w * 1.02, h: g.h * 1.02 };
       from = "tiles";
@@ -496,7 +546,7 @@ async function load() {
   } catch (e) {
     setStatus(`Couldn't load buildings: ${e.message}. Check your connection and try again.`, true);
   } finally {
-    $("load").disabled = false; render();
+    finishLoading(); $("load").disabled = false; render();
   }
 }
 
