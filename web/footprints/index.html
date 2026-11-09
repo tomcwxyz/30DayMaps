@@ -188,6 +188,11 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
         <button type="submit" id="find">Find</button>
       </div>
       <div class="results" id="results" aria-live="polite"></div>
+      <div class="load-progress" id="loadProgress" hidden aria-label="Map loading progress">
+        <strong id="loadHeading">Preparing your map…</strong>
+        <div class="load-track" id="loadTrack" role="progressbar" aria-label="Map tiles processed" aria-valuemin="0" aria-valuemax="100"><span class="load-fill" id="loadFill"></span></div>
+        <p id="loadDetail">New places can take a minute or more. Your map is being built.</p>
+      </div>
       <div class="gallery" id="gallery" aria-label="Ready-made cities" hidden></div>
       <div class="chips" id="presets" aria-label="Example places"></div>
     </fieldset>
@@ -221,11 +226,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       </div>
       <button type="button" class="primary" id="load">Draw buildings</button>
       <div class="status" id="status" role="status"></div>
-      <div class="load-progress" id="loadProgress" hidden aria-label="Map loading progress">
-        <strong id="loadHeading">Preparing your map…</strong>
-        <div class="load-track" id="loadTrack" role="progressbar" aria-label="Map tiles processed" aria-valuemin="0" aria-valuemax="100"><span class="load-fill" id="loadFill"></span></div>
-        <p id="loadDetail">New places can take a minute or more. Your map is being built.</p>
-      </div>
+
     </fieldset>
 
 
@@ -465,6 +466,7 @@ function countBuildings(rings, g) {
 }
 
 let loadTicker = null;
+let loadGeneration = 0;
 function showLoading(heading, detail, done, total) {
   const panel = $("loadProgress"), track = $("loadTrack");
   panel.hidden = false;
@@ -487,6 +489,8 @@ function finishLoading() {
   $("loadProgress").hidden = true;
 }
 async function load() {
+  const generation = ++loadGeneration;
+  const current = () => generation === loadGeneration;
   const g = currentWindow();
   $("load").disabled = true;
   const t0 = performance.now(), secs = () => ((performance.now() - t0) / 1000).toFixed(0);
@@ -506,7 +510,11 @@ async function load() {
     const city = state.city && packFit(state.city, g);
     if (city && city.fits) {
       setStatus(`Opening the ready-made map of ${state.city.name}…`);
-      try { usePack(await fetchPack(`cities/${state.city.slug}.fpk.gz`), city, g); from = "ready-made"; } catch { /* fall through */ }
+      try {
+        const prepared = await fetchPack(`cities/${state.city.slug}.fpk.gz`);
+        if (!current()) return;
+        usePack(prepared, city, g); from = "ready-made";
+      } catch { /* fall through */ }
     }
     // 2. The shared place cache
     let cacheMiss = false;
@@ -514,9 +522,17 @@ async function load() {
       try {
         const q = new URLSearchParams({ lat: state.lat, lon: state.lon, w: (g.w / 1000).toFixed(2) });
         const r = await fetch(`api/pack?${q}`);
+        if (!current()) return;
         if (r.status === 200) {
-          const hit = await r.json(), fit = packFit(hit, g);
-          if (fit.fits) { setStatus("Opening a saved map of this place…"); usePack(await fetchPack(hit.url), fit, g); from = "saved"; }
+          const hit = await r.json();
+          if (!current()) return;
+          const fit = packFit(hit, g);
+          if (fit.fits) {
+            setStatus("Opening a saved map of this place…");
+            const cached = await fetchPack(hit.url);
+            if (!current()) return;
+            usePack(cached, fit, g); from = "saved";
+          }
         } else if (r.status === 404) cacheMiss = true;
         else cacheOn = false;
       } catch { cacheOn = false; }
@@ -527,9 +543,11 @@ async function load() {
       showLoading(`Drawing buildings in ${state.place}…`, tileDetail());
       const result = await FD.buildFromTiles(state.lat, state.lon, g.w, g.h,
         { onProgress: (done, total) => {
+          if (!current()) return;
           tileDone = done; tileTotal = total;
           showLoading(`Drawing buildings in ${state.place}…`, tileDetail(), done, total);
         } });
+      if (!current()) return;
       state.rings = result.rings;
       state.loaded = { lat: state.lat, lon: state.lon, w: g.w * 1.02, h: g.h * 1.02 };
       from = "tiles";
@@ -544,9 +562,10 @@ async function load() {
     else setStatus(`Loaded ${state.buildings.toLocaleString("en-GB")} buildings` +
       (from === "tiles" ? ` in ${secs()} s.` : ` from a ${from} map.`));
   } catch (e) {
+    if (!current()) return;
     setStatus(`Couldn't load buildings: ${e.message}. Check your connection and try again.`, true);
   } finally {
-    finishLoading(); $("load").disabled = false; render();
+    if (current()) { finishLoading(); $("load").disabled = false; render(); }
   }
 }
 
@@ -575,9 +594,9 @@ function choose(lat, lon, name, widthKm, city) {
   $("title").value = name;
   if (widthKm) $("width").value = widthKm;
   path = null; state.rings = null;
-  setStatus("Press Draw buildings to load this place.");
+  setStatus(`Preparing ${name}…`);
   render();
-  if (city) load();   // ready-made cities open straight away
+  load(); // Both searched places and ready-made cities draw immediately.
 }
 async function loadGallery() {
   if (!canUseApi) return;   // opened as a file: keep the example buttons
