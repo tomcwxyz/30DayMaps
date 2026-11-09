@@ -511,7 +511,9 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     except FulfilError:
         raise
     except Exception as e:  # keep tracebacks (which can contain URLs) out of public logs
-        raise FulfilError(f"Rendering the print failed ({type(e).__name__})") from None
+        detail = re.sub(r"(https?|file)://\S+", "<url>", str(e)).strip().splitlines()
+        detail = next((l for l in detail if l.strip() and not l.lstrip().startswith(("at ", "Call log", "-"))), "")[:240]
+        raise FulfilError(f"Rendering the print failed ({type(e).__name__}{': ' + detail if detail else ''})") from None
     stripe_set_metadata(http, key, order.pi_id, {
         "print_status": "awaiting approval", "print_file": print_path, "print_preview": preview_url, "print_error": ""})
     print(f"{ref(order.pi_id)}: print rendered and stored; preview link saved on the payment in Stripe")
