@@ -34,3 +34,13 @@ test("land-cover fractions derive exclusively from sample codes",()=>{
   assert.equal(b.built,0);
   assert.equal(cover.classify([54.8,-1.7],()=>0),null);
 });
+
+test("Day 8 and Day 9 use key-free OpenStreetMap tiles, with no CARTO dependency",()=>{
+  const fs=require("node:fs");
+  for(const page of ["day08-utopia","day09-urban-rural"]){
+    const app=fs.readFileSync(require("node:path").join(__dirname,"..","web",page,"app.js"),"utf8");
+    assert.match(app,/https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
+    assert.doesNotMatch(app,/cartocdn|carto\.com\/attributions/i);
+    assert.match(app,/openstreetmap\.org\/copyright/);
+  }
+});
