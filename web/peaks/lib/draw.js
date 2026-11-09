@@ -10,26 +10,72 @@
   // ---- colours -------------------------------------------------------------------
   // page, panel (the map's ground), line, text, muted, accent; sky = gradient top/bottom and
   // the farthest/nearest skyline layers.
+  // group sorts the swatches: light, dark, two-tone (coloured map on a light sheet), filled.
+  // fills: colours between contour levels, cycled; ramp: fills are a low-to-high scale instead.
   const THEMES = {
-    paper:   { label: "Paper", page: "#F6F3EC", panel: "#F6F3EC", line: "#1F2321", text: "#1F2321", muted: "#7D817C", accent: "#B5482F",
-               sky: ["#E7E4DA", "#F6F3EC", "#D6D3CA", "#1F2321"] },
-    white:   { label: "White", page: "#FFFFFF", panel: "#FFFFFF", line: "#141414", text: "#141414", muted: "#8A8A8A", accent: "#C0392B",
-               sky: ["#EDEDED", "#FFFFFF", "#D9D9D9", "#141414"] },
-    navy:    { label: "Navy", page: "#F6F3EC", panel: "#17263A", line: "#E6EDF1", text: "#17263A", muted: "#7D8790", accent: "#F0B45A",
-               sky: ["#B9C2DA", "#F2D3BF", "#B5B0CB", "#1D2440"] },
-    oxblood: { label: "Oxblood", page: "#7C2A30", panel: "#7C2A30", line: "#F3D9D4", text: "#FBEDE8", muted: "#D9A9A6", accent: "#FFFFFF", frame: true,
-               sky: ["#6A2228", "#8E3A40", "#B0676B", "#3A1013"] },
-    night:   { label: "Night", page: "#121A1E", panel: "#121A1E", line: "#DCD5C4", text: "#E9E3D3", muted: "#76858B", accent: "#E0A55E",
-               sky: ["#0E151A", "#24333A", "#3E5058", "#0A0F12"] },
-    moss:    { label: "Moss", page: "#EEEBDD", panel: "#2E3A2C", line: "#E7E2C6", text: "#2E3A2C", muted: "#7F8A72", accent: "#E2C46B",
-               sky: ["#DCE8E3", "#EFEBDF", "#C3D4CB", "#1E4C3D"] },
-    bands:   { label: "Bands", page: "#F4EEDC", panel: "#F4EEDC", line: "#2B2A28", text: "#2B2A28", muted: "#837D70", accent: "#2B2A28",
-               fills: ["#D8D2BE", "#9FB7B1", "#E7B24C", "#C76E6B", "#E9E2CC", "#8FA3C2", "#B9C3A1", "#F0C9A6"],
-               sky: ["#F4EEDC", "#F4EEDC", "#8FA3C2", "#2B2A28"] },
+    paper:     { label: "Paper", group: "light", page: "#F6F3EC", panel: "#F6F3EC", line: "#1F2321", text: "#1F2321", muted: "#7D817C", accent: "#B5482F",
+                 sky: ["#E7E4DA", "#F6F3EC", "#D6D3CA", "#1F2321"] },
+    white:     { label: "White", group: "light", page: "#FFFFFF", panel: "#FFFFFF", line: "#141414", text: "#141414", muted: "#8A8A8A", accent: "#C0392B",
+                 sky: ["#EDEDED", "#FFFFFF", "#D9D9D9", "#141414"] },
+    fog:       { label: "Fog", group: "light", page: "#E8ECEC", panel: "#E8ECEC", line: "#46545C", text: "#2B363C", muted: "#87949A", accent: "#C2643A",
+                 sky: ["#D9E0E2", "#EEF1F1", "#C5CED2", "#33414A"] },
+    alpine:    { label: "Alpine", group: "light", page: "#FBFAF7", panel: "#FBFAF7", line: "#24507F", text: "#1C3456", muted: "#8795A8", accent: "#C8372D",
+                 sky: ["#DCE6F1", "#FBFAF7", "#C2D1E3", "#1C3456"] },
+    sand:      { label: "Sandstone", group: "light", page: "#F0E5D1", panel: "#F0E5D1", line: "#9A4428", text: "#5A2A1A", muted: "#A88B72", accent: "#2F5D50",
+                 sky: ["#E8D8BC", "#F4EADA", "#D8BC96", "#7A3A22"] },
+    blush:     { label: "Blush", group: "light", page: "#F3E0D9", panel: "#F3E0D9", line: "#6C2533", text: "#5A1E2A", muted: "#A9838A", accent: "#6C2533",
+                 sky: ["#EBD0C7", "#F7EAE4", "#D8B0A8", "#5A1E2A"] },
+    navy:      { label: "Navy", group: "duo", page: "#F6F3EC", panel: "#17263A", line: "#E6EDF1", text: "#17263A", muted: "#7D8790", accent: "#F0B45A",
+                 sky: ["#B9C2DA", "#F2D3BF", "#B5B0CB", "#1D2440"] },
+    moss:      { label: "Moss", group: "duo", page: "#EEEBDD", panel: "#2E3A2C", line: "#E7E2C6", text: "#2E3A2C", muted: "#7F8A72", accent: "#E2C46B",
+                 sky: ["#DCE8E3", "#EFEBDF", "#C3D4CB", "#1E4C3D"] },
+    ochre:     { label: "Ochre", group: "duo", page: "#F4EEDF", panel: "#D8A23E", line: "#2A2118", text: "#2A2118", muted: "#8A7A60", accent: "#2A2118",
+                 sky: ["#F1E0B6", "#F7F0DE", "#E3C27A", "#5A3D12"] },
+    cyanotype: { label: "Cyanotype", group: "duo", page: "#F3F5F7", panel: "#1D4E89", line: "#E9F1FA", text: "#173F70", muted: "#8399B4", accent: "#F2C14E",
+                 sky: ["#C9D7EA", "#EEF2F7", "#9DB6D3", "#0E2A4D"] },
+    night:     { label: "Night", group: "dark", page: "#121A1E", panel: "#121A1E", line: "#DCD5C4", text: "#E9E3D3", muted: "#76858B", accent: "#E0A55E",
+                 sky: ["#0E151A", "#24333A", "#3E5058", "#0A0F12"] },
+    ink:       { label: "Ink", group: "dark", page: "#0A0A0A", panel: "#0A0A0A", line: "#FFFFFF", text: "#FFFFFF", muted: "#8C8C8C", accent: "#FF5A36",
+                 sky: ["#0A0A0A", "#232323", "#424242", "#000000"] },
+    slate:     { label: "Slate", group: "dark", page: "#353C42", panel: "#353C42", line: "#EDE7DA", text: "#F2EDE3", muted: "#9AA2A8", accent: "#E9B872",
+                 sky: ["#2B3136", "#4A535A", "#6B747B", "#1B1F22"] },
+    forest:    { label: "Forest", group: "dark", page: "#1E3328", panel: "#1E3328", line: "#E8DFB8", text: "#F0E9CC", muted: "#8FA08D", accent: "#E3B94F",
+                 sky: ["#17281F", "#2E4A3B", "#4E6B59", "#0F1A14"] },
+    oxblood:   { label: "Oxblood", group: "dark", page: "#7C2A30", panel: "#7C2A30", line: "#F3D9D4", text: "#FBEDE8", muted: "#D9A9A6", accent: "#FFFFFF", frame: true,
+                 sky: ["#6A2228", "#8E3A40", "#B0676B", "#3A1013"] },
+    bands:     { label: "Bands", group: "filled", page: "#F4EEDC", panel: "#F4EEDC", line: "#2B2A28", text: "#2B2A28", muted: "#837D70", accent: "#2B2A28",
+                 fills: ["#D8D2BE", "#9FB7B1", "#E7B24C", "#C76E6B", "#E9E2CC", "#8FA3C2", "#B9C3A1", "#F0C9A6"],
+                 sky: ["#F4EEDC", "#F4EEDC", "#8FA3C2", "#2B2A28"] },
+    relief:    { label: "Relief", group: "filled", ramp: true, page: "#F5F2EA", panel: "#F5F2EA", line: "#3B342C", text: "#2E2924", muted: "#8A8175", accent: "#A8322D",
+                 fills: ["#7FA77A", "#A9C38E", "#D7D9A2", "#E6CF97", "#D4AE7E", "#B78E6C", "#A08473", "#C9BEB6", "#F4F1EC"],
+                 sky: ["#E3EAF0", "#F5F2EA", "#B9C4A8", "#3B342C"] },
+    glacier:   { label: "Glacier", group: "filled", ramp: true, page: "#F2F6F8", panel: "#F2F6F8", line: "#18324C", text: "#18324C", muted: "#7E92A3", accent: "#D2553A",
+                 fills: ["#2C4A6B", "#3D6589", "#5585AA", "#7DA8C7", "#A9C9DE", "#D2E4EE", "#FFFFFF"],
+                 sky: ["#DCE8F0", "#F4F8FA", "#A9C9DE", "#18324C"] },
   };
 
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const mix = (a, b, t) => { const A = hex(a), B = hex(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+  const lum = c => { const [r, g, b] = hex(c); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+
+  // Colour of fill band i of n: cycled, or read off a low-to-high ramp.
+  function fillAt(th, i, n) {
+    const f = th.fills;
+    if (!th.ramp) return f[i % f.length];
+    const t = Math.max(0, Math.min(1, i / Math.max(1, n - 1))) * (f.length - 1), k = Math.min(f.length - 2, Math.floor(t));
+    return mix(f[k], f[k + 1], t - k);
+  }
+
+  // A theme at a contrast: "soft" pulls the lines toward the ground and thins them;
+  // "bold" pushes them toward black or white and thickens them.
+  function withContrast(th, c) {
+    if (c === "soft") return { ...th, line: mix(th.line, th.panel, 0.42), muted: mix(th.muted, th.page, 0.2), weight: 0.85 };
+    if (c === "bold") {
+      const ext = lum(th.panel) < 0.5 ? "#FFFFFF" : "#000000";
+      return { ...th, line: mix(th.line, ext, 0.6), weight: 1.45 };
+    }
+    return th;
+  }
 
   // ---- small helpers ---------------------------------------------------------------
   function nice(step) {
@@ -318,10 +364,11 @@
     items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: th.panel });
     items.push({ t: "clip", x: box.x, y: box.y, w: box.w, h: box.h });
     const widthKm = (frame.x1 - frame.x0) / 1000;
-    const lw = (widthKm < 16 ? 0.15 : 0.115) * Math.max(0.75, u);
+    const lw = (widthKm < 16 ? 0.15 : 0.115) * Math.max(0.75, u) * (th.weight || 1);
     if (filled && th.fills) {
-      items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: th.fills[0] });
-      geo.levels.forEach((lv, i) => items.push({ t: "path", rings: ringsToMM(lv.polys, M), fill: th.fills[(i + 1) % th.fills.length], rule: "evenodd" }));
+      const nl = geo.levels.length + 1;
+      items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, fill: fillAt(th, 0, nl) });
+      geo.levels.forEach((lv, i) => items.push({ t: "path", rings: ringsToMM(lv.polys, M), fill: fillAt(th, i + 1, nl), rule: "evenodd" }));
     }
     const minor = [], major = [];
     for (const lv of geo.levels) (lv.major ? major : minor).push(...ringsToMM(lv.polys, M));
@@ -334,12 +381,12 @@
       const peaks = pickSummits(names, g, frame, Math.round(6 * Math.sqrt(box.w * box.h) / 260), 0.14);
       avoid = avoid.concat(summitMarks(items, peaks, M, box, th, u));
       if (frame.x1 - frame.x0 <= 12000) avoid = avoid.concat(ridgeLabels(items, names, g, frame, M, box, th, u, avoid));
-      for (const l of contourLabels(geo, M, box, u, avoid))
+      if (!(filled && th.ramp)) for (const l of contourLabels(geo, M, box, u, avoid))   // a height scale reads itself; halos would blotch it
         items.push({ t: "text", x: l.x, y: l.y, s: `${Math.round(l.level)}`, size: 1.95 * u, family: MONO, weight: 400, fill: th.line,
                      align: "center", base: "middle", rot: l.rot, halo: { color: filled && th.fills ? th.page : th.panel, width: 0.9 * u } });
     }
     items.push({ t: "unclip" });
-    if (th.frame) items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, stroke: th.line, w: 0.3 * u });
+    if (th.frame) items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, stroke: th.line, sw: 0.3 * u });
     return M;
   }
 
@@ -371,10 +418,10 @@
       pts[2 * cols] = box.x + box.w; pts[2 * cols + 1] = box.y + box.h + 5;
       pts[2 * cols + 2] = box.x; pts[2 * cols + 3] = box.y + box.h + 5;
       items.push({ t: "path", rings: [pts], fill: th.panel });
-      items.push({ t: "path", rings: [pts.subarray(0, cols * 2)], stroke: th.line, w: 0.3 * u, open: true });
+      items.push({ t: "path", rings: [pts.subarray(0, cols * 2)], stroke: th.line, w: 0.3 * u * (th.weight || 1), open: true });
     });
     items.push({ t: "unclip" });
-    if (th.frame) items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, stroke: th.line, w: 0.3 * u });
+    if (th.frame) items.push({ t: "rect", x: box.x, y: box.y, w: box.w, h: box.h, stroke: th.line, sw: 0.3 * u });
     return rows;
   }
 
@@ -492,7 +539,7 @@
     const n = L.length, cols = offs.length;
     for (let i = n - 1; i >= 0; i--) {
       const t = (n - 1 - i) / Math.max(1, n - 1);
-      const fill = th.fills && !colours ? (i === 0 ? near : th.fills[(n - 1 - i) % th.fills.length]) : mix(far, near, t ** 1.35);
+      const fill = th.fills && !colours ? (i === 0 ? near : th.ramp ? fillAt(th, i, n) : th.fills[(n - 1 - i) % th.fills.length]) : mix(far, near, t ** 1.35);
       const pts = new Float32Array(cols * 2 + 4);
       for (let c = 0; c < cols; c++) { pts[2 * c] = X(offs[c]); pts[2 * c + 1] = Math.min(box.y + box.h + 5, Y(Math.max(L[i][c], yLo - span))); }
       pts[2 * cols] = box.x + box.w; pts[2 * cols + 1] = box.y + box.h + 5; pts[2 * cols + 2] = box.x; pts[2 * cols + 3] = box.y + box.h + 5;
@@ -632,5 +679,5 @@
     }
   }
 
-  root.PeaksDraw = { THEMES, layout, caption, credit, stopsLayout, drawStops, fmtDate, contourGeometry, drawContours, drawRidgelines, skyline, drawSkyline, drawProfile, nice, ll, fmtKm, mix };
+  root.PeaksDraw = { THEMES, withContrast, fillAt, layout, caption, credit, stopsLayout, drawStops, fmtDate, contourGeometry, drawContours, drawRidgelines, skyline, drawSkyline, drawProfile, nice, ll, fmtKm, mix };
 })(typeof window !== "undefined" ? window : globalThis);

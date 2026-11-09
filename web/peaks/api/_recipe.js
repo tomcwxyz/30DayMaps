@@ -6,7 +6,8 @@ const { decode } = require("../lib/polyline.js");
 
 const PAPERS = ["A4", "A3", "A2", "A1", "50x70", "square"];
 const PANOS = ["pano75", "pano90"];
-const THEMES = ["paper", "white", "navy", "oxblood", "night", "moss", "bands"];
+const THEMES = ["paper", "white", "fog", "alpine", "sand", "blush", "navy", "moss", "ochre", "cyanotype", "night", "ink", "slate", "forest", "oxblood", "bands", "relief", "glacier"];
+const CONTRASTS = ["soft", "bold"];   // standard is left out
 const STYLES = ["poster", "contours", "ridgelines", "skyline", "panorama"];
 const DIRS = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"];
 const LIMITS = { name: 60, region: 40, title: 60, subtitle: 140, runner: 40, time: 12 };
@@ -73,6 +74,7 @@ function validateRecipe(input) {
   if (!r.route) r.round = "";
   if (!r.title) throw new Error("Add a title");
   if (!THEMES.includes(r.theme)) throw new Error("Unknown colours");
+  if (CONTRASTS.includes(input.contrast)) r.contrast = input.contrast;
   if (style === "panorama" ? !PANOS.includes(r.paper) : !PAPERS.includes(r.paper)) throw new Error("Unknown paper size");
   if (r.route && style === "skyline") throw new Error("Routes can't be drawn as a skyline");
   if (JSON.stringify(r).length > MAX_JSON) throw new Error("Design text is too long; shorten the subtitle or the runner's name");
