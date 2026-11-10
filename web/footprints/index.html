@@ -164,6 +164,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .credit { font-size: 12px; color: var(--muted); margin: 0; }
 .credit a { color: inherit; }
 @media (prefers-reduced-motion: no-preference) { button { transition: background .15s, border-color .15s; } }
+
+/* The donation note is visible before designing and alongside checkout. */
+.giving { margin: 0; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--panel); color: var(--fg); font-size: 14px; line-height: 1.45; }
+.giving a { color: inherit; text-underline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -173,6 +177,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       <h1>Footprints</h1>
       <p class="lede">Any place in the world, drawn as its buildings and nothing else. Printed and posted, or as a high-resolution file.</p>
     </div>
+    <p class="giving"><strong>£1 from each Footprint goes to <a href="https://homeless.org.uk/" target="_blank" rel="noopener">Homeless Link</a>.</strong></p>
     <ol class="steps" aria-label="How it works">
       <li><b>1</b>Pick a city or search anywhere</li>
       <li><b>2</b>Add your own words and colours</li>
@@ -248,6 +253,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
             <span><strong>Digital file by email</strong><span class="price" id="digitalPrice"></span></span></label>
         </div>
         <p class="shopnote" id="shopPrice"></p>
+        <p class="giving"><strong>£1 from each Footprint goes to <a href="https://homeless.org.uk/" target="_blank" rel="noopener">Homeless Link</a>.</strong></p>
         <button type="button" class="primary" id="order" disabled>Order this print</button>
         <div class="status" id="orderStatus" role="status"></div>
       </div>
