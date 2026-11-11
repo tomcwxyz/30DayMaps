@@ -315,9 +315,14 @@ def make_day9():
     h, w = cover.shape
 
     def sample(x, y):
+        # rasterio.rowcol flattens array inputs. Reshape back to the original
+        # grid so the map is a true 2D geographical image, not a colour band.
+        shape = np.broadcast_shapes(np.shape(x), np.shape(y))
         row, col = rowcol(tx, x, y)
+        row = np.asarray(row).reshape(shape)
+        col = np.asarray(col).reshape(shape)
         good = (row >= 0) & (row < h) & (col >= 0) & (col < w)
-        result = np.zeros(np.broadcast(row, col).shape, dtype=np.uint8)
+        result = np.zeros(shape, dtype=np.uint8)
         result[good] = cover[row[good], col[good]]
         return result
 
