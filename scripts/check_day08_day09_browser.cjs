@@ -50,7 +50,7 @@ async function inspect(browser,route,isMobile){
 }
 
 (async()=>{
-  const browser=await chromium.launch({headless:true});
+  const browser=await chromium.launch({channel:"chrome",headless:true,args:["--no-sandbox"]});
   try{
     for(const route of ["day08-utopia","day09-urban-rural"]){
       await inspect(browser,route,false);
