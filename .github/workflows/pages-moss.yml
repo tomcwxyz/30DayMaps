@@ -12,7 +12,8 @@ on:
       - 'web/day09-urban-rural/**'
       - 'web/shared/**'
       - 'tests/day08-day09.test.cjs'
-      - 'scripts/check_day08_day09_sources.cjs'
+      - 'maps/day08_day09.py'
+      - 'tests/test_day08_day09.py'
       - 'maps/dale_head_viewshed.py'
       - 'maps/dale_head_peaks.py'
       - 'maps/dale_head_panorama.py'
@@ -32,7 +33,8 @@ on:
       - 'web/day09-urban-rural/**'
       - 'web/shared/**'
       - 'tests/day08-day09.test.cjs'
-      - 'scripts/check_day08_day09_sources.cjs'
+      - 'maps/day08_day09.py'
+      - 'tests/test_day08_day09.py'
       - '.github/workflows/pages-moss.yml'
   workflow_dispatch:
 
@@ -60,9 +62,7 @@ jobs:
           node --test tests/day05-geo.test.cjs tests/day05-media.test.cjs
           node --check web/day05-dale-head/app.js
           node --check web/day05-dale-head/panorama.js
-          node --check web/day08-utopia/geo.js
           node --check web/day08-utopia/app.js
-          node --check web/day09-urban-rural/landcover.js
           node --check web/day09-urban-rural/app.js
           node --test tests/day08-day09.test.cjs
           python - <<'PY'
@@ -83,10 +83,6 @@ jobs:
               assert len(p["grid_refs"]) == p["cell_count"]
           print(f"Verified {len(source['features'])} NBN grids and {len(clusters['features'])} cluster profiles")
           PY
-
-      - name: Verify Day 08 and Day 09 live mapping sources
-        continue-on-error: true
-        run: node scripts/check_day08_day09_sources.cjs
 
       - name: Restore any already-calculated, reproducible Dale Head data
         id: viewshed-cache
@@ -179,7 +175,7 @@ jobs:
             echo "::warning::Panorama is missing; only the 3D overview will be offered"
           fi
 
-      - name: Prepare Day 04 moss and both Day 05 static experiences
+      - name: Prepare the static map challenge experiences
         run: |
           set -euo pipefail
           mkdir -p _site
@@ -212,8 +208,9 @@ jobs:
               test -s "_site/$app/$file"
             done
           done
-          test -s _site/day08-utopia/geo.js
-          test -s _site/day09-urban-rural/landcover.js
+          for file in _site/day08-utopia/data/today.png _site/day08-utopia/data/2050.png _site/day08-utopia/data/metrics.json _site/day09-urban-rural/data/transect.png _site/day09-urban-rural/data/profile.json; do
+            test -s "$file"
+          done
           test -s _site/shared/map-challenge.css
 
       - name: Bundle pinned Leaflet and MapLibre for both static maps
