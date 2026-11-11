@@ -1,0 +1,31 @@
+{
+  "status": "measured_inputs_modelled_future",
+  "source_year": 2021,
+  "study_region": "ONS 2025 North East region E12000001",
+  "resolution_m": 300,
+  "base_landcover": "ESA WorldCover 2021 v200; sampled at 300 m, nearest-neighbour",
+  "current_woodland_wetland_km2_approx": 1418.3,
+  "modelled_nature_first_km2_approx": 4276.1,
+  "modelled_added_km2_approx": 2857.8,
+  "study_land_km2_approx": 8552.2,
+  "current_woodland_wetland_pct_of_sampled_land": 16.6,
+  "2050_nature_first_pct_of_sampled_land": 50.0,
+  "named_river_ways": 88,
+  "former_rail_ways": 1877,
+  "method": "50% of sampled classified terrestrial cells allocated using westness, adjacency to existing tree/wetland, and 450m named river/160m former-railway buffers; built-up areas excluded",
+  "critical_note": "This is a designed land-allocation scenario, NOT a forecast, restoration suitability model, ecological connectivity analysis, legal access assessment or landownership proposal.",
+  "sources": [
+    {
+      "name": "ESA WorldCover 2021",
+      "url": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N54W003_Map.tif"
+    },
+    {
+      "name": "ONS Regions December 2025",
+      "url": "https://www.ons.gov.uk/methodology/geography"
+    },
+    {
+      "name": "\u00a9 OpenStreetMap contributors",
+      "url": "https://www.openstreetmap.org/copyright"
+    }
+  ]
+}
