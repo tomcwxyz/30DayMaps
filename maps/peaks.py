@@ -116,7 +116,8 @@ def fetch(slug: str) -> Path:
     return fetch_dem(slug, p["lat"], p["lon"], reach, reach, max(15.0, reach / 1600))
 
 
-OVERPASS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter")
+OVERPASS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+            "https://overpass.private.coffee/api/interpreter")
 
 
 def fetch_names(slug: str) -> Path:
@@ -134,7 +135,7 @@ def fetch_names(slug: str) -> Path:
     q = (f'[out:json][timeout:60];(node["natural"~"^(peak|hill|volcano)$"]["name"]({bbox});'
          f'way["natural"~"^(arete|ridge)$"]["name"]({bbox}););out center;')
     for attempt in range(6):
-        url = OVERPASS[attempt % 2]
+        url = OVERPASS[attempt % len(OVERPASS)]
         try:
             r = requests.post(url, data={"data": q}, timeout=90,
                               headers={"User-Agent": "30DayMaps-peaks/0.1 (+https://github.com/tomcwxyz/30DayMaps)"})
@@ -628,18 +629,28 @@ def web_places(path: Path = WEB_PLACES) -> Path:
         out = [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "ele": n["ele"]} for n in ns]
         return out + [{"name": n["name"], "lat": round(n["lat"], 5), "lon": round(n["lon"], 5), "kind": "ridge"}
                       for n in names(slug, "ridge")]
+    # A place whose summit names haven't been fetched yet stays off the page until they have.
+    ready = lambda slug: (DEM_DIR / f"{slug}.names.json").exists()
+    left = [x["slug"] for x in PLACES["areas"] + PLACES["views"] if not ready(x["slug"])]
+    if left:
+        print(f"left off until their names are fetched: {' '.join(left)}")
     areas = []
     for a in PLACES["areas"]:
+        if not ready(a["slug"]):
+            continue
         view, crop = POSTERS.get(a["slug"], (None, None))
+        if view and not ready(view):
+            view, crop = None, None
         # Hand-named ridges replace any OpenStreetMap ridge within 400 m of them.
         extra = [{**r, "kind": "ridge"} for r in a.get("ridges", [])]
         near = lambda n: any(abs(n["lat"] - r["lat"]) * 111320 < 400 and
                              abs(n["lon"] - r["lon"]) * 111320 * math.cos(math.radians(r["lat"])) < 400 for r in extra)
         named = [n for n in summits(a["slug"]) if not (n.get("kind") == "ridge" and near(n))]
         areas.append({**{k: v for k, v in a.items() if k != "ridges"}, "names": named + extra,
+                      **({"views": [v for v in a["views"] if ready(v)]} if "views" in a else {}),
                       "poster_view": view, "poster_crop": crop})
     views = [{**{k: x for k, x in v.items() if k != "labels"}, "names": summits(v["slug"]) + v.get("labels", [])}
-             for v in PLACES["views"]]
+             for v in PLACES["views"] if ready(v["slug"])]
     # Ready-made routes: GPX files in web/peaks/routes (built by maps/peaks_routes.py).
     routes = [r for r in PLACES.get("routes", []) if (path.parent / "routes" / f"{r['slug']}.gpx").exists()]
     path.write_text(json.dumps({"areas": areas, "views": views, "routes": routes}, ensure_ascii=False, separators=(",", ":")))
@@ -661,11 +672,24 @@ def main():
         return
     every = list(AREAS) + list(VIEWS)
     if a.cmd == "fetch":
+        missing, streak = [], 0
         for s in (every if a.all else a.slugs):
             if not (DEM_DIR / f"{s}.npz").exists() or a.force:
                 fetch(s)
+            if streak >= 2:   # Overpass is down: don't spend the run waiting on it
+                if not (DEM_DIR / f"{s}.names.json").exists():
+                    missing.append(s)
+                continue
             if not (DEM_DIR / f"{s}.names.json").exists() or a.force:
-                fetch_names(s)
+                try:
+                    fetch_names(s)
+                    streak = 0
+                except RuntimeError as e:   # keep going: a place without names is left off the page until a rerun
+                    print(f"{s}: {e}")
+                    missing.append(s)
+                    streak += 1
+        if missing:
+            print(f"No summit names yet for {len(missing)}: {' '.join(missing)}. Run the workflow again to fill them in.")
         return
     slugs = [s for s in every if (DEM_DIR / f"{s}.npz").exists()] if a.all else a.slugs
     for s in slugs:
