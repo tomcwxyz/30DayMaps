@@ -344,7 +344,7 @@ def make_day9():
         point = a + vec * fraction
         vals = sample(point[0] + offsets[:, 0], point[1] + offsets[:, 1])
         cover_pct = classify_pct(vals)
-        lat, lon = TO_WGS.transform(*point)
+        lon, lat = TO_WGS.transform(*point)
         stations.append({
             "index": i, "distance_km": round(distance * fraction / 1000, 3),
             "lat": round(lat, 6), "lon": round(lon, 6), **cover_pct
