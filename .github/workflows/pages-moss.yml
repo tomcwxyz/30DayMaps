@@ -20,6 +20,7 @@ on:
       - 'tests/test_dale_head_panorama.py'
       - 'tests/test_dale_head_peaks.py'
       - 'scripts/check_day05_browser.cjs'
+      - 'scripts/check_day08_day09_browser.cjs'
       - 'scripts/prepare_day05_vendor.cjs'
       - 'tests/test_dale_head_viewshed.py'
       - 'pyproject.toml'
@@ -241,11 +242,30 @@ jobs:
           PY
           node scripts/check_day05_browser.cjs
 
+      - name: Verify source-derived Day 8 and Day 9 in desktop and mobile Chrome
+        env:
+          DAY_MAP_BASE: http://127.0.0.1:8011
+          DAY_MAP_OUTPUT: browser-screenshots
+        run: |
+          python -m http.server 8011 --directory _site > /tmp/day08-day09-static-server.log 2>&1 &
+          python - <<'PY'
+          import time, urllib.request
+          for attempt in range(30):
+              try:
+                  urllib.request.urlopen('http://127.0.0.1:8011/day08-utopia/data/metrics.json', timeout=3)
+                  break
+              except Exception:
+                  time.sleep(1)
+          else:
+              raise RuntimeError('Day 8 and 9 static test server did not start')
+          PY
+          node scripts/check_day08_day09_browser.cjs
+
       - name: Preserve real browser screenshots and test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: day05-browser-screenshots
+          name: day05-day08-day09-browser-screenshots
           path: browser-screenshots/
           if-no-files-found: ignore
           retention-days: 7
@@ -272,6 +292,31 @@ jobs:
       - name: Deploy static map experiences
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify published Day 8 and Day 9 real-data assets
+        env:
+          PAGE_ROOT: \${{ steps.deployment.outputs.page_url }}
+        run: |
+          python - <<'PY'
+          import os, urllib.request
+          base=os.environ["PAGE_ROOT"].rstrip("/")+"/"
+          paths={
+              "day08-utopia/": "North East, 2050",
+              "day09-urban-rural/": "Where does",
+              "day08-utopia/data/metrics.json": '"measured_inputs_modelled_future"',
+              "day09-urban-rural/data/profile.json": '"measured"',
+          }
+          for name,expected in paths.items():
+              url=base+name+"?check="+os.environ.get("GITHUB_SHA","main")
+              with urllib.request.urlopen(url,timeout=25) as result:
+                  content=result.read().decode("utf-8")
+              assert expected in content, f"Stale published asset: {name}"
+              print("Verified published",url)
+          for name in ("day08-utopia/data/2050.png","day08-utopia/data/today.png","day09-urban-rural/data/transect.png"):
+              with urllib.request.urlopen(base+name,timeout=25) as result:
+                  assert result.read(8)==bytes([137,80,78,71,13,10,26,10]), f"Bad PNG: {name}"
+              print("Verified map image",name)
+          PY
 
       - name: Verify the published wildlife page is the current build
         env:
