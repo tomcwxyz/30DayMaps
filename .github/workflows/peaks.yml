@@ -20,7 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with: {ref: "${{ github.ref_name }}"}
@@ -28,7 +28,7 @@ jobs:
         with: {python-version: '3.12'}
       - run: python -m pip install -e ".[sight]"
       - name: Fetch elevation
-        env: {SLUGS: "${{ inputs.slugs }}"}
+        env: {SLUGS: "${{ inputs.slugs }}", PEAKS_NAMES_BUDGET_MIN: "60"}
         run: |
           if [ -n "$SLUGS" ]; then python -m maps.peaks fetch --force $SLUGS; else python -m maps.peaks fetch --all; fi
       - name: Refresh the print maker's places

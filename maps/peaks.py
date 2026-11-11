@@ -672,11 +672,15 @@ def main():
         return
     every = list(AREAS) + list(VIEWS)
     if a.cmd == "fetch":
-        missing, streak = [], 0
+        import os
+        import time
+        missing, streak, start = [], 0, time.monotonic()
+        budget = float(os.environ.get("PEAKS_NAMES_BUDGET_MIN", "0")) * 60   # 0 = no limit
         for s in (every if a.all else a.slugs):
             if not (DEM_DIR / f"{s}.npz").exists() or a.force:
                 fetch(s)
-            if streak >= 2:   # Overpass is down: don't spend the run waiting on it
+            over = budget and time.monotonic() - start > budget   # leave time to save what we have
+            if streak >= 2 or over:   # Overpass is down or slow: don't spend the run waiting on it
                 if not (DEM_DIR / f"{s}.names.json").exists():
                     missing.append(s)
                 continue
