@@ -53,7 +53,7 @@ jobs:
           # Source files may have moved while the long raster build was running.
           # Rebase BEFORE staging generated outputs, never force-push a stale run.
           git fetch origin "$GITHUB_REF_NAME"
-          git rebase "origin/$GITHUB_REF_NAME"
+          git -c rebase.autoStash=true rebase "origin/$GITHUB_REF_NAME"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f web/day08-utopia/data/*.png web/day08-utopia/data/*.json
