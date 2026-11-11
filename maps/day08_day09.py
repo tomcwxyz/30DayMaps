@@ -167,6 +167,23 @@ def terrain_rgb(codes):
     return result
 
 
+def sample_landcover(codes, transform, x, y):
+    """Sample a BNG raster with scalar, 1D or multi-dimensional coordinates.
+
+    Rasterio flattens array inputs; preserve the caller's grid dimensions.
+    Out-of-raster positions are returned as 0 (NoData).
+    """
+    shape = np.broadcast_shapes(np.shape(x), np.shape(y))
+    row, col = rowcol(transform, x, y)
+    row = np.asarray(row).reshape(shape)
+    col = np.asarray(col).reshape(shape)
+    good = ((row >= 0) & (row < codes.shape[0]) &
+            (col >= 0) & (col < codes.shape[1]))
+    result = np.zeros(shape, dtype=np.uint8)
+    result[good] = codes[row[good], col[good]]
+    return result
+
+
 def draw_day8(codes, transform, region, rivers, rails, chosen, existing, filename, future):
     rgb = terrain_rgb(codes)
     if future:
@@ -315,16 +332,7 @@ def make_day9():
     h, w = cover.shape
 
     def sample(x, y):
-        # rasterio.rowcol flattens array inputs. Reshape back to the original
-        # grid so the map is a true 2D geographical image, not a colour band.
-        shape = np.broadcast_shapes(np.shape(x), np.shape(y))
-        row, col = rowcol(tx, x, y)
-        row = np.asarray(row).reshape(shape)
-        col = np.asarray(col).reshape(shape)
-        good = (row >= 0) & (row < h) & (col >= 0) & (col < w)
-        result = np.zeros(shape, dtype=np.uint8)
-        result[good] = cover[row[good], col[good]]
-        return result
+        return sample_landcover(cover, tx, x, y)
 
     n = 85
     stations = []
