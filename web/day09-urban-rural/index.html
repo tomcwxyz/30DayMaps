@@ -1,52 +1,50 @@
 <!doctype html>
 <html lang="en-GB"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f3f0e7"><meta name="description" content="Where does the city end? A satellite land-cover cross-section from Newcastle to Hamsterley Forest.">
+<meta name="theme-color" content="#f3efe5">
+<meta name="description" content="Measured land-cover data between Newcastle and Hamsterley Forest. A real satellite-derived transect and composition chart.">
 <title>Where does the city end? · Day 09 / Urban–Rural</title>
-<link rel="stylesheet" href="../shared/map-challenge.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist-browser/geotiff.js"></script>
-<script defer src="./landcover.js"></script><script defer src="./app.js"></script>
-</head>
-<body>
-<header><div class="meta"><span>30 Day Map Challenge / November 2026</span><span>09 — Urban–Rural</span></div>
-<p class="eyebrow">A transect across the North East</p>
-<h1>Where does the city end?</h1>
-<p class="intro">Follow a straight line from Newcastle towards Hamsterley Forest. The landscape doesn't switch neatly from urban to rural: built-up ground, trees, fields and grassland mix and change along the way.</p>
-</header>
-<main>
-<aside class="panel">
-<section><h2>A landscape, not a boundary.</h2>
-<p>This is a cross-section across <strong>real satellite-derived land cover</strong>. The colours represent the predominant land-cover class in each mapped pixel, not a judgement about whether a place is “urban” or “rural”.</p>
-<div class="legend-row"><span class="swatch" style="background:#fa0000"></span> Built-up land</div>
-<div class="legend-row"><span class="swatch" style="background:#006400"></span> Tree cover</div>
-<div class="legend-row"><span class="swatch" style="background:#f096ff"></span> Cropland</div>
-<div class="legend-row"><span class="swatch" style="background:#ffff4c"></span> Grassland</div>
-<div class="legend-row"><span class="swatch" style="background:#0064c8"></span> Water (other classes also shown)</div>
-</section>
-<section><p class="eyebrow">Explore the section</p>
-<p>Newcastle city centre → Hamsterley Forest, following a <strong>straight transect</strong>, not a road or running route.</p>
-<p class="small">Point to, click, or use arrow keys on the chart to inspect a part of the transect.</p>
-<svg id="profile" tabindex="0" role="img" aria-label="Built-up share along the Newcastle to Hamsterley transect" viewBox="0 0 320 150"></svg>
-<div class="barlabels"><span>Newcastle</span><span>Hamsterley Forest</span></div>
-<p class="stat" id="built-up">—</p>
-<p class="small" id="point-description">Approximate percentage of classified land that is built-up within 500 m of the selected transect point.</p>
-<p id="status" class="small" role="status" aria-live="polite">Reading WorldCover classification data…</p>
-</section>
-<section><p class="eyebrow">Inspect the map</p>
-<div class="controls"><button id="satellite" class="active" type="button" aria-pressed="true">Land cover</button>
-<button id="outline" type="button" aria-pressed="false">Base map</button>
-<button id="reset" type="button">Reset view</button></div>
-<p class="small" style="margin-top:12px">The map uses ESA WorldCover 2021; it is <strong>not</strong> a 2026 development or change map.</p></section>
-</aside>
-<div class="mapwrap">
-<div id="map" role="region" aria-label="Actual satellite-derived land cover from Newcastle to Hamsterley Forest"></div>
-<div class="mapinfo"><div><strong>Newcastle → Hamsterley</strong><div>Land cover, not settlement classifications</div></div></div>
-<div class="mapkey">ESA WorldCover · 10 m source classification (2021) · the profile is sampled and smoothed to illustrate a local gradient.</div>
-</div>
-</main>
-<footer>
-<p><strong>What this shows.</strong> Land-cover classes observed in 2021, not land ownership, accessibility, actual population, planning designations or an official rural–urban classification. The transect is a straight geographical line; sample points use a roughly 500 m surrounding radius and a downsampled satellite classification. Local percentages are indicative, not survey-grade estimates. If the classification file cannot be accessed, the profile is withheld rather than fabricated.</p>
-<p>Source: <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover 2021 v200</a>. © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium. Basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. <a href="../day08-utopia/">Previous: Day 08 — Utopia</a>.</p>
-</footer></body></html>
+<link rel="stylesheet" href="./style.css"><script defer src="./app.js"></script>
+</head><body><div class="page">
+  <div class="issue"><span>30 Day Map Challenge / 2026</span><span>09 / Urban–Rural</span></div>
+  <header><p class="eyebrow">An observation of the North East</p>
+    <h1>Where does<br><em>the city end?</em></h1>
+    <p class="intro">The edge of the city isn't a line. It's a shifting mixture of streets, fields and trees. A journey from Newcastle into County Durham, measured in land-cover pixels.</p></header>
+  <main>
+    <section class="strip-section" aria-label="Land-cover map transect">
+      <div class="section-head"><div><p class="eyebrow">01 / The landscape</p><h2>Newcastle to Hamsterley Forest</h2></div><span id="length">A straight cross-section</span></div>
+      <figure><div class="strip-scroll"><img id="strip" src="./data/transect.png" alt="Actual classified land-cover pixels sampled along an 8 km wide, rotated transect between Newcastle and Hamsterley Forest.">
+        </div><figcaption>A straight geographical strip, rotated horizontally for comparison — <strong>not a road or walking route</strong>. Colour is derived from ESA WorldCover 2021, sampled at 40 m. On smaller screens, swipe along the map. <a href="./data/transect.png" target="_blank" rel="noopener">Open the full-size map</a>.</figcaption>
+      </figure>
+      <div class="strip-key"><span><i style="background:#a98b84"></i>Built-up</span><span><i style="background:#356945"></i>Tree cover</span><span><i style="background:#dcd0a1"></i>Cropland</span><span><i style="background:#c5cb97"></i>Grass / shrub</span><span><i style="background:#6d9ca9"></i>Water</span></div>
+    </section>
+    <section class="analysis" aria-label="Land-cover composition chart">
+      <div class="analysis-copy">
+        <p class="eyebrow">02 / The measurement</p><h2>Not a boundary.<br><em>A gradient.</em></h2>
+        <p>At regular intervals along the line, we counted the classified land-cover pixels within a 500 m circle. Each colour below is a measured percentage, not an invented curve.</p>
+        <p>Move along the chart to see how the mixture changes. A field can give way to a village, then to woods, without ever crossing a neat urban–rural border.</p>
+        <div class="selection">
+          <span id="position">Newcastle · 0 km</span>
+          <strong id="built-share">—</strong>
+          <small>classified land built-up at this point</small>
+          <div class="detail" id="details">Loading satellite-derived measurements…</div>
+        </div>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-head"><strong>Land cover along the transect</strong><span>Local composition · 500 m radius</span></div>
+        <svg id="chart" viewBox="0 0 980 420" role="img" tabindex="0" aria-label="Stacked area chart of measured built-up, tree, cropland, open and other cover along the Newcastle to Hamsterley transect; use arrow keys to inspect positions.">
+          <text x="46" y="70" fill="#586b5e" font-size="17">Loading measured data…</text>
+        </svg>
+        <div class="chart-key"><span><i style="background:#a98b84"></i>Built-up</span><span><i style="background:#356945"></i>Tree cover</span><span><i style="background:#d9c79d"></i>Cropland</span><span><i style="background:#a4b48b"></i>Grass / shrub</span><span><i style="background:#729eaa"></i>Other</span></div>
+        <p class="chart-note" id="status" role="status" aria-live="polite">Loading precomputed data from the project repository…</p>
+      </div>
+    </section>
+    <section class="method"><div><p class="eyebrow">The method</p><h2>Measured, not imagined.</h2></div><div>
+      <p>The source is <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover 2021 v200</a>, a satellite land-cover classification. It has been sampled onto a 40 m grid for this map. Along the straight line between Newcastle city centre and Hamsterley Forest, the chart uses <strong>85 measured locations</strong> and counts classified cells within 500 m of each location. Values are intentionally not smoothed.</p>
+      <p>Colours are grouped into built-up, trees, cropland, grass/shrub and other classified land cover. The transect is a rotated 8 km wide strip so the full journey can be read left to right. These figures don't tell us who lives in a place, whether land is accessible, or whether a place is officially urban or rural.</p>
+      <p><a href="./data/profile.json">Inspect every sampled value</a> · <a href="https://github.com/tomcwxyz/30DayMaps/blob/main/maps/day08_day09.py">Inspect the processing code</a></p>
+    </div></section>
+  </main><footer><span>09 / Urban–Rural · 30 Day Map Challenge</span>
+    <span>© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium</span>
+    <a href="../day08-utopia/">← 08 / A Land Reclaimed</a></footer>
+</div></body></html>

@@ -1,0 +1,66 @@
+name: Build real data for Days 8 and 9
+
+on:
+  push:
+    branches:
+      - feat/real-data-day08-day09
+    paths:
+      - 'maps/day08_day09.py'
+      - '.github/workflows/build-day08-day09.yml'
+      - 'tests/test_day08_day09.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-derived-maps-\${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install geospatial tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[test]'
+      - name: Compile source before fetching data
+        run: python -m py_compile maps/day08_day09.py
+      - name: Build measured and modelled map assets
+        run: python -m maps.day08_day09 --day all
+      - name: Check outputs and provenance
+        run: |
+          python -m pytest -q tests/test_day08_day09.py
+          node --test tests/day08-day09.test.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: day08-day09-measured-data-and-maps
+          path: |
+            web/day08-utopia/data/
+            web/day09-urban-rural/data/
+          retention-days: 14
+      - name: Commit reproducible outputs to the feature branch
+        run: |
+          # Source files may have moved while the long raster build was running.
+          # Rebase BEFORE staging generated outputs, never force-push a stale run.
+          git fetch origin "$GITHUB_REF_NAME"
+          git -c rebase.autoStash=true rebase "origin/$GITHUB_REF_NAME"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f web/day08-utopia/data/*.png web/day08-utopia/data/*.json
+          git add -f web/day09-urban-rural/data/*.png web/day09-urban-rural/data/*.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Build data-derived Day 8 and Day 9 maps [skip ci]"
+            git push
+          else
+            echo "No generated data changes"
+          fi

@@ -1,46 +1,47 @@
-const test=require("node:test");const assert=require("node:assert/strict");
-const wild=require("../web/day08-utopia/geo.js");
-const cover=require("../web/day09-urban-rural/landcover.js");
-test("distance to access woodland is zero for point within polygon",()=>{
-  const poly={type:"Polygon",coordinates:[[[-1.6,54.7],[-1.5,54.7],[-1.5,54.8],[-1.6,54.8],[-1.6,54.7]]]};
-  assert.equal(wild.distanceToGeometry([54.75,-1.55],poly).metres,0);
-});
-test("distance excludes holes (private inholdings)",()=>{
-  const poly={type:"Polygon",coordinates:[
-    [[-1.7,54.7],[-1.5,54.7],[-1.5,54.9],[-1.7,54.9],[-1.7,54.7]],
-    [[-1.61,54.79],[-1.59,54.79],[-1.59,54.81],[-1.61,54.81],[-1.61,54.79]]
-  ]};
-  const d=wild.distanceToGeometry([54.8,-1.6],poly);
-  assert.ok(d.metres>500&&d.metres<1500);
-});
-test("distance to nearby woodland has metres and destination",()=>{
-  const poly={type:"Polygon",coordinates:[[[-1.61,54.8],[-1.6,54.8],[-1.6,54.81],[-1.61,54.81],[-1.61,54.8]]]};
-  const d=wild.distanceToGeometry([54.8,-1.62],poly);
-  assert.ok(d.metres>500&&d.metres<750);
-  assert.equal(d.point.length,2);
-});
-test("worldcover transect endpoints are fixed and samples follow the line",()=>{
-  const p=cover.points(11);
-  assert.deepEqual(p[0],cover.START);
-  assert.deepEqual(p[10],cover.END);
-  assert.ok(cover.greatCircleKm(cover.START,cover.END)>30);
-});
-test("land-cover fractions derive exclusively from sample codes",()=>{
-  const a=cover.classify([54.8,-1.7],()=>50);
-  assert.equal(a.built,100);
-  assert.equal(a.trees,0);
-  const b=cover.classify([54.8,-1.7],()=>10);
-  assert.equal(b.trees,100);
-  assert.equal(b.built,0);
-  assert.equal(cover.classify([54.8,-1.7],()=>0),null);
-});
+const test=require("node:test");
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const path=require("node:path");
+const base=path.join(__dirname,"..");
+const read=filename=>fs.readFileSync(path.join(base,filename),"utf8");
 
-test("Day 8 and Day 9 use key-free OpenStreetMap tiles, with no CARTO dependency",()=>{
-  const fs=require("node:fs");
-  for(const page of ["day08-utopia","day09-urban-rural"]){
-    const app=fs.readFileSync(require("node:path").join(__dirname,"..","web",page,"app.js"),"utf8");
-    assert.match(app,/https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
-    assert.doesNotMatch(app,/cartocdn|carto\.com\/attributions/i);
-    assert.match(app,/openstreetmap\.org\/copyright/);
+test("Day 8 is a sourced, not invented, geographic scenario",()=>{
+  const html=read("web/day08-utopia/index.html");
+  const app=read("web/day08-utopia/app.js");
+  assert.match(html,/North East, 2050/);
+  assert.match(html,/hypothetical|imagined|modelling rule/i);
+  assert.match(app,/data\/2050\.png/);
+  assert.match(app,/data\/today\.png/);
+  assert.match(app,/data\/metrics\.json/);
+  assert.doesNotMatch(app,/cartocdn|tile\.openstreetmap\.org|Math\.random|mapproxy/i);
+});
+test("Day 9 chart is built from committed satellite sample percentages",()=>{
+  const html=read("web/day09-urban-rural/index.html");
+  const app=read("web/day09-urban-rural/app.js");
+  assert.match(html,/Measured, not imagined/i);
+  assert.match(html,/data\/transect\.png/);
+  assert.match(app,/data\/profile\.json/);
+  for(const col of ["built","trees","cropland","open","other"]){
+    assert.ok(app.includes(col));
+  }
+  assert.doesNotMatch(app,/Math\.random|mapproxy|GeoTIFF|cartocdn/i);
+});
+test("precomputed datasets are present and numerically consistent",()=>{
+  const day8=JSON.parse(read("web/day08-utopia/data/metrics.json"));
+  const day9=JSON.parse(read("web/day09-urban-rural/data/profile.json"));
+  assert.equal(day8.status,"measured_inputs_modelled_future");
+  assert.ok(day8.modelled_added_km2_approx>0);
+  assert.equal(day8["2050_nature_first_pct_of_sampled_land"],50);
+  assert.equal(day9.status,"measured");
+  assert.equal(day9.samples.length,85);
+  assert.ok(day9.distance_km>30&&day9.distance_km<50);
+  for(const item of day9.samples){
+    const sum=["built","trees","cropland","open","other"].reduce((a,k)=>a+item[k],0);
+    assert.ok(Math.abs(sum-100)<.2,"composition percentages must sum to 100");
+  }
+  for(const image of ["web/day08-utopia/data/today.png","web/day08-utopia/data/2050.png","web/day09-urban-rural/data/transect.png"]){
+    const bytes=fs.readFileSync(path.join(base,image));
+    assert.deepEqual([...bytes.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+    assert.ok(bytes.length>10000);
   }
 });
