@@ -3,8 +3,9 @@ import json
 from pathlib import Path
 
 import numpy as np
+from rasterio.transform import from_origin
 
-from maps.day08_day09 import CLASS_COLOUR, D8, D9, classify_pct
+from maps.day08_day09 import CLASS_COLOUR, D8, D9, classify_pct, sample_landcover
 
 
 def test_landcover_classification_counts_only_valid_source_classes():
@@ -49,3 +50,15 @@ def test_generated_day9_is_measured_and_full_length():
         assert item["distance_km"] > last
         last = item["distance_km"]
         assert abs(sum(item[k] for k in ("built", "trees", "cropland", "open", "other")) - 100) < .15
+
+
+def test_two_dimensional_raster_sampling_preserves_map_geometry():
+    """A map grid must stay 2D; rasterio.rowcol itself flattens arrays."""
+    codes = np.array([[10, 20], [40, 50]], dtype=np.uint8)
+    transform = from_origin(0, 80, 40, 40)
+    xs = np.array([[20, 60], [20, 60]], dtype=float)
+    ys = np.array([[60, 60], [20, 20]], dtype=float)
+    measured = sample_landcover(codes, transform, xs, ys)
+    assert measured.shape == (2, 2)
+    np.testing.assert_array_equal(measured, codes)
+    assert sample_landcover(codes, transform, np.array([20, 60]), np.array([60, 20])).tolist() == [10, 50]
