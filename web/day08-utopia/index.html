@@ -1,54 +1,65 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f3f0e7">
-<meta name="description" content="What if everyone could walk to somewhere wild? A North East mapping experiment using Forestry Commission woodland access evidence.">
-<title>A wild place within ten minutes · Day 08 / Utopia</title>
-<link rel="stylesheet" href="../shared/map-challenge.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-<script defer src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script defer src="./geo.js"></script><script defer src="./app.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f3efe5">
+<meta name="description" content="North East 2050: a speculative land-recovery map created from real 2021 satellite land cover, mapped rivers and former railway alignments.">
+<title>North East, 2050 — A Land Reclaimed · Day 8 / Utopia</title>
+<link rel="stylesheet" href="./style.css">
+<script defer src="./app.js"></script>
 </head>
-<body>
-<header><div class="meta"><span>30 Day Map Challenge / November 2026</span><span>08 — Utopia</span></div>
-<p class="eyebrow">A different future for the North East</p>
-<h1>A wild place within ten minutes.</h1>
-<p class="intro">Imagine being able to step outside and reach woodland within ten minutes. Where do we already have mapped access — and what might change if we opened more woods and connected them?</p>
-</header>
-<main>
-<aside class="panel">
-<section><h2>What's there now?</h2>
-<p>The Forestry Commission maps woodlands with <strong>public access</strong> and woods with <strong>no known public access</strong>. Select a place on the map to explore its surroundings.</p>
-<div class="legend-row"><span class="swatch green"></span> Public access indicated</div>
-<div class="legend-row"><span class="swatch pale"></span> No known public access</div>
-<div class="legend-row"><span class="swatch link"></span> Hypothetical connection</div>
-<p class="small">A 10-minute walk is roughly 800 m at 4.8 km/h. The circle is straight-line proximity, <strong>not</strong> a route-based ten-minute catchment.</p>
-</section>
-<section><p class="eyebrow">Choose a starting point</p>
-<div class="controls" id="places">
-<button type="button" data-place="newcastle">Newcastle</button>
-<button type="button" data-place="chester">Chester-le-Street</button>
-<button type="button" data-place="durham" class="active">Durham</button>
-<button type="button" data-place="bishop">Bishop Auckland</button>
-<button type="button" data-place="hamsterley">Hamsterley</button></div>
-<p class="small">Or click anywhere on the map.</p></section>
-<section><p class="eyebrow">Explore the alternative</p>
-<div class="controls">
-<button type="button" id="now" class="active" aria-pressed="true">Today</button>
-<button type="button" id="future" aria-pressed="false">What if?</button>
-</div><p id="interpretation" style="margin-top:14px">Select a place to compare mapped woodland access in its immediate surroundings.</p>
-<p class="stat" id="distance">—</p><p class="small" id="distance-label">Nearest mapped accessible woodland</p>
-<p class="small" id="status" role="status" aria-live="polite">Loading Forestry Commission woodland polygons…</p>
-</section>
-</aside>
-<div class="mapwrap">
-<div id="map" role="region" aria-label="Interactive North East woodland access map"></div>
-<div class="mapinfo"><div><strong id="map-title">Durham</strong><div id="map-subtitle">Click anywhere to explore an 800 m radius</div></div></div>
-<div class="mapkey">Green: known public access to woodland · Ochre: no known public access · Dashed orange: hypothetical link. Map layers update as you pan or zoom.</div>
-</div>
-</main>
-<footer>
-<p><strong>This is a thought experiment, not an access map or planning proposal.</strong> “No known public access” does not mean legally closed, and “public access” does not guarantee access or accessibility at any particular entrance. The woodland layer also includes narrow corridors along public paths; it must not be read as access to an entire woodland. The 800 m circle is a straight-line illustration: no road/path routing, entrances, barriers, slope, population distribution, habitat quality or landowner consent has been assessed. Hypothetical links are straight lines, not proposed footpaths. No statement about “everyone” or regional coverage is calculated here.</p>
-<p>Woodland data: <a href="https://services2.arcgis.com/mHXjwgl3OARRqqD4/ArcGIS/rest/services/Woods_For_All/FeatureServer/0" target="_blank" rel="noopener">Forestry Commission, Woods for All (2025)</a>, based mainly on National Forest Inventory 2022 and other access sources; contains Forestry Commission information licensed under the Open Government Licence v3.0. Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>. <a href="../day09-urban-rural/">Next: Day 09 — Urban–Rural</a>.</p>
-</footer></body></html>
+<body><div class="sheet">
+  <div class="issue"><span>30 Day Map Challenge / 2026</span><span>08 / Utopia</span></div>
+  <header class="opening">
+    <div><p class="kicker">A possible future for the North East</p>
+      <h1>North East, 2050:<br><em>A Land Reclaimed</em></h1>
+      <p class="standfirst">What if we chose to give <strong>half our landscape</strong> back to nature — and connected the places we've left apart?</p></div>
+    <div class="opening-note">An imagined future.<br>Real geography.<br>Transparent rules.</div>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="map-heading">
+      <div class="map-top"><div><p class="kicker">A cartography of possibility</p>
+        <h2 id="map-heading">A different North East</h2></div>
+        <div class="switch" role="group" aria-label="Compare present landscape to the imagined scenario">
+          <button type="button" id="show-today" aria-pressed="false">2021 landscape</button>
+          <button type="button" id="show-future" aria-pressed="true">Imagined 2050</button>
+        </div>
+      </div>
+      <figure class="map-figure">
+        <img id="landscape" src="./data/2050.png" width="2035" height="1850"
+          alt="Data-derived map of the North East, with hypothetical green land allocation, real mapped river lines, former railway alignments and town labels.">
+        <figcaption id="map-caption">Imagined 2050 · a deliberately ambitious allocation of 50% of sampled land to nature-first uses. Not a prediction or land-use proposal.</figcaption>
+      </figure>
+      <div class="legend" aria-label="Map legend"><span><i class="swatch core"></i>Existing woodland and wetland</span>
+        <span><i class="swatch restored"></i>Additional land allocated in 2050</span>
+        <span><i class="swatch crops"></i>Other fields and open land</span>
+        <span><i class="swatch built"></i>Existing built-up land</span>
+        <span><i class="swatch river"></i>Mapped Tyne / Wear / Tees waterways</span>
+        <span><i class="swatch rail"></i>Disused rail alignments (not confirmed paths)</span></div>
+    </section>
+    <section class="story" aria-label="The transformation">
+      <div class="story-intro"><p class="kicker">The proposition</p>
+      <h2>Not another small improvement.</h2>
+      <p>Rather than proposing one new park, imagine making nature a defining purpose of the whole region. The western uplands, river corridors, old railway alignments and existing woods help shape the map — but the change itself is explicitly imagined.</p></div>
+      <div class="big-number"><strong id="future-share">50%</strong><span>of sampled terrestrial land assigned to nature-first uses in this model</span></div>
+      <div class="metrics">
+        <div><strong id="today-area">—</strong><span>km² currently mapped as tree or wetland cover</span></div>
+        <div><strong id="added-area">—</strong><span>km² additionally allocated in the imagined scenario</span></div>
+      </div>
+      <div class="ideas">
+        <article><strong>01 / Make space for a wild core</strong><p>Prioritise a more continuous nature-first landscape towards the Pennines, rather than scattering isolated pockets.</p></article>
+        <article><strong>02 / Give rivers room</strong><p>Use actual Tyne, Wear and Tees alignments to favour land next to waterways. The 450 m buffer is a scenario rule, not a modelled floodplain.</p></article>
+        <article><strong>03 / Reconnect the landscape</strong><p>Give greater weight to land near existing woods and disused railway alignments. These lines are mapped infrastructure, not verified greenways.</p></article>
+        <article><strong>04 / Keep the cities</strong><p>Existing built-up cells are protected from reallocation in the model. The transformation concerns how the wider landscape might work around settlements.</p></article>
+      </div>
+      <p class="source-status" role="status" id="status">Loading the data-derived 2050 model…</p>
+    </section>
+    <section class="method">
+      <div><p class="kicker">How this map was made</p><h2>The future is imagined.<br>The inputs are not.</h2></div>
+      <div><p>Existing land cover comes from <a href="https://esa-worldcover.org/en/data-access" target="_blank" rel="noopener">ESA WorldCover 2021</a>, sampled at 300 m for this regional illustration. The North East boundary is from the Office for National Statistics. Named waterways and former railway alignments come from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+      <p>The proposed 2050 areas follow a reproducible scoring rule: priority to western land, proximity to existing tree/wetland cover, and proximity to mapped rivers and former railways. The highest-scoring undeveloped terrestrial cells are added until the nature-first allocation covers 50% of the sampled land. The map makes <strong>no claim</strong> about land ownership, ecological condition, rights of access, restoration cost, permissions, agricultural trade-offs or feasibility.</p>
+      <p><a href="./data/metrics.json">Inspect the underlying figures and modelling method</a> · <a href="https://github.com/tomcwxyz/30DayMaps/blob/main/maps/day08_day09.py">Read the reproducible source code</a></p></div>
+    </section>
+  </main>
+  <footer><span>08 / Utopia · 30 Day Map Challenge</span><span>© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium · Contains ONS data © Crown copyright OGL v3.0 · © OpenStreetMap contributors</span><a href="../day09-urban-rural/">09 / Where does the city end?</a></footer>
+</div></body></html>
