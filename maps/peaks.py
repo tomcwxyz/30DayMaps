@@ -570,6 +570,14 @@ POSTERS = {  # contour place -> (skyline that shows it, half-width of the strip 
     "cheviot": ("cheviot-from-simonside", None), "lake-district": ("lakes-from-orrest-head", None),
     "blencathra": ("sharp-edge-from-bannerdale", None),
     "inaccessible-pinnacle": ("inaccessible-pinnacle-from-glen-brittle", None),
+    "buachaille-etive-mor": ("buachaille-from-kings-house", None), "schiehallion": ("schiehallion-from-loch-rannoch", None),
+    "an-teallach": ("an-teallach-from-the-destitution-road", None), "liathach": ("liathach-from-loch-clair", None),
+    "suilven": ("suilven-from-glencanisp", None), "the-cobbler": ("cobbler-from-arrochar", None),
+    "great-gable": ("great-gable-from-wast-water", None), "langdale-pikes": ("langdale-pikes-from-blea-tarn", None),
+    "old-man-of-coniston": ("old-man-from-coniston-water", None), "tryfan": ("tryfan-from-the-a5", None),
+    "eiger-monch-jungfrau": ("eiger-monch-jungfrau-from-mannlichen", None), "monte-rosa": ("monte-rosa-from-gornergrat", None),
+    "tre-cime": ("tre-cime-from-rifugio-locatelli", None), "grossglockner": ("grossglockner-from-franz-josefs-hohe", None),
+    "zugspitze": ("zugspitze-from-eibsee", None),
 }
 
 

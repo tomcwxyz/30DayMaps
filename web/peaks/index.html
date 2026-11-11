@@ -92,6 +92,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .results button { text-align: left; line-height: 1.3; padding: 8px 10px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button { padding: 6px 10px; font-size: 13px; min-height: 34px; }
+.groups { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.groups button { font-weight: 600; }
 .chips button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .seg button { padding: 8px 6px; font-size: 14px; display: grid; justify-items: center; gap: 4px; }
@@ -184,6 +186,7 @@ button.order { min-height: 48px; padding: 12px 22px; font-size: 16px; flex: 0 1 
   <form class="panel" id="controls" autocomplete="off" onsubmit="return false">
     <fieldset>
       <legend>Mountain</legend>
+      <div class="chips groups" id="groups" aria-label="Regions"></div>
       <div class="chips" id="presets" aria-label="Ready-made mountains"></div>
       <div class="search">
         <input type="search" id="q" placeholder="Search a peak, range or place" aria-label="Search for a place">
@@ -797,6 +800,13 @@ function seenOptions() {
   $("seenFrom").innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
 }
 
+// The ready-made mountains, one region at a time.
+function showGroup(g) {
+  if (!g) return;
+  for (const b of $("groups").children) b.setAttribute("aria-pressed", String(b.dataset.group === g));
+  for (const b of $("presets").children) b.hidden = b.dataset.group !== g;
+}
+
 function choosePlace(p, { keepStyle = true } = {}) {
   state.route = null;
   $("gpxClear").hidden = true; $("trimRow").hidden = true; $("gpxFile").value = "";
@@ -818,6 +828,7 @@ function choosePlace(p, { keepStyle = true } = {}) {
   $("title").value = a ? a.title : p.name;
   $("subtitle").value = D.ll(p.lat, p.lon);
   for (const b of $("presets").children) b.setAttribute("aria-pressed", String(!!a && b.dataset.slug === a.slug));
+  if (a) showGroup(a.group);
   for (const b of $("rounds").children) b.setAttribute("aria-pressed", "false");
   syncOutputs(); showFor(); schedule(0);
 }
@@ -1164,7 +1175,11 @@ function build() {
     for (const x of $("contrast").children) x.setAttribute("aria-pressed", String(x === b));
     schedule(0);
   };
-  $("presets").innerHTML = PLACES.areas.map(a => `<button type="button" data-slug="${a.slug}" aria-pressed="false">${a.name}</button>`).join("");
+  const groups = [...new Set(PLACES.areas.map(a => a.group || "More"))];
+  $("groups").innerHTML = groups.map(g => `<button type="button" data-group="${g}" aria-pressed="false">${g}</button>`).join("");
+  $("groups").onclick = e => { const b = e.target.closest("button"); if (b) showGroup(b.dataset.group); };
+  $("presets").innerHTML = PLACES.areas.map(a => `<button type="button" data-slug="${a.slug}" data-group="${a.group || "More"}" aria-pressed="false">${a.name}</button>`).join("");
+  showGroup(groups[0]);
   $("presets").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
     const a = PLACES.areas.find(x => x.slug === b.dataset.slug);

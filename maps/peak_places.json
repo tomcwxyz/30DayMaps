@@ -1,5 +1,5 @@
 {
- "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline. 'max_exag' keeps a view near true scale (more foreground instead of taller hills); 'poster_centre' (degrees off the view's middle) centres a poster's strip. 'routes' are ready-made rounds and races: GPX files in web/peaks/routes, built from maps/peak_routes.json by maps/peaks_routes.py.",
+ "_help": "Mountains for maps.peaks. 'area' places are drawn as contours and ridgelines around a centre; 'view' places are skylines seen from a viewpoint (azimuth in degrees from north, fov = field of view, reach_km = how far to look). An area's optional 'ridges' adds named ridges that OpenStreetMap lacks (labelled like its natural=arete/ridge). A place's or view's optional 'hires' is a LiDAR patch (maps/peaks_lidar.py) used wherever it covers, and 'labels' adds named points (a ridge prints without a height) to its skyline. 'max_exag' keeps a view near true scale (more foreground instead of taller hills); 'poster_centre' (degrees off the view's middle) centres a poster's strip. 'group' is the heading an area sits under on the page (England, Scotland, Wales, Alps, Himalaya). 'routes' are ready-made rounds and races: GPX files in web/peaks/routes, built from maps/peak_routes.json by maps/peaks_routes.py.",
  "areas": [
   {
    "slug": "helvellyn",
@@ -20,7 +20,8 @@
    },
    "views": [
     "helvellyn-from-place-fell"
-   ]
+   ],
+   "group": "England"
   },
   {
    "slug": "blencathra",
@@ -53,7 +54,8 @@
     "halfW": 2440,
     "halfH": 3190,
     "res": 3
-   }
+   },
+   "group": "England"
   },
   {
    "slug": "scafell",
@@ -63,7 +65,8 @@
    "lat": 54.4542,
    "lon": -3.2116,
    "width_km": 8,
-   "summit_m": 978
+   "summit_m": 978,
+   "group": "England"
   },
   {
    "slug": "lake-district",
@@ -73,7 +76,8 @@
    "lat": 54.49,
    "lon": -3.09,
    "width_km": 34,
-   "summit_m": 978
+   "summit_m": 978,
+   "group": "England"
   },
   {
    "slug": "cheviot",
@@ -84,7 +88,94 @@
    "lon": -2.1456,
    "width_km": 12,
    "summit_m": 815,
-   "smooth_m": 32
+   "smooth_m": 32,
+   "group": "England"
+  },
+  {
+   "slug": "old-man-of-coniston",
+   "name": "Old Man of Coniston",
+   "title": "The Old Man of Coniston",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.3709,
+   "lon": -3.1213,
+   "width_km": 6,
+   "summit_m": 803,
+   "views": [
+    "old-man-from-coniston-water"
+   ]
+  },
+  {
+   "slug": "great-gable",
+   "name": "Great Gable",
+   "title": "Great Gable",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.4832,
+   "lon": -3.2185,
+   "width_km": 6,
+   "summit_m": 899,
+   "views": [
+    "great-gable-from-wast-water"
+   ]
+  },
+  {
+   "slug": "skiddaw",
+   "name": "Skiddaw",
+   "title": "Skiddaw",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.6511,
+   "lon": -3.1476,
+   "width_km": 8,
+   "summit_m": 931
+  },
+  {
+   "slug": "langdale-pikes",
+   "name": "Langdale Pikes",
+   "title": "The Langdale Pikes",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.4573,
+   "lon": -3.1098,
+   "width_km": 5,
+   "summit_m": 736,
+   "views": [
+    "langdale-pikes-from-blea-tarn"
+   ]
+  },
+  {
+   "slug": "fairfield",
+   "name": "Fairfield",
+   "title": "The Fairfield Horseshoe",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.47,
+   "lon": -2.99,
+   "width_km": 8,
+   "summit_m": 873
+  },
+  {
+   "slug": "haystacks",
+   "name": "Haystacks",
+   "title": "Haystacks",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.5072,
+   "lon": -3.2471,
+   "width_km": 4,
+   "summit_m": 597
+  },
+  {
+   "slug": "catbells",
+   "name": "Catbells",
+   "title": "Catbells",
+   "region": "Lake District",
+   "group": "England",
+   "lat": 54.5682,
+   "lon": -3.17,
+   "width_km": 4,
+   "summit_m": 451
   },
   {
    "slug": "ben-nevis",
@@ -94,7 +185,8 @@
    "lat": 56.7969,
    "lon": -5.0036,
    "width_km": 9,
-   "summit_m": 1345
+   "summit_m": 1345,
+   "group": "Scotland"
   },
   {
    "slug": "cuillin",
@@ -109,7 +201,8 @@
     "zoom": 1.35,
     "dy_km": 2.0,
     "dx_km": -0.5
-   }
+   },
+   "group": "Scotland"
   },
   {
    "slug": "inaccessible-pinnacle",
@@ -119,7 +212,169 @@
    "lat": 57.2127,
    "lon": -6.2348,
    "width_km": 3,
-   "summit_m": 986
+   "summit_m": 986,
+   "group": "Scotland"
+  },
+  {
+   "slug": "buachaille-etive-mor",
+   "name": "Buachaille Etive Mòr",
+   "title": "Buachaille Etive Mòr",
+   "region": "Glen Coe",
+   "group": "Scotland",
+   "lat": 56.6462,
+   "lon": -4.899,
+   "width_km": 6,
+   "summit_m": 1022,
+   "views": [
+    "buachaille-from-kings-house"
+   ]
+  },
+  {
+   "slug": "glen-coe",
+   "name": "Glen Coe",
+   "title": "Glen Coe",
+   "region": "Lochaber",
+   "group": "Scotland",
+   "lat": 56.655,
+   "lon": -4.985,
+   "width_km": 14,
+   "summit_m": 1150
+  },
+  {
+   "slug": "schiehallion",
+   "name": "Schiehallion",
+   "title": "Schiehallion",
+   "region": "Perthshire",
+   "group": "Scotland",
+   "lat": 56.6668,
+   "lon": -4.0991,
+   "width_km": 7,
+   "summit_m": 1083,
+   "views": [
+    "schiehallion-from-loch-rannoch"
+   ]
+  },
+  {
+   "slug": "cairngorms",
+   "name": "Cairngorms",
+   "title": "The Cairngorms",
+   "region": "Highlands",
+   "group": "Scotland",
+   "lat": 57.085,
+   "lon": -3.69,
+   "width_km": 16,
+   "summit_m": 1309
+  },
+  {
+   "slug": "lochnagar",
+   "name": "Lochnagar",
+   "title": "Lochnagar",
+   "region": "Royal Deeside",
+   "group": "Scotland",
+   "lat": 56.9604,
+   "lon": -3.2456,
+   "width_km": 7,
+   "summit_m": 1155
+  },
+  {
+   "slug": "an-teallach",
+   "name": "An Teallach",
+   "title": "An Teallach",
+   "region": "Wester Ross",
+   "group": "Scotland",
+   "lat": 57.807,
+   "lon": -5.2525,
+   "width_km": 6,
+   "summit_m": 1062,
+   "views": [
+    "an-teallach-from-the-destitution-road"
+   ]
+  },
+  {
+   "slug": "liathach",
+   "name": "Liathach",
+   "title": "Liathach",
+   "region": "Torridon",
+   "group": "Scotland",
+   "lat": 57.566,
+   "lon": -5.485,
+   "width_km": 8,
+   "summit_m": 1055,
+   "views": [
+    "liathach-from-loch-clair"
+   ]
+  },
+  {
+   "slug": "suilven",
+   "name": "Suilven",
+   "title": "Suilven",
+   "region": "Assynt",
+   "group": "Scotland",
+   "lat": 58.113,
+   "lon": -5.122,
+   "width_km": 6,
+   "summit_m": 731,
+   "views": [
+    "suilven-from-glencanisp"
+   ]
+  },
+  {
+   "slug": "stac-pollaidh",
+   "name": "Stac Pollaidh",
+   "title": "Stac Pollaidh",
+   "region": "Coigach",
+   "group": "Scotland",
+   "lat": 58.0445,
+   "lon": -5.208,
+   "width_km": 3,
+   "summit_m": 612
+  },
+  {
+   "slug": "the-storr",
+   "name": "The Storr",
+   "title": "The Storr",
+   "region": "Trotternish, Isle of Skye",
+   "group": "Scotland",
+   "lat": 57.5072,
+   "lon": -6.1829,
+   "width_km": 4,
+   "summit_m": 719
+  },
+  {
+   "slug": "the-cobbler",
+   "name": "The Cobbler",
+   "title": "The Cobbler",
+   "region": "Arrochar Alps",
+   "group": "Scotland",
+   "lat": 56.2133,
+   "lon": -4.8081,
+   "width_km": 4,
+   "summit_m": 884,
+   "views": [
+    "cobbler-from-arrochar"
+   ]
+  },
+  {
+   "slug": "ben-lomond",
+   "name": "Ben Lomond",
+   "title": "Ben Lomond",
+   "region": "Loch Lomond",
+   "group": "Scotland",
+   "lat": 56.1902,
+   "lon": -4.6323,
+   "width_km": 7,
+   "summit_m": 974
+  },
+  {
+   "slug": "goatfell",
+   "name": "Goatfell",
+   "title": "Goatfell",
+   "region": "Isle of Arran",
+   "group": "Scotland",
+   "lat": 55.63,
+   "lon": -5.21,
+   "width_km": 9,
+   "summit_m": 874
   },
   {
    "slug": "yr-wyddfa",
@@ -129,7 +384,69 @@
    "lat": 53.0685,
    "lon": -4.0763,
    "width_km": 8,
-   "summit_m": 1085
+   "summit_m": 1085,
+   "group": "Wales",
+   "views": [
+    "yr-wyddfa-from-llynnau-mymbyr"
+   ]
+  },
+  {
+   "slug": "tryfan",
+   "name": "Tryfan",
+   "title": "Tryfan",
+   "region": "Eryri",
+   "group": "Wales",
+   "lat": 53.1155,
+   "lon": -3.9968,
+   "width_km": 3.5,
+   "summit_m": 917,
+   "views": [
+    "tryfan-from-the-a5"
+   ]
+  },
+  {
+   "slug": "glyderau",
+   "name": "Glyderau",
+   "title": "Y Glyderau",
+   "region": "Eryri",
+   "group": "Wales",
+   "lat": 53.105,
+   "lon": -4.01,
+   "width_km": 7,
+   "summit_m": 1001
+  },
+  {
+   "slug": "carneddau",
+   "name": "Carneddau",
+   "title": "Y Carneddau",
+   "region": "Eryri",
+   "group": "Wales",
+   "lat": 53.16,
+   "lon": -3.965,
+   "width_km": 10,
+   "summit_m": 1064
+  },
+  {
+   "slug": "cadair-idris",
+   "name": "Cadair Idris",
+   "title": "Cadair Idris",
+   "region": "Eryri",
+   "group": "Wales",
+   "lat": 52.6997,
+   "lon": -3.9082,
+   "width_km": 7,
+   "summit_m": 893
+  },
+  {
+   "slug": "pen-y-fan",
+   "name": "Pen y Fan",
+   "title": "Pen y Fan",
+   "region": "Bannau Brycheiniog",
+   "group": "Wales",
+   "lat": 51.8837,
+   "lon": -3.4361,
+   "width_km": 7,
+   "summit_m": 886
   },
   {
    "slug": "matterhorn",
@@ -139,7 +456,8 @@
    "lat": 45.9763,
    "lon": 7.6586,
    "width_km": 10,
-   "summit_m": 4478
+   "summit_m": 4478,
+   "group": "Alps"
   },
   {
    "slug": "mont-blanc",
@@ -149,7 +467,155 @@
    "lat": 45.87,
    "lon": 6.91,
    "width_km": 20,
-   "summit_m": 4806
+   "summit_m": 4806,
+   "group": "Alps"
+  },
+  {
+   "slug": "eiger-monch-jungfrau",
+   "name": "Eiger, Mönch, Jungfrau",
+   "title": "Eiger · Mönch · Jungfrau",
+   "region": "Bernese Oberland",
+   "group": "Alps",
+   "lat": 46.558,
+   "lon": 7.985,
+   "width_km": 10,
+   "summit_m": 4158,
+   "views": [
+    "eiger-monch-jungfrau-from-mannlichen"
+   ]
+  },
+  {
+   "slug": "monte-rosa",
+   "name": "Monte Rosa",
+   "title": "Monte Rosa",
+   "region": "Pennine Alps",
+   "group": "Alps",
+   "lat": 45.9369,
+   "lon": 7.8668,
+   "width_km": 12,
+   "summit_m": 4634,
+   "views": [
+    "monte-rosa-from-gornergrat"
+   ]
+  },
+  {
+   "slug": "weisshorn",
+   "name": "Weisshorn",
+   "title": "Weisshorn",
+   "region": "Pennine Alps",
+   "group": "Alps",
+   "lat": 46.1012,
+   "lon": 7.7162,
+   "width_km": 9,
+   "summit_m": 4506
+  },
+  {
+   "slug": "dent-blanche",
+   "name": "Dent Blanche",
+   "title": "Dent Blanche",
+   "region": "Pennine Alps",
+   "group": "Alps",
+   "lat": 46.0342,
+   "lon": 7.6122,
+   "width_km": 8,
+   "summit_m": 4357
+  },
+  {
+   "slug": "gran-paradiso",
+   "name": "Gran Paradiso",
+   "title": "Gran Paradiso",
+   "region": "Graian Alps",
+   "group": "Alps",
+   "lat": 45.5178,
+   "lon": 7.2665,
+   "width_km": 10,
+   "summit_m": 4061
+  },
+  {
+   "slug": "barre-des-ecrins",
+   "name": "Barre des Écrins",
+   "title": "Barre des Écrins",
+   "region": "Écrins",
+   "group": "Alps",
+   "lat": 44.9222,
+   "lon": 6.3597,
+   "width_km": 10,
+   "summit_m": 4102
+  },
+  {
+   "slug": "piz-bernina",
+   "name": "Piz Bernina",
+   "title": "Piz Bernina",
+   "region": "Bernina Range",
+   "group": "Alps",
+   "lat": 46.3825,
+   "lon": 9.9081,
+   "width_km": 10,
+   "summit_m": 4049
+  },
+  {
+   "slug": "tre-cime",
+   "name": "Tre Cime",
+   "title": "Tre Cime di Lavaredo",
+   "region": "Dolomites",
+   "group": "Alps",
+   "lat": 46.6186,
+   "lon": 12.3048,
+   "width_km": 5,
+   "summit_m": 2999,
+   "views": [
+    "tre-cime-from-rifugio-locatelli"
+   ]
+  },
+  {
+   "slug": "sassolungo",
+   "name": "Sassolungo",
+   "title": "Sassolungo · Langkofel",
+   "region": "Dolomites",
+   "group": "Alps",
+   "lat": 46.5207,
+   "lon": 11.7347,
+   "width_km": 6,
+   "summit_m": 3181
+  },
+  {
+   "slug": "marmolada",
+   "name": "Marmolada",
+   "title": "Marmolada",
+   "region": "Dolomites",
+   "group": "Alps",
+   "lat": 46.4343,
+   "lon": 11.8507,
+   "width_km": 8,
+   "summit_m": 3343
+  },
+  {
+   "slug": "grossglockner",
+   "name": "Grossglockner",
+   "title": "Grossglockner",
+   "region": "Hohe Tauern",
+   "group": "Alps",
+   "lat": 47.0742,
+   "lon": 12.6947,
+   "width_km": 10,
+   "summit_m": 3798,
+   "views": [
+    "grossglockner-from-franz-josefs-hohe"
+   ]
+  },
+  {
+   "slug": "zugspitze",
+   "name": "Zugspitze",
+   "title": "Zugspitze",
+   "region": "Wetterstein",
+   "group": "Alps",
+   "lat": 47.4211,
+   "lon": 10.9853,
+   "width_km": 10,
+   "summit_m": 2962,
+   "views": [
+    "zugspitze-from-eibsee"
+   ]
   },
   {
    "slug": "everest",
@@ -159,7 +625,8 @@
    "lat": 27.9881,
    "lon": 86.925,
    "width_km": 18,
-   "summit_m": 8849
+   "summit_m": 8849,
+   "group": "Himalaya"
   }
  ],
  "views": [
@@ -399,6 +866,294 @@
    "max_exag": 5,
    "poster_centre": 4,
    "poster_floor": "skyline"
+  },
+  {
+   "slug": "buachaille-from-kings-house",
+   "title": "Buachaille Etive Mòr",
+   "subtitle": "from Kings House, looking west",
+   "lat": 56.648,
+   "lon": -4.837,
+   "azimuth": 267,
+   "fov": 56,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.6
+  },
+  {
+   "slug": "schiehallion-from-loch-rannoch",
+   "title": "Schiehallion",
+   "subtitle": "from Kinloch Rannoch, looking south-east",
+   "lat": 56.7,
+   "lon": -4.187,
+   "azimuth": 124,
+   "fov": 50,
+   "reach_km": 16,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "an-teallach-from-the-destitution-road",
+   "title": "An Teallach",
+   "subtitle": "from the Destitution Road, looking west",
+   "lat": 57.795,
+   "lon": -5.135,
+   "azimuth": 281,
+   "fov": 56,
+   "reach_km": 18,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "liathach-from-loch-clair",
+   "title": "Liathach",
+   "subtitle": "from Loch Clair, looking west",
+   "lat": 57.556,
+   "lon": -5.355,
+   "azimuth": 278,
+   "fov": 56,
+   "reach_km": 20,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "suilven-from-glencanisp",
+   "title": "Suilven",
+   "subtitle": "from Glencanisp, looking south-east",
+   "lat": 58.141,
+   "lon": -5.215,
+   "azimuth": 122,
+   "fov": 50,
+   "reach_km": 14,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "cobbler-from-arrochar",
+   "title": "The Cobbler",
+   "subtitle": "from Arrochar, looking west",
+   "lat": 56.201,
+   "lon": -4.744,
+   "azimuth": 289,
+   "fov": 50,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.8
+  },
+  {
+   "slug": "great-gable-from-wast-water",
+   "title": "Great Gable",
+   "subtitle": "from Wast Water, looking north-east",
+   "lat": 54.4425,
+   "lon": -3.284,
+   "azimuth": 43,
+   "fov": 60,
+   "reach_km": 16,
+   "lift_m": 2,
+   "near_km": 0.6
+  },
+  {
+   "slug": "langdale-pikes-from-blea-tarn",
+   "title": "The Langdale Pikes",
+   "subtitle": "from Blea Tarn, looking north",
+   "lat": 54.429,
+   "lon": -3.09,
+   "azimuth": 338,
+   "fov": 60,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.5
+  },
+  {
+   "slug": "old-man-from-coniston-water",
+   "title": "The Old Man of Coniston",
+   "subtitle": "from Brantwood, looking west",
+   "lat": 54.374,
+   "lon": -3.056,
+   "azimuth": 265,
+   "fov": 60,
+   "reach_km": 11,
+   "lift_m": 20,
+   "near_km": 0.6
+  },
+  {
+   "slug": "tryfan-from-the-a5",
+   "title": "Tryfan",
+   "subtitle": "from the A5 by Gwern Gof Uchaf, looking south-west",
+   "lat": 53.123,
+   "lon": -3.97,
+   "azimuth": 245,
+   "fov": 60,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.4
+  },
+  {
+   "slug": "yr-wyddfa-from-llynnau-mymbyr",
+   "title": "Yr Wyddfa",
+   "subtitle": "from Llynnau Mymbyr, looking west",
+   "lat": 53.0975,
+   "lon": -3.931,
+   "azimuth": 252,
+   "fov": 46,
+   "reach_km": 26,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "eiger-monch-jungfrau-from-mannlichen",
+   "title": "Eiger · Mönch · Jungfrau",
+   "subtitle": "from Männlichen, looking south-east",
+   "lat": 46.6127,
+   "lon": 7.9408,
+   "azimuth": 151,
+   "fov": 70,
+   "reach_km": 17,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "monte-rosa-from-gornergrat",
+   "title": "Monte Rosa",
+   "subtitle": "from the Gornergrat, looking south-east",
+   "lat": 45.9833,
+   "lon": 7.7845,
+   "azimuth": 129,
+   "fov": 90,
+   "reach_km": 20,
+   "lift_m": 2,
+   "near_km": 1.0
+  },
+  {
+   "slug": "tre-cime-from-rifugio-locatelli",
+   "title": "Tre Cime di Lavaredo",
+   "subtitle": "from Rifugio Locatelli, looking south",
+   "lat": 46.632,
+   "lon": 12.302,
+   "azimuth": 172,
+   "fov": 60,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.3
+  },
+  {
+   "slug": "grossglockner-from-franz-josefs-hohe",
+   "title": "Grossglockner",
+   "subtitle": "from the Kaiser-Franz-Josefs-Höhe, looking west",
+   "lat": 47.076,
+   "lon": 12.75,
+   "azimuth": 267,
+   "fov": 60,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.6
+  },
+  {
+   "slug": "zugspitze-from-eibsee",
+   "title": "Zugspitze",
+   "subtitle": "from the Eibsee, looking south",
+   "lat": 47.4567,
+   "lon": 10.9789,
+   "azimuth": 173,
+   "fov": 60,
+   "reach_km": 10,
+   "lift_m": 2,
+   "near_km": 0.8
+  },
+  {
+   "slug": "great-gable-summit",
+   "title": "From Great Gable",
+   "subtitle": "looking south-west from the summit",
+   "lat": 54.4832,
+   "lon": -3.2185,
+   "azimuth": 215,
+   "fov": 140,
+   "reach_km": 35,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "skiddaw-summit",
+   "title": "From Skiddaw",
+   "subtitle": "looking south from the summit",
+   "lat": 54.6511,
+   "lon": -3.1476,
+   "azimuth": 185,
+   "fov": 140,
+   "reach_km": 35,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "old-man-of-coniston-summit",
+   "title": "From the Old Man of Coniston",
+   "subtitle": "looking north-west from the summit",
+   "lat": 54.3709,
+   "lon": -3.1213,
+   "azimuth": 330,
+   "fov": 140,
+   "reach_km": 35,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "schiehallion-summit",
+   "title": "From Schiehallion",
+   "subtitle": "looking west from the summit",
+   "lat": 56.6668,
+   "lon": -4.0991,
+   "azimuth": 280,
+   "fov": 140,
+   "reach_km": 50,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "goatfell-summit",
+   "title": "From Goatfell",
+   "subtitle": "looking north-west from the summit",
+   "lat": 55.63,
+   "lon": -5.21,
+   "azimuth": 315,
+   "fov": 140,
+   "reach_km": 45,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "cadair-idris-summit",
+   "title": "From Cadair Idris",
+   "subtitle": "looking north from the summit",
+   "lat": 52.6997,
+   "lon": -3.9082,
+   "azimuth": 20,
+   "fov": 140,
+   "reach_km": 40,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "pen-y-fan-summit",
+   "title": "From Pen y Fan",
+   "subtitle": "looking west from the summit",
+   "lat": 51.8837,
+   "lon": -3.4361,
+   "azimuth": 290,
+   "fov": 140,
+   "reach_km": 35,
+   "lift_m": 2,
+   "panorama": true
+  },
+  {
+   "slug": "zugspitze-summit",
+   "title": "From the Zugspitze",
+   "subtitle": "looking south from the summit",
+   "lat": 47.4211,
+   "lon": 10.9853,
+   "azimuth": 180,
+   "fov": 160,
+   "reach_km": 60,
+   "lift_m": 2,
+   "panorama": true
   }
  ],
  "routes": [
@@ -409,48 +1164,216 @@
    "subtitle": "42 Lakeland fells from Keswick Moot Hall",
    "stops_label": "summits",
    "stops": [
-    ["Skiddaw", 54.65138, -3.14777],
-    ["Great Calva", 54.67073, -3.10111],
-    ["Blencathra", 54.63998, -3.04972],
-    ["Clough Head", 54.59365, -3.03236],
-    ["Great Dodd", 54.57572, -3.01939],
-    ["Watson's Dodd", 54.56692, -3.02896],
-    ["Stybarrow Dodd", 54.56111, -3.01744],
-    ["Raise", 54.54771, -3.01746],
-    ["White Side", 54.54092, -3.02505],
-    ["Lower Man", 54.53087, -3.02535],
-    ["Helvellyn", 54.52697, -3.01754],
-    ["Nethermost Pike", 54.51899, -3.01543],
-    ["Dollywaggon Pike", 54.50864, -3.01114],
-    ["Fairfield", 54.49705, -2.99163],
-    ["Seat Sandal", 54.49485, -3.014],
-    ["Steel Fell", 54.49116, -3.05216],
-    ["Calf Crag", 54.48422, -3.07947],
-    ["High Raise", 54.47597, -3.11125],
-    ["Sergeant Man", 54.47033, -3.10258],
-    ["Thunacar Knott", 54.4622, -3.11265],
-    ["Harrison Stickle", 54.45689, -3.10948],
-    ["Pike of Stickle", 54.4564, -3.12138],
-    ["Rossett Pike", 54.45794, -3.15979],
-    ["Bowfell", 54.44783, -3.16624],
-    ["Esk Pike", 54.45719, -3.17922],
-    ["Great End", 54.46495, -3.19452],
-    ["Ill Crag", 54.45558, -3.1997],
-    ["Broad Crag", 54.45738, -3.20691],
-    ["Scafell Pike", 54.45426, -3.21165],
-    ["Scafell", 54.44751, -3.22473],
-    ["Yewbarrow", 54.47136, -3.27331],
-    ["Red Pike", 54.48392, -3.28987],
-    ["Steeple", 54.49338, -3.30219],
-    ["Pillar", 54.49748, -3.28118],
-    ["Kirk Fell", 54.48332, -3.24407],
-    ["Great Gable", 54.48208, -3.21921],
-    ["Green Gable", 54.48571, -3.21378],
-    ["Brandreth", 54.49647, -3.21429],
-    ["Grey Knotts", 54.50235, -3.2102],
-    ["Dale Head", 54.52723, -3.20236],
-    ["Hindscarth", 54.53786, -3.21375],
-    ["Robinson", 54.5408, -3.23514]
+    [
+     "Skiddaw",
+     54.65138,
+     -3.14777
+    ],
+    [
+     "Great Calva",
+     54.67073,
+     -3.10111
+    ],
+    [
+     "Blencathra",
+     54.63998,
+     -3.04972
+    ],
+    [
+     "Clough Head",
+     54.59365,
+     -3.03236
+    ],
+    [
+     "Great Dodd",
+     54.57572,
+     -3.01939
+    ],
+    [
+     "Watson's Dodd",
+     54.56692,
+     -3.02896
+    ],
+    [
+     "Stybarrow Dodd",
+     54.56111,
+     -3.01744
+    ],
+    [
+     "Raise",
+     54.54771,
+     -3.01746
+    ],
+    [
+     "White Side",
+     54.54092,
+     -3.02505
+    ],
+    [
+     "Lower Man",
+     54.53087,
+     -3.02535
+    ],
+    [
+     "Helvellyn",
+     54.52697,
+     -3.01754
+    ],
+    [
+     "Nethermost Pike",
+     54.51899,
+     -3.01543
+    ],
+    [
+     "Dollywaggon Pike",
+     54.50864,
+     -3.01114
+    ],
+    [
+     "Fairfield",
+     54.49705,
+     -2.99163
+    ],
+    [
+     "Seat Sandal",
+     54.49485,
+     -3.014
+    ],
+    [
+     "Steel Fell",
+     54.49116,
+     -3.05216
+    ],
+    [
+     "Calf Crag",
+     54.48422,
+     -3.07947
+    ],
+    [
+     "High Raise",
+     54.47597,
+     -3.11125
+    ],
+    [
+     "Sergeant Man",
+     54.47033,
+     -3.10258
+    ],
+    [
+     "Thunacar Knott",
+     54.4622,
+     -3.11265
+    ],
+    [
+     "Harrison Stickle",
+     54.45689,
+     -3.10948
+    ],
+    [
+     "Pike of Stickle",
+     54.4564,
+     -3.12138
+    ],
+    [
+     "Rossett Pike",
+     54.45794,
+     -3.15979
+    ],
+    [
+     "Bowfell",
+     54.44783,
+     -3.16624
+    ],
+    [
+     "Esk Pike",
+     54.45719,
+     -3.17922
+    ],
+    [
+     "Great End",
+     54.46495,
+     -3.19452
+    ],
+    [
+     "Ill Crag",
+     54.45558,
+     -3.1997
+    ],
+    [
+     "Broad Crag",
+     54.45738,
+     -3.20691
+    ],
+    [
+     "Scafell Pike",
+     54.45426,
+     -3.21165
+    ],
+    [
+     "Scafell",
+     54.44751,
+     -3.22473
+    ],
+    [
+     "Yewbarrow",
+     54.47136,
+     -3.27331
+    ],
+    [
+     "Red Pike",
+     54.48392,
+     -3.28987
+    ],
+    [
+     "Steeple",
+     54.49338,
+     -3.30219
+    ],
+    [
+     "Pillar",
+     54.49748,
+     -3.28118
+    ],
+    [
+     "Kirk Fell",
+     54.48332,
+     -3.24407
+    ],
+    [
+     "Great Gable",
+     54.48208,
+     -3.21921
+    ],
+    [
+     "Green Gable",
+     54.48571,
+     -3.21378
+    ],
+    [
+     "Brandreth",
+     54.49647,
+     -3.21429
+    ],
+    [
+     "Grey Knotts",
+     54.50235,
+     -3.2102
+    ],
+    [
+     "Dale Head",
+     54.52723,
+     -3.20236
+    ],
+    [
+     "Hindscarth",
+     54.53786,
+     -3.21375
+    ],
+    [
+     "Robinson",
+     54.5408,
+     -3.23514
+    ]
    ]
   },
   {
@@ -460,20 +1383,76 @@
    "subtitle": "Abraham's Tea Round, from Keswick",
    "stops_label": "summits",
    "stops": [
-    ["Catbells", 54.56835, -3.17066],
-    ["Robinson", 54.5408, -3.23514],
-    ["High Stile", 54.52181, -3.28369],
-    ["Red Pike", 54.52743, -3.29859],
-    ["Whiteless Pike", 54.55936, -3.26935],
-    ["Wandope", 54.56631, -3.25706],
-    ["Hopegill Head", 54.5869, -3.2337],
-    ["Grisedale Pike", 54.59177, -3.24205],
-    ["Crag Hill", 54.57178, -3.2502],
-    ["Sail", 54.57135, -3.2418],
-    ["Scar Crags", 54.57501, -3.22593],
-    ["Causey Pike", 54.57679, -3.21008],
-    ["Rowling End", 54.57557, -3.19377],
-    ["Barrow", 54.58569, -3.19746]
+    [
+     "Catbells",
+     54.56835,
+     -3.17066
+    ],
+    [
+     "Robinson",
+     54.5408,
+     -3.23514
+    ],
+    [
+     "High Stile",
+     54.52181,
+     -3.28369
+    ],
+    [
+     "Red Pike",
+     54.52743,
+     -3.29859
+    ],
+    [
+     "Whiteless Pike",
+     54.55936,
+     -3.26935
+    ],
+    [
+     "Wandope",
+     54.56631,
+     -3.25706
+    ],
+    [
+     "Hopegill Head",
+     54.5869,
+     -3.2337
+    ],
+    [
+     "Grisedale Pike",
+     54.59177,
+     -3.24205
+    ],
+    [
+     "Crag Hill",
+     54.57178,
+     -3.2502
+    ],
+    [
+     "Sail",
+     54.57135,
+     -3.2418
+    ],
+    [
+     "Scar Crags",
+     54.57501,
+     -3.22593
+    ],
+    [
+     "Causey Pike",
+     54.57679,
+     -3.21008
+    ],
+    [
+     "Rowling End",
+     54.57557,
+     -3.19377
+    ],
+    [
+     "Barrow",
+     54.58569,
+     -3.19746
+    ]
    ]
   },
   {
@@ -483,20 +1462,76 @@
    "subtitle": "105 miles around the Lake District from Coniston",
    "stops_label": "checkpoints",
    "stops": [
-    ["Seathwaite", 54.354, -3.189],
-    ["Boot", 54.396, -3.274],
-    ["Wasdale Head", 54.466, -3.285],
-    ["Buttermere", 54.541, -3.277],
-    ["Braithwaite", 54.602, -3.192],
-    ["Blencathra Centre", 54.612, -3.074],
-    ["Dockray", 54.59, -2.949],
-    ["Dalemain", 54.634, -2.837],
-    ["Howtown", 54.575, -2.855],
-    ["Mardale Head", 54.482, -2.812],
-    ["Kentmere", 54.43, -2.84],
-    ["Ambleside", 54.432, -2.963],
-    ["Chapel Stile", 54.437, -3.053],
-    ["Tilberthwaite", 54.399, -3.068]
+    [
+     "Seathwaite",
+     54.354,
+     -3.189
+    ],
+    [
+     "Boot",
+     54.396,
+     -3.274
+    ],
+    [
+     "Wasdale Head",
+     54.466,
+     -3.285
+    ],
+    [
+     "Buttermere",
+     54.541,
+     -3.277
+    ],
+    [
+     "Braithwaite",
+     54.602,
+     -3.192
+    ],
+    [
+     "Blencathra Centre",
+     54.612,
+     -3.074
+    ],
+    [
+     "Dockray",
+     54.59,
+     -2.949
+    ],
+    [
+     "Dalemain",
+     54.634,
+     -2.837
+    ],
+    [
+     "Howtown",
+     54.575,
+     -2.855
+    ],
+    [
+     "Mardale Head",
+     54.482,
+     -2.812
+    ],
+    [
+     "Kentmere",
+     54.43,
+     -2.84
+    ],
+    [
+     "Ambleside",
+     54.432,
+     -2.963
+    ],
+    [
+     "Chapel Stile",
+     54.437,
+     -3.053
+    ],
+    [
+     "Tilberthwaite",
+     54.399,
+     -3.068
+    ]
    ]
   },
   {
@@ -506,20 +1541,76 @@
    "subtitle": "Around Mont Blanc from Chamonix",
    "stops_label": "checkpoints",
    "stops": [
-    ["Les Houches", 45.8905, 6.799],
-    ["Saint-Gervais", 45.892, 6.712],
-    ["Les Contamines", 45.821, 6.727],
-    ["Les Chapieux", 45.696, 6.738],
-    ["Lac Combal", 45.779, 6.86],
-    ["Courmayeur", 45.792, 6.972],
-    ["Refuge Bertone", 45.809, 6.98],
-    ["Refuge Bonatti", 45.841, 7.029],
-    ["Arnouvaz", 45.86, 7.048],
-    ["La Fouly", 45.933, 7.095],
-    ["Champex-Lac", 46.031, 7.117],
-    ["Trient", 46.056, 6.995],
-    ["Vallorcine", 46.032, 6.933],
-    ["La Flégère", 45.96, 6.889]
+    [
+     "Les Houches",
+     45.8905,
+     6.799
+    ],
+    [
+     "Saint-Gervais",
+     45.892,
+     6.712
+    ],
+    [
+     "Les Contamines",
+     45.821,
+     6.727
+    ],
+    [
+     "Les Chapieux",
+     45.696,
+     6.738
+    ],
+    [
+     "Lac Combal",
+     45.779,
+     6.86
+    ],
+    [
+     "Courmayeur",
+     45.792,
+     6.972
+    ],
+    [
+     "Refuge Bertone",
+     45.809,
+     6.98
+    ],
+    [
+     "Refuge Bonatti",
+     45.841,
+     7.029
+    ],
+    [
+     "Arnouvaz",
+     45.86,
+     7.048
+    ],
+    [
+     "La Fouly",
+     45.933,
+     7.095
+    ],
+    [
+     "Champex-Lac",
+     46.031,
+     7.117
+    ],
+    [
+     "Trient",
+     46.056,
+     6.995
+    ],
+    [
+     "Vallorcine",
+     46.032,
+     6.933
+    ],
+    [
+     "La Flégère",
+     45.96,
+     6.889
+    ]
    ]
   }
  ]

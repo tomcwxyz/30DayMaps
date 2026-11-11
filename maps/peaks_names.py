@@ -17,12 +17,24 @@ SERVERS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.sys
            "https://overpass.private.coffee/api/interpreter"]
 # [south, west, north, east], generous enough for every ready-made view's reach
 REGIONS = {
-    "lake-district": [54.00, -3.75, 55.00, -2.40],
+    "lake-district": [54.00, -3.85, 55.00, -2.40],
     "cheviot": [54.90, -2.90, 55.90, -1.30],
-    "lochaber": [56.30, -5.90, 57.30, -4.10],
-    "skye": [56.75, -7.10, 57.65, -5.40],
-    "eryri": [52.70, -4.70, 53.45, -3.45],
-    "mont-blanc-matterhorn": [45.50, 6.40, 46.30, 8.20],
+    "lochaber": [56.20, -5.90, 57.30, -3.20],
+    "skye": [56.75, -7.10, 57.80, -5.40],
+    "eryri": [52.30, -4.80, 53.45, -3.30],
+    "mont-blanc-matterhorn": [45.30, 6.40, 46.30, 8.20],
+    "arrochar-lomond": [55.95, -5.10, 56.30, -4.40],
+    "arran": [55.20, -6.00, 56.05, -4.55],
+    "cairngorms": [56.75, -4.10, 57.40, -2.90],
+    "torridon-fisherfield": [57.30, -5.90, 58.00, -4.80],
+    "assynt": [57.90, -5.50, 58.30, -4.90],
+    "brecon-beacons": [51.55, -3.95, 52.20, -2.90],
+    "bernese-oberland": [46.35, 7.60, 46.80, 8.30],
+    "ecrins": [44.75, 6.10, 45.10, 6.60],
+    "bernina": [46.25, 9.70, 46.55, 10.15],
+    "dolomites": [46.30, 11.55, 46.75, 12.45],
+    "glockner": [46.95, 12.50, 47.25, 12.90],
+    "wetterstein": [46.85, 10.15, 47.98, 11.80],
     "khumbu": [27.50, 86.30, 28.50, 87.50],
 }
 
