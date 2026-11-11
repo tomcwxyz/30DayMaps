@@ -295,7 +295,7 @@ jobs:
 
       - name: Verify published Day 8 and Day 9 real-data assets
         env:
-          PAGE_ROOT: \${{ steps.deployment.outputs.page_url }}
+          PAGE_ROOT: ${{ steps.deployment.outputs.page_url }}
         run: |
           python - <<'PY'
           import os, urllib.request
