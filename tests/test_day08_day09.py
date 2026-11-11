@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from rasterio.transform import from_origin
 
-from maps.day08_day09 import CLASS_COLOUR, D8, D9, classify_pct, sample_landcover
+from maps.day08_day09 import CLASS_COLOUR, D8, D9, START, END, classify_pct, sample_landcover
 
 
 def test_landcover_classification_counts_only_valid_source_classes():
@@ -43,6 +43,10 @@ def test_generated_day9_is_measured_and_full_length():
     assert len(d["samples"]) == 85
     assert d["sample_resolution_m"] == 40
     assert d["radius_m"] == 500
+    assert abs(d["samples"][0]["lat"] - START[0]) < .0001
+    assert abs(d["samples"][0]["lon"] - START[1]) < .0001
+    assert abs(d["samples"][-1]["lat"] - END[0]) < .0001
+    assert abs(d["samples"][-1]["lon"] - END[1]) < .0001
     assert (D9 / "transect.png").stat().st_size > 10000
     last = -1.0
     for item in d["samples"]:
