@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-from maps.peaks import AREAS, DEM_DIR, VIEWS
+from maps.peaks import AREAS, DEM_DIR, VIEWS, load
 
 
 def km(la1, lo1, la2, lo2):
@@ -25,8 +25,7 @@ def check_area(slug, a):
     if not names_f.exists() or not dem_f.exists():
         return None
     peaks = [n for n in json.loads(names_f.read_text()) if n.get("kind", "peak") == "peak"]
-    d = np.load(dem_f)
-    dem_max = float(np.nanmax(d["dem"]))
+    dem_max = float(np.nanmax(load(slug)["dem"]))   # after the same repairs the page makes
     # The named summit closest in height to summit_m, within half the frame: the top this place is about.
     half = a["width_km"] / 2
     near = [p for p in peaks if km(a["lat"], a["lon"], p["lat"], p["lon"]) <= half]
@@ -48,8 +47,7 @@ def check_view(slug, v):
     dem_f = DEM_DIR / f"{slug}.npz"
     if not dem_f.exists():
         return None
-    d = np.load(dem_f)
-    z = d["dem"]
+    z = load(slug)["dem"]
     h, w = z.shape
     ground = float(z[h // 2, w // 2])
     return {"slug": slug, "ground_m": round(ground), "flags": "viewpoint in water or below sea" if ground <= 0 else ""}
