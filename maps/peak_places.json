@@ -296,13 +296,10 @@
    "title": "Liathach",
    "region": "Torridon",
    "group": "Scotland",
-   "lat": 57.566,
-   "lon": -5.485,
+   "lat": 57.572,
+   "lon": -5.468,
    "width_km": 8,
-   "summit_m": 1055,
-   "views": [
-    "liathach-from-loch-clair"
-   ]
+   "summit_m": 1055
   },
   {
    "slug": "suilven",
@@ -900,18 +897,6 @@
    "azimuth": 281,
    "fov": 56,
    "reach_km": 18,
-   "lift_m": 2,
-   "near_km": 1.0
-  },
-  {
-   "slug": "liathach-from-loch-clair",
-   "title": "Liathach",
-   "subtitle": "from Loch Clair, looking west",
-   "lat": 57.556,
-   "lon": -5.355,
-   "azimuth": 278,
-   "fov": 56,
-   "reach_km": 20,
    "lift_m": 2,
    "near_km": 1.0
   },
