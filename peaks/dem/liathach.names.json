@@ -1,0 +1,123 @@
+[
+{
+"name": "Ruadh-stac Mòr",
+"name_en": null,
+"lat": 57.5937429,
+"lon": -5.4294363,
+"x": 3322.8,
+"y": 3091.1,
+"ele": 1010.0,
+"osm": 266821658,
+"kind": "peak"
+},
+{
+"name": "Sail Mhòr",
+"name_en": null,
+"lat": 57.5880107,
+"lon": -5.4512234,
+"x": 2020.2,
+"y": 2451.8,
+"ele": 980.0,
+"osm": 334519587,
+"kind": "peak"
+},
+{
+"name": "Spidean a' Choire Leith",
+"name_en": null,
+"lat": 57.5642151,
+"lon": -5.4636172,
+"x": 1279.8,
+"y": -198.6,
+"ele": 1055.0,
+"osm": 727741678,
+"kind": "peak"
+},
+{
+"name": "Mullach an Rathain",
+"name_en": null,
+"lat": 57.5609005,
+"lon": -5.4924941,
+"x": -448.6,
+"y": -567.9,
+"ele": 1023.0,
+"osm": 727741978,
+"kind": "peak"
+},
+{
+"name": "Beinn Dearg",
+"name_en": null,
+"lat": 57.5881177,
+"lon": -5.5229859,
+"x": -2271.9,
+"y": 2463.9,
+"ele": 914.0,
+"osm": 1970299627,
+"kind": "peak"
+},
+{
+"name": "Càrn na Feòla",
+"name_en": null,
+"lat": 57.591009,
+"lon": -5.4902206,
+"x": -312.2,
+"y": 2785.3,
+"ele": 755.0,
+"osm": 1970299652,
+"kind": "peak"
+},
+{
+"name": "Stùc Loch na Cabhaig",
+"name_en": null,
+"lat": 57.5948161,
+"lon": -5.5301962,
+"x": -2702.7,
+"y": 3210.2,
+"ele": 888.0,
+"osm": 1970299658,
+"kind": "peak"
+},
+{
+"name": "Stùc a' Choire Dhuibh Bhig",
+"name_en": null,
+"lat": 57.5671357,
+"lon": -5.4424229,
+"x": 2548.0,
+"y": 127.3,
+"ele": null,
+"osm": 1970311815,
+"kind": "peak"
+},
+{
+"name": "Seana Mheallan",
+"name_en": null,
+"lat": 57.5387069,
+"lon": -5.4618794,
+"x": 1384.7,
+"y": -3039.4,
+"ele": 437.0,
+"osm": 2130099866,
+"kind": "peak"
+},
+{
+"name": "Meall Dearg",
+"name_en": null,
+"lat": 57.5632166,
+"lon": -5.4894721,
+"x": -267.7,
+"y": -310.0,
+"ele": null,
+"osm": 5730487234,
+"kind": "peak"
+},
+{
+"name": "Beinn Eighe",
+"name_en": null,
+"lat": 57.5879827,
+"lon": -5.4019183,
+"x": 4969.2,
+"y": 2451.3,
+"ele": null,
+"osm": 327815823,
+"kind": "ridge"
+}
+]

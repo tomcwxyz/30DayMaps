@@ -1,0 +1,68 @@
+[
+{
+"name": "Beinn Narnain",
+"name_en": null,
+"lat": 56.2214527,
+"lon": -4.7893997,
+"x": 1160.1,
+"y": 907.9,
+"ele": 926.0,
+"osm": 258819149,
+"kind": "peak"
+},
+{
+"name": "Ben Arthur (The Cobbler)",
+"name_en": null,
+"lat": 56.2131795,
+"lon": -4.809154,
+"x": -65.4,
+"y": -13.4,
+"ele": 884.0,
+"osm": 265662146,
+"kind": "peak"
+},
+{
+"name": "An t-Sron",
+"name_en": null,
+"lat": 56.2076389,
+"lon": -4.7932934,
+"x": 918.9,
+"y": -630.2,
+"ele": 614.0,
+"osm": 268767488,
+"kind": "peak"
+},
+{
+"name": "Beinn Luibhean",
+"name_en": null,
+"lat": 56.2312531,
+"lon": -4.8363118,
+"x": -1749.7,
+"y": 1999.4,
+"ele": 858.0,
+"osm": 268767659,
+"kind": "peak"
+},
+{
+"name": "The North Peak",
+"name_en": null,
+"lat": 56.2149477,
+"lon": -4.804886,
+"x": 199.4,
+"y": 183.5,
+"ele": null,
+"osm": 268768300,
+"kind": "peak"
+},
+{
+"name": "Arthur's Seat",
+"name_en": null,
+"lat": 56.2119251,
+"lon": -4.806405,
+"x": 105.2,
+"y": -153.1,
+"ele": 858.0,
+"osm": 268768873,
+"kind": "peak"
+}
+]

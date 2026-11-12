@@ -1,0 +1,145 @@
+[
+{
+"name": "Stob Dearg",
+"name_en": null,
+"lat": 56.6468537,
+"lon": -4.8987627,
+"x": 14.6,
+"y": 72.8,
+"ele": 1021.0,
+"osm": 25453202,
+"kind": "peak"
+},
+{
+"name": "Meall a' Bhùiridh",
+"name_en": null,
+"lat": 56.6122677,
+"lon": -4.8521185,
+"x": 2878.7,
+"y": -3777.5,
+"ele": 1108.0,
+"osm": 259450580,
+"kind": "peak"
+},
+{
+"name": "Creise",
+"name_en": null,
+"lat": 56.6145149,
+"lon": -4.8719012,
+"x": 1663.8,
+"y": -3527.9,
+"ele": 1100.0,
+"osm": 259450630,
+"kind": "peak"
+},
+{
+"name": "Beinn a' Chrùlaiste",
+"name_en": null,
+"lat": 56.6689504,
+"lon": -4.8635325,
+"x": 2174.5,
+"y": 2533.9,
+"ele": 857.0,
+"osm": 649794304,
+"kind": "peak"
+},
+{
+"name": "Stob Mhic Mhartuin",
+"name_en": null,
+"lat": 56.6754695,
+"lon": -4.9265316,
+"x": -1687.7,
+"y": 3259.6,
+"ele": 716.0,
+"osm": 665672382,
+"kind": "peak"
+},
+{
+"name": "Beinn Bheag",
+"name_en": null,
+"lat": 56.6794435,
+"lon": -4.9058201,
+"x": -418.0,
+"y": 3701.8,
+"ele": 616.0,
+"osm": 665673005,
+"kind": "peak"
+},
+{
+"name": "Stob na Doire",
+"name_en": null,
+"lat": 56.6367864,
+"lon": -4.9242362,
+"x": -1548.6,
+"y": -1048.0,
+"ele": 1010.0,
+"osm": 919055403,
+"kind": "peak"
+},
+{
+"name": "Stob Coire Altruim",
+"name_en": null,
+"lat": 56.6344127,
+"lon": -4.9408032,
+"x": -2565.3,
+"y": -1311.8,
+"ele": 941.0,
+"osm": 919055759,
+"kind": "peak"
+},
+{
+"name": "Stob nan Cabar",
+"name_en": null,
+"lat": 56.6553058,
+"lon": -4.9392395,
+"x": -2468.0,
+"y": 1014.7,
+"ele": null,
+"osm": 1098682657,
+"kind": "peak"
+},
+{
+"name": "Stob a' Ghlais Choire",
+"name_en": null,
+"lat": 56.6235889,
+"lon": -4.8711062,
+"x": 1712.2,
+"y": -2517.5,
+"ele": 996.0,
+"osm": 5630154435,
+"kind": "peak"
+},
+{
+"name": "Buachaille Etive Mòr",
+"name_en": null,
+"lat": 56.6332682,
+"lon": -4.9376027,
+"x": -2369.0,
+"y": -1439.3,
+"ele": null,
+"osm": 209179445,
+"kind": "ridge"
+},
+{
+"name": "Curved Ridge",
+"name_en": null,
+"lat": 56.6476916,
+"lon": -4.8958847,
+"x": 191.1,
+"y": 166.1,
+"ele": null,
+"osm": 306666936,
+"kind": "ridge"
+},
+{
+"name": "Buachaille Etive Beag",
+"name_en": null,
+"lat": 56.6463841,
+"lon": -4.95563,
+"x": -3474.1,
+"y": 21.9,
+"ele": null,
+"osm": 913832688,
+"kind": "ridge"
+}
+]

@@ -1,0 +1,90 @@
+[
+{
+"name": "Tryfan",
+"name_en": null,
+"lat": 53.1149311,
+"lon": -3.997578,
+"x": -52.1,
+"y": -63.3,
+"ele": 917.5,
+"osm": 29580544,
+"kind": "peak"
+},
+{
+"name": "Glyder Fach",
+"name_en": null,
+"lat": 53.1048299,
+"lon": -4.0083794,
+"x": -775.5,
+"y": -1187.4,
+"ele": 994.0,
+"osm": 29580546,
+"kind": "peak"
+},
+{
+"name": "Y Foel Goch",
+"name_en": null,
+"lat": 53.1047259,
+"lon": -3.9763653,
+"x": 1368.6,
+"y": -1198.8,
+"ele": 805.0,
+"osm": 335171400,
+"kind": "peak"
+},
+{
+"name": "Castell Y Gwynt",
+"name_en": null,
+"lat": 53.1037392,
+"lon": -4.0120632,
+"x": -1022.3,
+"y": -1308.7,
+"ele": 972.0,
+"osm": 976215383,
+"kind": "peak"
+},
+{
+"name": "Bryn Tryfan",
+"name_en": null,
+"lat": 53.1121663,
+"lon": -3.9987554,
+"x": -130.9,
+"y": -371.0,
+"ele": 831.0,
+"osm": 2666032931,
+"kind": "peak"
+},
+{
+"name": "Pen y Benglog",
+"name_en": null,
+"lat": 53.1220415,
+"lon": -4.0223654,
+"x": -1711.5,
+"y": 728.3,
+"ele": 364.0,
+"osm": 11260314192,
+"kind": "peak"
+},
+{
+"name": "Braich y Ddeugwm",
+"name_en": null,
+"lat": 53.1154444,
+"lon": -3.9753288,
+"x": 1437.7,
+"y": -6.0,
+"ele": null,
+"osm": 1099835634,
+"kind": "ridge"
+},
+{
+"name": "Y Grib Bigog",
+"name_en": "Bristly Ridge",
+"lat": 53.107692,
+"lon": -4.0033283,
+"x": -437.2,
+"y": -868.9,
+"ele": null,
+"osm": 1315683748,
+"kind": "ridge"
+}
+]

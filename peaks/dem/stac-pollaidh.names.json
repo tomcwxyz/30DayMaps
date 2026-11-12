@@ -1,0 +1,35 @@
+[
+{
+"name": "Stac Pollaidh",
+"name_en": null,
+"lat": 58.0441506,
+"lon": -5.207476,
+"x": 30.9,
+"y": -38.9,
+"ele": 612.0,
+"osm": 341433373,
+"kind": "peak"
+},
+{
+"name": "Stac Pollaidh (East Summit)",
+"name_en": null,
+"lat": 58.0432062,
+"lon": -5.2027038,
+"x": 312.8,
+"y": -144.1,
+"ele": null,
+"osm": 4253211918,
+"kind": "peak"
+},
+{
+"name": "Creag nan Dearcag",
+"name_en": null,
+"lat": 58.0450602,
+"lon": -5.2291365,
+"x": -1248.3,
+"y": 62.6,
+"ele": 316.0,
+"osm": 13707091914,
+"kind": "peak"
+}
+]

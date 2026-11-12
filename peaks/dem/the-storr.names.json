@@ -1,0 +1,57 @@
+[
+{
+"name": "Sron Dubh",
+"name_en": null,
+"lat": 57.5123624,
+"lon": -6.2151656,
+"x": -1933.8,
+"y": 575.4,
+"ele": null,
+"osm": 563094267,
+"kind": "peak"
+},
+{
+"name": "An Stòr",
+"name_en": "The Storr",
+"lat": 57.507291,
+"lon": -6.1833224,
+"x": -25.3,
+"y": 10.1,
+"ele": 719.0,
+"osm": 563094988,
+"kind": "peak"
+},
+{
+"name": "Needle Rock",
+"name_en": null,
+"lat": 57.50819,
+"lon": -6.1746924,
+"x": 492.0,
+"y": 110.3,
+"ele": null,
+"osm": 1311840010,
+"kind": "peak"
+},
+{
+"name": "Old Man of Storr",
+"name_en": null,
+"lat": 57.5069624,
+"lon": -6.1746388,
+"x": 495.2,
+"y": -26.4,
+"ele": 137.0,
+"osm": 1311840056,
+"kind": "peak"
+},
+{
+"name": "Hartaval",
+"name_en": null,
+"lat": 57.5164672,
+"lon": -6.2115812,
+"x": -1718.8,
+"y": 1032.4,
+"ele": 669.0,
+"osm": 2550878315,
+"kind": "peak"
+}
+]
