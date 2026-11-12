@@ -1009,7 +1009,7 @@
    "fov": 70,
    "reach_km": 17,
    "lift_m": 2,
-   "near_km": 1.0
+   "near_km": 4.0
   },
   {
    "slug": "monte-rosa-from-gornergrat",
