@@ -1,0 +1,112 @@
+[
+{
+"name": "Barrow",
+"name_en": null,
+"lat": 54.585694,
+"lon": -3.1974644,
+"x": -1775.6,
+"y": 1947.7,
+"ele": 455.0,
+"osm": 29953942,
+"kind": "peak"
+},
+{
+"name": "Maiden Moor",
+"name_en": null,
+"lat": 54.5531536,
+"lon": -3.1815879,
+"x": -749.8,
+"y": -1674.8,
+"ele": 575.0,
+"osm": 29954490,
+"kind": "peak"
+},
+{
+"name": "Cat Bells",
+"name_en": null,
+"lat": 54.5683522,
+"lon": -3.1706606,
+"x": -42.7,
+"y": 16.9,
+"ele": 451.0,
+"osm": 29954492,
+"kind": "peak"
+},
+{
+"name": "Rowling End",
+"name_en": null,
+"lat": 54.5755672,
+"lon": -3.1937738,
+"x": -1537.4,
+"y": 820.3,
+"ele": 433.0,
+"osm": 373110433,
+"kind": "peak"
+},
+{
+"name": "Skelgill Bank",
+"name_en": null,
+"lat": 54.5746662,
+"lon": -3.1694754,
+"x": 33.9,
+"y": 719.8,
+"ele": 338.0,
+"osm": 4845498615,
+"kind": "peak"
+},
+{
+"name": "Swinside",
+"name_en": null,
+"lat": 54.5915386,
+"lon": -3.1725809,
+"x": -166.8,
+"y": 2598.0,
+"ele": 244.8,
+"osm": 4872184186,
+"kind": "peak"
+},
+{
+"name": "Copperheap Hill",
+"name_en": null,
+"lat": 54.5837177,
+"lon": -3.1575391,
+"x": 805.7,
+"y": 1727.4,
+"ele": null,
+"osm": 4872184188,
+"kind": "peak"
+},
+{
+"name": "Stub Hill",
+"name_en": null,
+"lat": 54.5852099,
+"lon": -3.1599317,
+"x": 650.9,
+"y": 1893.5,
+"ele": null,
+"osm": 4872184189,
+"kind": "peak"
+},
+{
+"name": "Grange Crags",
+"name_en": null,
+"lat": 54.5476283,
+"lon": -3.150809,
+"x": 1241.9,
+"y": -2289.8,
+"ele": 194.0,
+"osm": 5048150855,
+"kind": "peak"
+},
+{
+"name": "Shepherds Crag",
+"name_en": null,
+"lat": 54.5560339,
+"lon": -3.1392128,
+"x": 1991.9,
+"y": -1353.8,
+"ele": 230.7,
+"osm": 12563917326,
+"kind": "peak"
+}
+]

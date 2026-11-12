@@ -1,0 +1,211 @@
+[
+{
+"name": "Mont Durand",
+"name_en": null,
+"lat": 46.0337197,
+"lon": 7.6505095,
+"x": 2965.8,
+"y": -52.7,
+"ele": 3712.0,
+"osm": 393169562,
+"kind": "peak"
+},
+{
+"name": "Pointe de Zinal",
+"name_en": null,
+"lat": 46.0272094,
+"lon": 7.6304632,
+"x": 1414.0,
+"y": -776.9,
+"ele": 3790.0,
+"osm": 393169563,
+"kind": "peak"
+},
+{
+"name": "Stockje",
+"name_en": null,
+"lat": 45.9943975,
+"lon": 7.6104401,
+"x": -136.3,
+"y": -4424.1,
+"ele": 3097.0,
+"osm": 393169860,
+"kind": "peak"
+},
+{
+"name": "Pointe de Bricolla",
+"name_en": null,
+"lat": 46.0625036,
+"lon": 7.5917457,
+"x": -1582.7,
+"y": 3146.2,
+"ele": 3573.0,
+"osm": 393172218,
+"kind": "peak"
+},
+{
+"name": "Grand Cornier",
+"name_en": null,
+"lat": 46.0521309,
+"lon": 7.6115672,
+"x": -49.0,
+"y": 1993.1,
+"ele": 3969.0,
+"osm": 393172219,
+"kind": "peak"
+},
+{
+"name": "Dent des Rosses",
+"name_en": null,
+"lat": 46.06797,
+"lon": 7.59038,
+"x": -1688.2,
+"y": 3753.8,
+"ele": 3613.0,
+"osm": 1373121826,
+"kind": "peak"
+},
+{
+"name": "Pointe du Mourti Occidentale",
+"name_en": null,
+"lat": 46.0733594,
+"lon": 7.5809294,
+"x": -2419.1,
+"y": 4353.1,
+"ele": 3529.0,
+"osm": 1373122183,
+"kind": "peak"
+},
+{
+"name": "Dent Blanche",
+"name_en": null,
+"lat": 46.0341763,
+"lon": 7.6119305,
+"x": -20.9,
+"y": -2.6,
+"ele": 4358.0,
+"osm": 1436639948,
+"kind": "peak"
+},
+{
+"name": "Grand Gendarme",
+"name_en": null,
+"lat": 46.0297672,
+"lon": 7.6106444,
+"x": -120.4,
+"y": -492.7,
+"ele": 4097.0,
+"osm": 1725081208,
+"kind": "peak"
+},
+{
+"name": "Pointe du Mourti Orientale",
+"name_en": null,
+"lat": 46.072429,
+"lon": 7.586095,
+"x": -2019.5,
+"y": 4249.6,
+"ele": 3563.0,
+"osm": 1798595238,
+"kind": "peak"
+},
+{
+"name": "Besso",
+"name_en": null,
+"lat": 46.07767,
+"lon": 7.658679,
+"x": 3595.4,
+"y": 4832.8,
+"ele": 3669.0,
+"osm": 3029801348,
+"kind": "peak"
+},
+{
+"name": "Tsa de l'Ano",
+"name_en": null,
+"lat": 46.0781688,
+"lon": 7.5733079,
+"x": -3008.5,
+"y": 4888.0,
+"ele": 3368.0,
+"osm": 3430028204,
+"kind": "peak"
+},
+{
+"name": "Äbihorn",
+"name_en": null,
+"lat": 46.0207199,
+"lon": 7.6535813,
+"x": 3204.3,
+"y": -1497.5,
+"ele": 3472.0,
+"osm": 4593390398,
+"kind": "peak"
+},
+{
+"name": "Gemsspitz",
+"name_en": null,
+"lat": 46.0075145,
+"lon": 7.6344895,
+"x": 1726.4,
+"y": -2965.9,
+"ele": 3182.0,
+"osm": 5096096405,
+"kind": "peak"
+},
+{
+"name": "Le Mammouth",
+"name_en": null,
+"lat": 46.0637207,
+"lon": 7.6535545,
+"x": 3199.8,
+"y": 3282.1,
+"ele": 3100.0,
+"osm": 6354819928,
+"kind": "peak"
+},
+{
+"name": "Wandfluehorn",
+"name_en": null,
+"lat": 46.0019307,
+"lon": 7.6018986,
+"x": -798.0,
+"y": -3586.7,
+"ele": 3589.0,
+"osm": 11538134710,
+"kind": "peak"
+},
+{
+"name": "Hohwänghorn",
+"name_en": null,
+"lat": 46.0287604,
+"lon": 7.6499048,
+"x": 2919.2,
+"y": -603.9,
+"ele": 3671.0,
+"osm": 11538220027,
+"kind": "peak"
+},
+{
+"name": "La Maya",
+"name_en": null,
+"lat": 46.053101,
+"lon": 7.5710007,
+"x": -3188.4,
+"y": 2101.7,
+"ele": 2867.0,
+"osm": 12040710462,
+"kind": "peak"
+},
+{
+"name": "Unterer Blausatz",
+"name_en": null,
+"lat": 46.0069027,
+"lon": 7.6370488,
+"x": 1924.6,
+"y": -3033.8,
+"ele": 3066.0,
+"osm": 12040710558,
+"kind": "peak"
+}
+]

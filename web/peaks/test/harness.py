@@ -178,7 +178,7 @@ def suite(out: Path, offline: bool = True):
         wait_drawn(page)
         for s, t in [("poster", "paper"), ("contours", "oxblood"), ("ridgelines", "navy"), ("skyline", "moss"), ("panorama", "night")]:
             theme(t); style(s); snap(f"cuillin-{s}-{t}")
-        page.click("#presets button[data-slug=matterhorn]"); style("poster"); theme("navy"); snap("matterhorn-poster-navy")
+        page.click("#groups button[data-group=Alps]"); page.click("#presets button[data-slug=matterhorn]"); style("poster"); theme("navy"); snap("matterhorn-poster-navy")
         theme("bands"); style("contours"); snap("matterhorn-contours-bands")
         # search
         page.fill("#q", "Scafell Pike"); page.click("#find")

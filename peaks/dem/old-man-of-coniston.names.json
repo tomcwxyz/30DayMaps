@@ -1,0 +1,222 @@
+[
+{
+"name": "Dow Crag",
+"name_en": null,
+"lat": 54.3702839,
+"lon": -3.136639,
+"x": -996.9,
+"y": -68.5,
+"ele": 778.0,
+"osm": 29876657,
+"kind": "peak"
+},
+{
+"name": "Swirl How",
+"name_en": null,
+"lat": 54.3952296,
+"lon": -3.1214914,
+"x": -12.4,
+"y": 2708.2,
+"ele": 802.4,
+"osm": 29876665,
+"kind": "peak"
+},
+{
+"name": "Grey Friar",
+"name_en": null,
+"lat": 54.3933475,
+"lon": -3.1410669,
+"x": -1284.0,
+"y": 2498.9,
+"ele": 773.0,
+"osm": 29876667,
+"kind": "peak"
+},
+{
+"name": "Great Carrs",
+"name_en": null,
+"lat": 54.3987801,
+"lon": -3.1247606,
+"x": -224.8,
+"y": 3103.4,
+"ele": 785.0,
+"osm": 29876669,
+"kind": "peak"
+},
+{
+"name": "Buck Pike",
+"name_en": null,
+"lat": 54.3651015,
+"lon": -3.1368191,
+"x": -1008.8,
+"y": -645.3,
+"ele": 744.0,
+"osm": 1388890469,
+"kind": "peak"
+},
+{
+"name": "Yew Pike",
+"name_en": null,
+"lat": 54.377583,
+"lon": -3.0785973,
+"x": 2774.9,
+"y": 744.7,
+"ele": null,
+"osm": 1423925858,
+"kind": "peak"
+},
+{
+"name": "Great How Crags",
+"name_en": null,
+"lat": 54.3898227,
+"lon": -3.1206853,
+"x": 39.9,
+"y": 2106.3,
+"ele": 770.0,
+"osm": 1825221818,
+"kind": "peak"
+},
+{
+"name": "Wetherlam",
+"name_en": null,
+"lat": 54.4004922,
+"lon": -3.097957,
+"x": 1516.0,
+"y": 3294.2,
+"ele": 763.0,
+"osm": 2123602545,
+"kind": "peak"
+},
+{
+"name": "Black Sails",
+"name_en": null,
+"lat": 54.3972286,
+"lon": -3.10609,
+"x": 987.9,
+"y": 2930.8,
+"ele": 745.0,
+"osm": 2123602550,
+"kind": "peak"
+},
+{
+"name": "The Bell",
+"name_en": null,
+"lat": 54.3718778,
+"lon": -3.0976286,
+"x": 1538.4,
+"y": 109.1,
+"ele": 335.0,
+"osm": 3133956434,
+"kind": "peak"
+},
+{
+"name": "Torver Back Common",
+"name_en": null,
+"lat": 54.3365945,
+"lon": -3.0937236,
+"x": 1793.7,
+"y": -3818.2,
+"ele": 178.0,
+"osm": 3325628523,
+"kind": "peak"
+},
+{
+"name": "Lag Bank",
+"name_en": null,
+"lat": 54.3384141,
+"lon": -3.1551942,
+"x": -2204.6,
+"y": -3615.5,
+"ele": 411.2,
+"osm": 4948866800,
+"kind": "peak"
+},
+{
+"name": "White Pike",
+"name_en": null,
+"lat": 54.350137,
+"lon": -3.1567525,
+"x": -2305.3,
+"y": -2310.6,
+"ele": 599.5,
+"osm": 4948867616,
+"kind": "peak"
+},
+{
+"name": "White Maiden",
+"name_en": null,
+"lat": 54.3513964,
+"lon": -3.1487861,
+"x": -1787.2,
+"y": -2170.6,
+"ele": 612.6,
+"osm": 4948867618,
+"kind": "peak"
+},
+{
+"name": "Blake Rigg",
+"name_en": null,
+"lat": 54.4010386,
+"lon": -3.0781913,
+"x": 2799.6,
+"y": 3355.6,
+"ele": 423.0,
+"osm": 4952407982,
+"kind": "peak"
+},
+{
+"name": "Old Man of Coniston",
+"name_en": null,
+"lat": 54.3706522,
+"lon": -3.1214477,
+"x": -9.6,
+"y": -27.6,
+"ele": 802.4,
+"osm": 5378256988,
+"kind": "peak"
+},
+{
+"name": "Brim Fell",
+"name_en": null,
+"lat": 54.377296,
+"lon": -3.1241988,
+"x": -188.4,
+"y": 712.0,
+"ele": 795.9,
+"osm": 6810911420,
+"kind": "peak"
+},
+{
+"name": "Brown Pike",
+"name_en": null,
+"lat": 54.3594146,
+"lon": -3.1387821,
+"x": -1136.5,
+"y": -1278.3,
+"ele": 682.0,
+"osm": 6895058852,
+"kind": "peak"
+},
+{
+"name": "Walna Scar",
+"name_en": null,
+"lat": 54.357179,
+"lon": -3.1437205,
+"x": -1457.6,
+"y": -1527.1,
+"ele": 620.8,
+"osm": 7227081523,
+"kind": "peak"
+},
+{
+"name": "Banks",
+"name_en": null,
+"lat": 54.3363348,
+"lon": -3.1282246,
+"x": -450.4,
+"y": -3847.5,
+"ele": 311.0,
+"osm": 12601813120,
+"kind": "peak"
+}
+]

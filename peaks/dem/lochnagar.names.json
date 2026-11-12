@@ -1,0 +1,189 @@
+[
+{
+"name": "Cac Càrn Beag",
+"name_en": null,
+"lat": 56.9602412,
+"lon": -3.245265,
+"x": 20.4,
+"y": -17.7,
+"ele": 1156.0,
+"osm": 304811948,
+"kind": "peak"
+},
+{
+"name": "Cairn Bannoch",
+"name_en": null,
+"lat": 56.9276502,
+"lon": -3.2783382,
+"x": -1993.4,
+"y": -3646.5,
+"ele": 1010.0,
+"osm": 304814834,
+"kind": "peak"
+},
+{
+"name": "Càrn a' Choire Bhòidheach",
+"name_en": null,
+"lat": 56.9457433,
+"lon": -3.272711,
+"x": -1650.0,
+"y": -1631.8,
+"ele": 1110.0,
+"osm": 304815323,
+"kind": "peak"
+},
+{
+"name": "Fafernie",
+"name_en": null,
+"lat": 56.925401,
+"lon": -3.2910235,
+"x": -2766.0,
+"y": -3896.5,
+"ele": 997.0,
+"osm": 1261454754,
+"kind": "peak"
+},
+{
+"name": "Cairn of Gowal",
+"name_en": null,
+"lat": 56.9198853,
+"lon": -3.2699363,
+"x": -1482.1,
+"y": -4511.4,
+"ele": 983.0,
+"osm": 1537476284,
+"kind": "peak"
+},
+{
+"name": "Meall Coire na Saobhaidhe",
+"name_en": null,
+"lat": 56.9705731,
+"lon": -3.2473254,
+"x": -104.9,
+"y": 1132.9,
+"ele": 972.0,
+"osm": 2436964166,
+"kind": "peak"
+},
+{
+"name": "Cuidhe Cròm",
+"name_en": null,
+"lat": 56.9495642,
+"lon": -3.2181993,
+"x": 1667.5,
+"y": -1206.3,
+"ele": 1082.0,
+"osm": 2436964168,
+"kind": "peak"
+},
+{
+"name": "Meall an Tionail",
+"name_en": null,
+"lat": 56.9734268,
+"lon": -3.2792416,
+"x": -2045.9,
+"y": 1451.2,
+"ele": 884.0,
+"osm": 2436964170,
+"kind": "peak"
+},
+{
+"name": "Cnapan Nathraichean",
+"name_en": null,
+"lat": 56.9842291,
+"lon": -3.280529,
+"x": -2123.6,
+"y": 2654.1,
+"ele": 823.0,
+"osm": 2436964183,
+"kind": "peak"
+},
+{
+"name": "Meikle Pap",
+"name_en": null,
+"lat": 56.9595281,
+"lon": -3.2189155,
+"x": 1623.4,
+"y": -96.8,
+"ele": 978.0,
+"osm": 2436964187,
+"kind": "peak"
+},
+{
+"name": "Craig Liath",
+"name_en": null,
+"lat": 56.9783383,
+"lon": -3.2445789,
+"x": 62.1,
+"y": 1997.6,
+"ele": 861.0,
+"osm": 2436964197,
+"kind": "peak"
+},
+{
+"name": "Eagles Rock",
+"name_en": null,
+"lat": 56.938393,
+"lon": -3.2540975,
+"x": -517.3,
+"y": -2450.6,
+"ele": 1051.0,
+"osm": 2436966830,
+"kind": "peak"
+},
+{
+"name": "Little Pap",
+"name_en": null,
+"lat": 56.945234,
+"lon": -3.2099656,
+"x": 2168.8,
+"y": -1688.3,
+"ele": 956.0,
+"osm": 2437253500,
+"kind": "peak"
+},
+{
+"name": "Cac Càrn Mòr",
+"name_en": null,
+"lat": 56.9562144,
+"lon": -3.2427693,
+"x": 172.2,
+"y": -466.1,
+"ele": 1148.0,
+"osm": 2610840644,
+"kind": "peak"
+},
+{
+"name": "The Stuic",
+"name_en": null,
+"lat": 56.9506928,
+"lon": -3.2742801,
+"x": -1745.3,
+"y": -1080.6,
+"ele": 1093.0,
+"osm": 2690808934,
+"kind": "peak"
+},
+{
+"name": "Càrn an t-Sagairt Beag",
+"name_en": null,
+"lat": 56.9480873,
+"lon": -3.2898903,
+"x": -2695.4,
+"y": -1370.3,
+"ele": 1044.0,
+"osm": 5682133457,
+"kind": "peak"
+},
+{
+"name": "Creag a' Ghlas-uillt",
+"name_en": null,
+"lat": 56.9434129,
+"lon": -3.2476392,
+"x": -124.1,
+"y": -1891.7,
+"ele": null,
+"osm": 9123139496,
+"kind": "peak"
+}
+]

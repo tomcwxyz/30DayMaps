@@ -1,0 +1,211 @@
+[
+{
+"name": "Pen y Fan",
+"name_en": null,
+"lat": 51.8840467,
+"lon": -3.4370014,
+"x": -62.1,
+"y": 38.6,
+"ele": 886.0,
+"osm": 16346725,
+"kind": "peak"
+},
+{
+"name": "Cribyn",
+"name_en": null,
+"lat": 51.8817789,
+"lon": -3.4196326,
+"x": 1133.9,
+"y": -213.6,
+"ele": 795.0,
+"osm": 16347060,
+"kind": "peak"
+},
+{
+"name": "Fan y Big",
+"name_en": null,
+"lat": 51.8758978,
+"lon": -3.4010973,
+"x": 2410.6,
+"y": -867.5,
+"ele": 719.0,
+"osm": 32319100,
+"kind": "peak"
+},
+{
+"name": "Corn Du",
+"name_en": null,
+"lat": 51.8816835,
+"lon": -3.4436544,
+"x": -520.2,
+"y": -224.3,
+"ele": 873.0,
+"osm": 32319360,
+"kind": "peak"
+},
+{
+"name": "Cefn Cul",
+"name_en": null,
+"lat": 51.8633484,
+"lon": -3.4327195,
+"x": 232.9,
+"y": -2264.4,
+"ele": 740.0,
+"osm": 3526075062,
+"kind": "peak"
+},
+{
+"name": "Gwaun Cerrig Llwydion",
+"name_en": null,
+"lat": 51.8672507,
+"lon": -3.3954207,
+"x": 2802.0,
+"y": -1829.4,
+"ele": 730.0,
+"osm": 3526078156,
+"kind": "peak"
+},
+{
+"name": "Y Gyrn",
+"name_en": null,
+"lat": 51.8838242,
+"lon": -3.4704018,
+"x": -2361.9,
+"y": 14.4,
+"ele": 619.0,
+"osm": 3526106440,
+"kind": "peak"
+},
+{
+"name": "Craig-Gwaun-Taf",
+"name_en": null,
+"lat": 51.875446,
+"lon": -3.4459677,
+"x": -679.6,
+"y": -918.3,
+"ele": 826.0,
+"osm": 3526108429,
+"kind": "peak"
+},
+{
+"name": "Twyn Cil-rhew",
+"name_en": null,
+"lat": 51.907747,
+"lon": -3.4306604,
+"x": 374.3,
+"y": 2675.6,
+"ele": 536.0,
+"osm": 9107346240,
+"kind": "peak"
+},
+{
+"name": "Cefn Cwm Llwch",
+"name_en": null,
+"lat": 51.8961681,
+"lon": -3.4293087,
+"x": 467.5,
+"y": 1387.3,
+"ele": 701.0,
+"osm": 11466876072,
+"kind": "peak"
+},
+{
+"name": "Allt Ddu",
+"name_en": null,
+"lat": 51.9052037,
+"lon": -3.4178301,
+"x": 1257.4,
+"y": 2392.8,
+"ele": 560.0,
+"osm": 11555225356,
+"kind": "peak"
+},
+{
+"name": "Bryn Teg",
+"name_en": null,
+"lat": 51.888171,
+"lon": -3.4149395,
+"x": 1456.9,
+"y": 497.7,
+"ele": null,
+"osm": 1570153998,
+"kind": "ridge"
+},
+{
+"name": "Craig Fan-ddu",
+"name_en": null,
+"lat": 51.845569,
+"lon": -3.4140166,
+"x": 1521.9,
+"y": -4242.4,
+"ele": null,
+"osm": 1570154001,
+"kind": "ridge"
+},
+{
+"name": "Craig Cwareli",
+"name_en": null,
+"lat": 51.8699767,
+"lon": -3.3848837,
+"x": 3527.6,
+"y": -1525.7,
+"ele": null,
+"osm": 1570154002,
+"kind": "ridge"
+},
+{
+"name": "Craig Cwm-Oergwm",
+"name_en": null,
+"lat": 51.8715742,
+"lon": -3.3984213,
+"x": 2595.1,
+"y": -1348.5,
+"ele": null,
+"osm": 1570154003,
+"kind": "ridge"
+},
+{
+"name": "Rhiw yr Ysgyfarnog",
+"name_en": null,
+"lat": 51.8693972,
+"lon": -3.4393436,
+"x": -223.4,
+"y": -1591.4,
+"ele": null,
+"osm": 1570154004,
+"kind": "ridge"
+},
+{
+"name": "Craig Cwm Sere",
+"name_en": null,
+"lat": 51.882572,
+"lon": -3.428317,
+"x": 535.9,
+"y": -125.5,
+"ele": null,
+"osm": 1570154005,
+"kind": "ridge"
+},
+{
+"name": "Craig Cwm Cynwyn",
+"name_en": null,
+"lat": 51.8784991,
+"lon": -3.4103649,
+"x": 1772.2,
+"y": -578.4,
+"ele": null,
+"osm": 1570154006,
+"kind": "ridge"
+},
+{
+"name": "Cefn Cyff",
+"name_en": null,
+"lat": 51.8867863,
+"lon": -3.3934999,
+"x": 2933.1,
+"y": 344.3,
+"ele": null,
+"osm": 1570310255,
+"kind": "ridge"
+}
+]

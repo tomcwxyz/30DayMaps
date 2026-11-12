@@ -1,0 +1,211 @@
+[
+{
+"name": "Mynydd Dol-Fanog",
+"name_en": null,
+"lat": 52.6812022,
+"lon": -3.8576366,
+"x": 3419.6,
+"y": -2057.2,
+"ele": 544.0,
+"osm": 29739680,
+"kind": "peak"
+},
+{
+"name": "Foel Ddu",
+"name_en": null,
+"lat": 52.6680075,
+"lon": -3.9277486,
+"x": -1322.5,
+"y": -3526.6,
+"ele": 448.0,
+"osm": 255372418,
+"kind": "peak"
+},
+{
+"name": "Mynydd Moel",
+"name_en": null,
+"lat": 52.7057519,
+"lon": -3.8848226,
+"x": 1580.1,
+"y": 673.7,
+"ele": 863.0,
+"osm": 3437701089,
+"kind": "peak"
+},
+{
+"name": "Gau Graig",
+"name_en": null,
+"lat": 52.7096822,
+"lon": -3.8604591,
+"x": 3226.6,
+"y": 1111.9,
+"ele": 683.0,
+"osm": 3437716013,
+"kind": "peak"
+},
+{
+"name": "Craig Cwm Amarch",
+"name_en": null,
+"lat": 52.6914963,
+"lon": -3.9092124,
+"x": -68.5,
+"y": -912.9,
+"ele": 791.0,
+"osm": 3437719972,
+"kind": "peak"
+},
+{
+"name": "Tyrrau Mawr",
+"name_en": null,
+"lat": 52.7034485,
+"lon": -3.9594637,
+"x": -3465.2,
+"y": 418.4,
+"ele": 661.0,
+"osm": 3437726525,
+"kind": "peak"
+},
+{
+"name": "Dol Gledr",
+"name_en": null,
+"lat": 52.7361839,
+"lon": -3.9439341,
+"x": -2413.7,
+"y": 4060.6,
+"ele": 309.0,
+"osm": 3686261744,
+"kind": "peak"
+},
+{
+"name": "Craig Y Castell",
+"name_en": null,
+"lat": 52.7375903,
+"lon": -3.9357855,
+"x": -1863.2,
+"y": 4216.8,
+"ele": 298.0,
+"osm": 3686263232,
+"kind": "peak"
+},
+{
+"name": "Craig Lwyd",
+"name_en": null,
+"lat": 52.6899132,
+"lon": -3.9030127,
+"x": 350.8,
+"y": -1089.1,
+"ele": 690.0,
+"osm": 3686286564,
+"kind": "peak"
+},
+{
+"name": "Mynydd Ty'n-y-fach",
+"name_en": "Mynydd Ty'n-y-fach",
+"lat": 52.6691053,
+"lon": -3.9418458,
+"x": -2276.1,
+"y": -3404.1,
+"ele": 409.0,
+"osm": 3686286944,
+"kind": "peak"
+},
+{
+"name": "Mynydd Pencoed",
+"name_en": null,
+"lat": 52.6881412,
+"lon": -3.91688,
+"x": -586.9,
+"y": -1286.2,
+"ele": 766.0,
+"osm": 3686289347,
+"kind": "peak"
+},
+{
+"name": "Craig Ysgiog",
+"name_en": null,
+"lat": 52.6743505,
+"lon": -3.947825,
+"x": -2680.3,
+"y": -2820.2,
+"ele": 325.0,
+"osm": 3686290283,
+"kind": "peak"
+},
+{
+"name": "Mynydd Gwerngraig",
+"name_en": null,
+"lat": 52.7055372,
+"lon": -3.8715756,
+"x": 2475.6,
+"y": 650.2,
+"ele": 686.0,
+"osm": 3686295268,
+"kind": "peak"
+},
+{
+"name": "Mynydd Rugog",
+"name_en": null,
+"lat": 52.6659196,
+"lon": -3.8903323,
+"x": 1208.8,
+"y": -3758.9,
+"ele": 504.0,
+"osm": 3728121245,
+"kind": "peak"
+},
+{
+"name": "Cadair Idris",
+"name_en": null,
+"lat": 52.6995951,
+"lon": -3.9088003,
+"x": -40.6,
+"y": -11.7,
+"ele": 893.0,
+"osm": 4079553118,
+"kind": "peak"
+},
+{
+"name": "Cyfrwy",
+"name_en": null,
+"lat": 52.7022321,
+"lon": -3.9196537,
+"x": -774.2,
+"y": 281.8,
+"ele": 811.0,
+"osm": 8737045289,
+"kind": "peak"
+},
+{
+"name": "Moelfryn",
+"name_en": null,
+"lat": 52.6928013,
+"lon": -3.8805707,
+"x": 1868.1,
+"y": -767.3,
+"ele": 370.0,
+"osm": 9922012498,
+"kind": "peak"
+},
+{
+"name": "Carnedd Lwyd",
+"name_en": null,
+"lat": 52.703481,
+"lon": -3.95069,
+"x": -2872.2,
+"y": 421.6,
+"ele": 616.0,
+"osm": 9922012514,
+"kind": "peak"
+},
+{
+"name": "Craig y Castell",
+"name_en": null,
+"lat": 52.7277097,
+"lon": -3.9297788,
+"x": -1457.8,
+"y": 3117.2,
+"ele": 321.0,
+"osm": 10309405840,
+"kind": "peak"
+}
+]

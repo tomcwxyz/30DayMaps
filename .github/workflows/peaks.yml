@@ -20,7 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with: {ref: "${{ github.ref_name }}"}
@@ -28,11 +28,20 @@ jobs:
         with: {python-version: '3.12'}
       - run: python -m pip install -e ".[sight]"
       - name: Fetch elevation
-        env: {SLUGS: "${{ inputs.slugs }}"}
+        timeout-minutes: 75
+        continue-on-error: true   # whatever arrived is still checked and committed below
+        env: {SLUGS: "${{ inputs.slugs }}", PEAKS_NAMES_BUDGET_MIN: "50"}
         run: |
           if [ -n "$SLUGS" ]; then python -m maps.peaks fetch --force $SLUGS; else python -m maps.peaks fetch --all; fi
       - name: Refresh the print maker's places
         run: python -m maps.peaks web
+      - name: Check places against OpenStreetMap (see the run summary)
+        continue-on-error: true
+        run: python -m maps.peaks_check
+      - name: Bake summit names for the ready-made regions
+        timeout-minutes: 20
+        continue-on-error: true   # Overpass can be slow; the committed names.json stays as it was
+        run: python -m maps.peaks_names
       - name: Keep the elevation grids as an artifact (too big for git)
         uses: actions/upload-artifact@v4
         with:
@@ -43,7 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add peaks/dem/*.names.json web/peaks/places.json
+          git add peaks/dem/*.names.json web/peaks/places.json web/peaks/names.json
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Peaks: summit names and places"
           git pull --rebase --autostash -q && git push

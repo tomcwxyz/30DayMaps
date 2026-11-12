@@ -1,0 +1,90 @@
+[
+{
+"name": "Schiehallion",
+"name_en": "Schiehallion",
+"lat": 56.6669296,
+"lon": -4.1003003,
+"x": -73.6,
+"y": 14.4,
+"ele": 1083.0,
+"osm": 273925520,
+"kind": "peak"
+},
+{
+"name": "Càrn Mairg",
+"name_en": null,
+"lat": 56.6346219,
+"lon": -4.1457221,
+"x": -2861.0,
+"y": -3582.2,
+"ele": 1041.0,
+"osm": 273926870,
+"kind": "peak"
+},
+{
+"name": "Meall nan Eun",
+"name_en": null,
+"lat": 56.6319195,
+"lon": -4.1083543,
+"x": -567.9,
+"y": -3884.0,
+"ele": 874.0,
+"osm": 608530853,
+"kind": "peak"
+},
+{
+"name": "Meall Liath",
+"name_en": null,
+"lat": 56.6344697,
+"lon": -4.1322925,
+"x": -2036.9,
+"y": -3599.6,
+"ele": 1012.0,
+"osm": 608531175,
+"kind": "peak"
+},
+{
+"name": "Meall Gruamach",
+"name_en": null,
+"lat": 56.6292792,
+"lon": -4.0695818,
+"x": 1811.7,
+"y": -4177.7,
+"ele": 676.0,
+"osm": 608543046,
+"kind": "peak"
+},
+{
+"name": "Geal Chàrn",
+"name_en": null,
+"lat": 56.6632481,
+"lon": -4.1526519,
+"x": -3283.8,
+"y": -394.2,
+"ele": 790.0,
+"osm": 609652189,
+"kind": "peak"
+},
+{
+"name": "Creag an Eàrra",
+"name_en": null,
+"lat": 56.6556714,
+"lon": -4.122311,
+"x": -1423.6,
+"y": -1239.0,
+"ele": null,
+"osm": 609653223,
+"kind": "peak"
+},
+{
+"name": "Meall Dubh",
+"name_en": null,
+"lat": 56.6881276,
+"lon": -4.0663392,
+"x": 2007.6,
+"y": 2375.4,
+"ele": null,
+"osm": 609872308,
+"kind": "peak"
+}
+]
