@@ -178,6 +178,10 @@ BOOKKEEPING = re.compile(r"\s*\((?:wainwright\s*)?(?:summit|wainwright)\)|\s+sum
 SAME_HILL_M = 600   # two summits of the same name this close are one hill mapped twice
 
 
+# OSM summits whose name only makes sense next to their hill, keyed by OSM node id.
+RENAME = {3133009392: "Crinkle Crags South Top"}
+
+
 def label(name: str) -> str:
     """A summit's name as it should print: OSM bookkeeping dropped, stray capitals fixed ("SIde")."""
     name = BOOKKEEPING.sub("", name).strip()
@@ -195,7 +199,7 @@ def names(slug: str, kind: str = "peak") -> list[dict]:
             continue
         name = n["name"] if _latin(n["name"]) else n.get("name_en")
         if _latin(name):
-            out.append(dict(n, name=label(name), name_en=None))
+            out.append(dict(n, name=RENAME.get(n.get("osm")) or label(name), name_en=None))
     out.sort(key=lambda n: (n.get("ele") is None, -(n.get("ele") or 0)))
     kept = []
     for n in out:
