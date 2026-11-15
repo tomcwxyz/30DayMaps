@@ -609,6 +609,26 @@ def _save(fig, path: Path, dpi=110) -> Path:
 STYLES = {"contours": contours, "ridgelines": ridgelines, "skyline": skyline, "poster": poster}
 
 
+STOP_MATCH_M = 150
+
+
+def with_heights(route: dict) -> dict:
+    """A route with each stop's OpenStreetMap height added ([name, lat, lon, ele]), so the
+    print lists the surveyed summit height (as the map labels do) rather than a sample of
+    smoothed elevation tiles, which reads 10-30 m low on sharp tops. Stops with no tagged
+    OSM summit within STOP_MATCH_M keep three values and the page falls back to the tiles."""
+    peaks = [n for f in sorted(DEM_DIR.glob("*.names.json"))
+             for n in json.loads(f.read_text()) if n.get("kind") == "peak" and n.get("ele")]
+    stops = []
+    for name, lat, lon, *_ in route.get("stops", []):
+        k = math.cos(math.radians(lat))
+        d = lambda n: math.hypot((n["lat"] - lat) * 111320, (n["lon"] - lon) * 111320 * k)
+        near = min(peaks, key=d, default=None)
+        ele = round(near["ele"]) if near and d(near) <= STOP_MATCH_M else None
+        stops.append([name, lat, lon] + ([ele] if ele is not None else []))
+    return {**route, "stops": stops} if route.get("stops") else route
+
+
 WEB_PLACES = Path("web/peaks/places.json")
 
 
@@ -633,7 +653,7 @@ def web_places(path: Path = WEB_PLACES) -> Path:
     views = [{**{k: x for k, x in v.items() if k != "labels"}, "names": summits(v["slug"]) + v.get("labels", [])}
              for v in PLACES["views"]]
     # Ready-made routes: GPX files in web/peaks/routes (built by maps/peaks_routes.py).
-    routes = [r for r in PLACES.get("routes", []) if (path.parent / "routes" / f"{r['slug']}.gpx").exists()]
+    routes = [with_heights(r) for r in PLACES.get("routes", []) if (path.parent / "routes" / f"{r['slug']}.gpx").exists()]
     path.write_text(json.dumps({"areas": areas, "views": views, "routes": routes}, ensure_ascii=False, separators=(",", ":")))
     print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(areas)} areas, {len(views)} views, {len(routes)} routes)")
     return path
