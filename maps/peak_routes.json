@@ -436,7 +436,7 @@
     "Les Houches",
     45.8905,
     6.799,
-    "via"
+    "checkpoint"
    ],
    [
     "Col de Voza",
@@ -448,13 +448,13 @@
     "Saint-Gervais",
     45.892,
     6.712,
-    "via"
+    "checkpoint"
    ],
    [
     "Les Contamines",
     45.821,
     6.727,
-    "via"
+    "checkpoint"
    ],
    [
     "Notre-Dame de la Gorge",
@@ -478,7 +478,7 @@
     "Les Chapieux",
     45.696,
     6.738,
-    "via"
+    "checkpoint"
    ],
    [
     "Col de la Seigne",
@@ -490,7 +490,7 @@
     "Lac Combal",
     45.779,
     6.86,
-    "via"
+    "checkpoint"
    ],
    [
     "Col Checrouit",
@@ -502,25 +502,25 @@
     "Courmayeur",
     45.792,
     6.972,
-    "via"
+    "checkpoint"
    ],
    [
     "Refuge Bertone",
     45.809,
     6.98,
-    "via"
+    "checkpoint"
    ],
    [
     "Refuge Bonatti",
     45.841,
     7.029,
-    "via"
+    "checkpoint"
    ],
    [
     "Arnouvaz",
     45.86,
     7.048,
-    "via"
+    "checkpoint"
    ],
    [
     "Grand Col Ferret",
@@ -532,7 +532,7 @@
     "La Fouly",
     45.933,
     7.095,
-    "via"
+    "checkpoint"
    ],
    [
     "Praz-de-Fort",
@@ -544,7 +544,7 @@
     "Champex-Lac",
     46.031,
     7.117,
-    "via"
+    "checkpoint"
    ],
    [
     "Bovine",
@@ -562,13 +562,13 @@
     "Trient",
     46.056,
     6.995,
-    "via"
+    "checkpoint"
    ],
    [
     "Vallorcine",
     46.032,
     6.933,
-    "via"
+    "checkpoint"
    ],
    [
     "Col des Montets",
@@ -580,7 +580,7 @@
     "La Flégère",
     45.96,
     6.889,
-    "via"
+    "checkpoint"
    ],
    [
     "Chamonix",
@@ -610,13 +610,13 @@
     "Seathwaite",
     54.354,
     -3.189,
-    "via"
+    "checkpoint"
    ],
    [
     "Boot",
     54.396,
     -3.274,
-    "via"
+    "checkpoint"
    ],
    [
     "Burnmoor Tarn",
@@ -628,7 +628,7 @@
     "Wasdale Head",
     54.466,
     -3.285,
-    "via"
+    "checkpoint"
    ],
    [
     "Black Sail Pass",
@@ -652,7 +652,7 @@
     "Buttermere",
     54.541,
     -3.277,
-    "via"
+    "checkpoint"
    ],
    [
     "Sail Pass",
@@ -664,7 +664,7 @@
     "Braithwaite",
     54.602,
     -3.192,
-    "via"
+    "checkpoint"
    ],
    [
     "Keswick",
@@ -676,7 +676,7 @@
     "Blencathra Centre",
     54.612,
     -3.074,
-    "via"
+    "checkpoint"
    ],
    [
     "Old Coach Road",
@@ -688,7 +688,7 @@
     "Dockray",
     54.59,
     -2.949,
-    "via"
+    "checkpoint"
    ],
    [
     "Aira Force",
@@ -700,7 +700,7 @@
     "Dalemain",
     54.634,
     -2.837,
-    "via"
+    "checkpoint"
    ],
    [
     "Pooley Bridge",
@@ -712,7 +712,7 @@
     "Howtown",
     54.575,
     -2.855,
-    "via"
+    "checkpoint"
    ],
    [
     "High Kop",
@@ -724,7 +724,7 @@
     "Mardale Head",
     54.482,
     -2.812,
-    "via"
+    "checkpoint"
    ],
    [
     "Gatesgarth Pass",
@@ -736,7 +736,7 @@
     "Kentmere",
     54.43,
     -2.84,
-    "via"
+    "checkpoint"
    ],
    [
     "Garburn Pass",
@@ -754,7 +754,7 @@
     "Ambleside",
     54.432,
     -2.963,
-    "via"
+    "checkpoint"
    ],
    [
     "Skelwith Bridge",
@@ -772,7 +772,7 @@
     "Chapel Stile",
     54.437,
     -3.053,
-    "via"
+    "checkpoint"
    ],
    [
     "Old Dungeon Ghyll",
@@ -790,7 +790,7 @@
     "Tilberthwaite",
     54.399,
     -3.068,
-    "via"
+    "checkpoint"
    ],
    [
     "Coniston",

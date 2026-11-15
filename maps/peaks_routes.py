@@ -4,7 +4,8 @@ each leg along real paths with BRouter (hiking-mountain profile), and write a GP
     python -m maps.peaks_routes maps/peak_routes.json web/peaks/routes [SLUG ...]
 
 SPEC: {slug: {"name": ..., "points": [[name, lat, lon, kind], ...]}} where kind is "peak"
-(snap to the OSM summit of that name within 1.5 km) or "via" (use as given).
+(snap to the OSM summit of that name within 1.5 km), "checkpoint" (a place the route must reach,
+used as given) or "via" (a waypoint to steer the route, used as given; a dead end to it is trimmed).
 """
 from __future__ import annotations
 
