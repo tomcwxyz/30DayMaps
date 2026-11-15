@@ -1,0 +1,24 @@
+name: Diagnostic render (temporary)
+on:
+  push:
+    branches: [ccr-b22ce61e-o03hit]
+    paths: [".github/workflows/diag-render.yml"]
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      # the same setup as the Print order workflow
+      - run: python -m pip install -e .
+      - run: python -m pip install playwright && python -m playwright install --with-deps chromium
+      - run: python -m maps.peaks_render diag/recipe.json diag/out --route "$(cat diag/route.txt)" --kinds print,web,check
+      - run: |
+          rm diag/out/peaks-*dpi.png
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f diag/out && git commit -m "Diagnostic render output" && git pull --rebase --autostash -q && git push

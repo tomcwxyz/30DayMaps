@@ -259,10 +259,14 @@ def render_peaks(recipe: str, out: Path, kinds=("print", "web"), min_long_px: in
                  route: str | None = None) -> dict[str, Path]:
     """Peaks prints are drawn by the web page itself, in headless Chromium."""
     from maps import peaks_render
-    return peaks_render.render(recipe, out, kinds, min_long_px, route=route or None)
+    try:
+        return peaks_render.render(recipe, out, kinds, min_long_px, route=route or None)
+    except peaks_render.TextCheckFailed as e:   # the same browser will fail the same way: don't retry
+        raise FulfilError(f"Rendering the print failed: {e}") from None
 
 
 RENDERERS = {"footprints": render, "peaks": render_peaks}
+CHECK_SHOPS = {"peaks"}   # renderers that can crop the print for the owner to read before approving
 AUTO = object()   # pick the renderer for the order's shop
 
 
@@ -417,8 +421,16 @@ def shipped_email(title: str, tracking: str, name: str = "", shop: dict | None =
     return subject, text, html
 
 
+CHECK_LABELS = {"list": "Summit list", "title": "Title and details", "labels": "Map labels"}
+CHECK_NAMES = tuple(CHECK_LABELS)
+
+
+def check_path(pi_id: str, name: str) -> str:
+    return f"orders/{pi_id}-check-{name}.png"
+
+
 def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, stripe_url: str,
-                   shop: str = "footprints") -> tuple[str, str, str]:
+                   shop: str = "footprints", checks=()) -> tuple[str, str, str]:
     """For the shop owner only: what's about to be printed, with a link to approve it."""
     title = recipe.get("title") or "(no title)"
     if shop == "peaks":
@@ -435,6 +447,8 @@ def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, str
     subject = f"Approve this print? {title}, {recipe.get('paper', '')}"[:150]
     text = ("A print order is waiting for your approval.\n\n" + "\n".join(f"{k}: {v}" for k, v in rows)
             + f"\n\nPreview (link works for 7 days):\n{preview_url}\n\n"
+            + ("Read these crops of the actual print file at full size before approving:\n"
+               + "".join(f"{CHECK_LABELS.get(n, n)}: {u}\n" for n, u in checks) + "\n" if checks else "")
             + (f"Approve or reject it on GitHub (Review deployments):\n{run_url}\n\n" if run_url else "")
             + (f"The payment in Stripe:\n{stripe_url}\n" if stripe_url else ""))
     table = "".join(f'<tr><td style="color:#666;padding:2px 12px 2px 0;vertical-align:top">{_esc(k)}</td>'
@@ -443,6 +457,12 @@ def approval_email(recipe: dict, paper: str, preview_url: str, run_url: str, str
             f'<p><a href="{_esc(preview_url)}"><img src="{_esc(preview_url)}" alt="Preview of the print" '
             'style="max-width:420px;width:100%;border:1px solid #ddd"></a></p>'
             f"<table>{table}</table>"
+            + ('<p style="margin-top:18px"><strong>Read the text before approving.</strong> These are crops of the '
+               "actual print file; open each one to see it at full size.</p>"
+               + "".join(f'<p style="margin:10px 0 2px;color:#666">{_esc(CHECK_LABELS.get(n, n))}</p>'
+                         f'<p style="margin:0"><a href="{_esc(u)}"><img src="{_esc(u)}" alt="{_esc(CHECK_LABELS.get(n, n))}" '
+                         'style="max-width:100%;border:1px solid #ddd"></a></p>' for n, u in checks)
+               if checks else "")
             + (f'<p style="margin-top:18px"><a href="{_esc(run_url)}" style="background:#2e6b5e;color:#fff;'
                'padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold">Approve or reject on GitHub</a></p>'
                '<p style="color:#666">On the run, press <em>Review deployments</em>, tick print-orders, then approve or reject.</p>'
@@ -519,10 +539,16 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
         return "submit"
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            files = _render(renderer, order, Path(tmp), ("print", "web"))
+            kinds = ("print", "web", "check") if order.shop in CHECK_SHOPS else ("print", "web")
+            files = _render(renderer, order, Path(tmp), kinds)
             print_path = uploader("put", str(files["print"]), f"orders/{order.pi_id}-print.png")["pathname"]
             preview_path = uploader("put", str(files["web"]), f"orders/{order.pi_id}-preview.png")["pathname"]
             preview_url = signed_url(uploader, preview_path, PREVIEW_HOURS)
+            checks = []
+            for f in files.get("check") or []:
+                name = Path(f).stem.removeprefix("check-")
+                path = uploader("put", str(f), check_path(order.pi_id, name))["pathname"]
+                checks.append((name, signed_url(uploader, path, PREVIEW_HOURS)))
     except FulfilError:
         raise
     except Exception as e:  # keep tracebacks (which can contain URLs) out of public logs
@@ -536,7 +562,8 @@ def prepare(session_id: str, *, http=requests, key=None, uploader=blob, renderer
     if owner and not order.metadata.get("email_owner"):
         recipe = json.loads(order.recipe)
         if notify(http, key, order.pi_id, owner, "email_owner",
-                  approval_email(recipe, _paper_label(recipe, shop), preview_url, *approval_links(order.pi_id, key), order.shop)):
+                  approval_email(recipe, _paper_label(recipe, shop), preview_url, *approval_links(order.pi_id, key), order.shop,
+                                 checks)):
             print(f"{ref(order.pi_id)}: preview emailed to the shop owner for approval")
     return "submit"
 
@@ -681,7 +708,8 @@ def status(*, http=requests, key=None, prodigi_key=None, uploader=blob, shop=Non
                     title = json.loads(s["metadata"]["recipe"]).get("title") or "your map"
                     notify(http, key, pid, (s.get("customer_details") or {}).get("email"), "email_shipped",
                            shipped_email(title, tracking[0], customer_name(s), sh), sh)
-                old = [meta["print_file"], f"orders/{pid}-preview.png"] if meta.get("print_file") else []
+                checks = [check_path(pid, n) for n in CHECK_NAMES] if (s.get("metadata") or {}).get("shop") in CHECK_SHOPS else []
+                old = [meta["print_file"], f"orders/{pid}-preview.png"] + checks if meta.get("print_file") else []
                 if old:
                     uploader("del", *old)
                     stripe_set_metadata(http, key, pid, {"print_file": "", "print_preview": ""})

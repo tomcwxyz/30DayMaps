@@ -1134,6 +1134,9 @@ window.PeaksApp = {
   ready: null,
   recipe, apply: applyRecipe,
   size: () => [state.composed.pw, state.composed.ph],
+  // For the print job: does text draw true at this resolution, and where is the text on the sheet?
+  textCheck: ppm => RN.textCheck(ppm),
+  textBoxes: () => RN.textBoxes(state.composed.items),
   // Saves the drawn sheet as a download: "png" at ppm pixels per millimetre, or "svg".
   async file(kind, ppm, name) {
     save(kind === "svg" ? new Blob([await svgText()], { type: "image/svg+xml" }) : await pngBlob(ppm), name || `${fileStem()}.${kind}`);
