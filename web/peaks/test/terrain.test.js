@@ -89,3 +89,19 @@ test("contours match d3-contour's rings on a hilly field", () => {
   const b = ref.reduce((s, gm) => s + gm.coordinates.flat().reduce((t, ring) => { for (let i = 1; i < ring.length; i++) t += Math.hypot(ring[i][0] - ring[i - 1][0], ring[i][1] - ring[i - 1][1]); return t; }, 0), 0);
   assert.ok(Math.abs(a - b) / b < 0.01, `lengths ${a.toFixed(1)} vs ${b.toFixed(1)}`);
 });
+
+test("summit names print without OSM bookkeeping, one label per hill", () => {
+  assert.strictEqual(T.label("High Stile (summit)"), "High Stile");
+  assert.strictEqual(T.label("Bakestall (Wainwright summit)"), "Bakestall");
+  assert.strictEqual(T.label("Gowbarrow Fell Summit"), "Gowbarrow Fell");
+  assert.strictEqual(T.label("Mallie SIde"), "Mallie Side");
+  assert.strictEqual(T.label("Third Crinkle (Gunson Knott)"), "Third Crinkle (Gunson Knott)");
+  const out = T.tidyNames([
+    { name: "Scar Crags", lat: 54.5744, lon: -3.2275, ele: 671 },
+    { name: "Scar Crags", lat: 54.5750, lon: -3.2259, ele: 672 },
+    { name: "Red Pike", lat: 54.5274, lon: -3.2986, ele: 755 },
+    { name: "Red Pike", lat: 54.4810, lon: -3.2780, ele: 826 },   // a different Red Pike, 5 km away
+    { name: "Sharp Edge", lat: 54.64, lon: -3.04, kind: "ridge" },
+  ]);
+  assert.deepStrictEqual(out.map(n => `${n.name} ${n.ele ?? ""}`.trim()), ["Red Pike 826", "Red Pike 755", "Scar Crags 672", "Sharp Edge"]);
+});

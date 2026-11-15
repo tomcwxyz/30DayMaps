@@ -4,12 +4,14 @@ each leg along real paths with BRouter (hiking-mountain profile), and write a GP
     python -m maps.peaks_routes maps/peak_routes.json web/peaks/routes [SLUG ...]
 
 SPEC: {slug: {"name": ..., "points": [[name, lat, lon, kind], ...]}} where kind is "peak"
-(snap to the OSM summit of that name within 1.5 km) or "via" (use as given).
+(snap to the OSM summit of that name within 1.5 km), "checkpoint" (a place the route must reach,
+used as given) or "via" (a waypoint to steer the route, used as given; a dead end to it is trimmed).
 """
 from __future__ import annotations
 
 import json
 import math
+import re
 import sys
 import time
 from pathlib import Path
@@ -41,28 +43,57 @@ def peaks_near(points):
     raise SystemExit(f"Overpass failed: {r.status_code}")
 
 
+SNAP_M = 1500
+# OSM bookkeeping in a summit's name, e.g. "Scar Crags (summit)", "Bakestall (Wainwright summit)"
+BOOKKEEPING = re.compile(r"\s*\((?:wainwright\s*)?(?:summit|wainwright)\)\s*$|\s+summit$", re.I)
+
+
 def norm(s):
+    s = BOOKKEEPING.sub("", s)
     return "".join(ch for ch in s.lower().replace("’", "'") if ch.isalnum())
 
 
 def snap(points, osm):
-    out = []
+    """Each "peak" point moves onto the OSM summit of its name within SNAP_M of the hint. An exact
+    name beats a partial one, so "Yewbarrow" lands on Yewbarrow, not the nearer "Yewbarrow North
+    Top". No match is an error: a guessed summit once put Hopegill Head 1.8 km out."""
+    out, missing = [], []
     for name, lat, lon, kind in points:
         if kind != "peak":
             out.append((name, lat, lon, kind, None)); continue
-        best = None
+        exact, partial = [], []
         for n, a, b, ele in osm:
-            if norm(n) == norm(name) or norm(name) in norm(n) or norm(n) in norm(name):
-                d = dist((lat, lon), (a, b))
-                if d < 1500 and (best is None or d < best[0]):
-                    best = (d, a, b, ele, n)
+            d = dist((lat, lon), (a, b))
+            if d >= SNAP_M:
+                continue
+            if norm(n) == norm(name):
+                exact.append((d, a, b, ele, n))
+            elif norm(name) in norm(n) or norm(n) in norm(name):
+                partial.append((d, a, b, ele, n))
+        best = min(exact or partial, default=None)
         if best:
-            print(f"  {name:22s} -> {best[4]} {best[0]:.0f} m away", flush=True)
+            print(f"  {name:22s} -> {best[4]} {best[0]:.0f} m away{'' if exact else ' (partial name match: check it)'}", flush=True)
             out.append((name, best[1], best[2], kind, best[3]))
         else:
-            print(f"  {name:22s} -> not in OSM, using the hint", flush=True)
-            out.append((name, lat, lon, kind, None))
+            missing.append(name)
+    if missing:
+        raise SystemExit(f"No OSM summit within {SNAP_M} m for: {', '.join(missing)}. Fix the hints in the spec.")
     return out
+
+
+def join(track, seg, at_via, tol_m=8):
+    """Adds a leg. At a "via" point the router may walk out to the point and back the same way;
+    that retraced stub would print as a dead end, so it's cut. Summits keep their out-and-backs."""
+    if track and seg and track[-1][:2] == seg[0][:2]:
+        seg = seg[1:]
+    if at_via:
+        k = 0
+        while k + 1 < len(track) and k < len(seg) and dist(track[-2 - k][:2], seg[k][:2]) < tol_m:
+            k += 1
+        if k:
+            track = track[:-k]
+            seg = seg[k:]
+    return track + seg
 
 
 def leg(a, b, profile="hiking-mountain"):
@@ -94,9 +125,7 @@ def build(slug, spec, out: Path):
     km = 0
     for a, b in zip(snapped, snapped[1:]):
         seg = leg(a, b)
-        if track and seg and track[-1][:2] == seg[0][:2]:
-            seg = seg[1:]
-        track += seg
+        track = join(track, seg, a[3] == "via")
         d = sum(dist(p[:2], q[:2]) for p, q in zip(seg, seg[1:])) / 1000
         km += d
         print(f"   {a[0]} -> {b[0]}: {d:.1f} km", flush=True)
