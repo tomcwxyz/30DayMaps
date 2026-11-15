@@ -84,11 +84,16 @@
           ctx.save();
           ctx.translate(it.x, it.y);
           if (it.rot) ctx.rotate(it.rot);
-          ctx.font = fontAt(it, it.size);
+          // Set the font at its real pixel size, not in millimetres scaled up: some Chromium
+          // builds hint and round glyphs at a ~2 px font, which broke letter spacing and lost
+          // thin letters (i, l, t) and spaces on a printed order.
+          const S = pxPerMM;
+          ctx.scale(1 / S, 1 / S);
+          ctx.font = fontAt(it, it.size * S);
           ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-          const draw = fn => { if (P.chars) P.chars.forEach((ch, i) => fn(ch, P.xs[i], P.y0)); else fn(it.s, P.x0, P.y0); };
+          const draw = fn => { if (P.chars) P.chars.forEach((ch, i) => fn(ch, P.xs[i] * S, P.y0 * S)); else fn(it.s, P.x0 * S, P.y0 * S); };
           if (it.halo) {
-            ctx.strokeStyle = it.halo.color; ctx.lineWidth = it.halo.width * 2; ctx.lineJoin = "round";
+            ctx.strokeStyle = it.halo.color; ctx.lineWidth = it.halo.width * 2 * S; ctx.lineJoin = "round";
             draw((s, x, y) => ctx.strokeText(s, x, y));
           }
           ctx.fillStyle = it.fill;
@@ -155,5 +160,57 @@ ${out.join("\n")}
 </svg>`;
   }
 
-  root.PeaksRender = { toCanvas, toSVG };
+  // ---- print check ---------------------------------------------------------------------
+  // Draws test phrases exactly as a print at pxPerMM would, and checks the ink against the
+  // font's own measurements: the overall width, and (for the sans) one clear gap per space.
+  // A Chromium that rounds glyphs at the wrong size fails this (letters bunch up or split
+  // apart, spaces vanish), so the print job can stop before anything reaches the printer.
+  const CHECKS = [
+    { family: "Jost", weight: 500, s: "Whiteless Pike Crag Hill Sail Hopegill Head", gaps: true },
+    { family: "Jost", weight: 400, s: "Abraham's Tea Round from Keswick", gaps: true },
+    { family: "Jost", weight: 700, s: "THE TEA ROUND", gaps: true },
+    { family: "IBM Plex Mono", weight: 400, s: "14 SUMMITS 3,237 M 820", gaps: false },
+  ];
+  function textCheck(pxPerMM, size = 2.25) {
+    const results = [];
+    for (const c of CHECKS) {
+      const it = { t: "text", x: 2, y: 2, s: c.s, size, family: c.family, weight: c.weight, fill: "#000", align: "left", base: "top" };
+      const P = placeText(it);
+      const pw = P.width + 4, ph = size * 2 + 2;
+      const canvas = document.createElement("canvas");
+      toCanvas(canvas, [{ t: "rect", x: 0, y: 0, w: pw, h: ph, fill: "#fff" }, it], pw, ph, pxPerMM);
+      const { width: W, height: H } = canvas;
+      const px = canvas.getContext("2d").getImageData(0, 0, W, H).data;
+      const inked = new Array(W).fill(false);
+      for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) if (px[(y * W + x) * 4] < 200) { inked[x] = true; break; }
+      const first = inked.indexOf(true), last = inked.lastIndexOf(true);
+      const ink = first < 0 ? 0 : (last - first + 1) / pxPerMM;
+      const ratio = ink / P.width;
+      let ok = ratio > 0.95 && ratio < 1.03;
+      const want = (c.s.match(/ /g) || []).length;
+      let gaps = null;
+      if (c.gaps && first >= 0) {
+        const space = placeText({ ...it, s: "a a" }).width - placeText({ ...it, s: "aa" }).width;
+        const min = Math.max(1, Math.round(space * 0.6 * pxPerMM));
+        gaps = 0;
+        for (let x = first, run = 0; x <= last; x++) {
+          if (!inked[x]) run++; else { if (run >= min) gaps++; run = 0; }
+        }
+        ok = ok && gaps === want;
+      }
+      results.push({ text: c.s, font: `${c.weight} ${c.family}`, ok, ratio: Math.round(ratio * 1000) / 1000, gaps, spaces: want });
+    }
+    return { ok: results.every(r => r.ok), results };
+  }
+
+  // Where each word sits on the sheet (millimetres), for checking crops of the finished print.
+  function textBoxes(items) {
+    return items.filter(it => it.t === "text" && !it.rot).map(it => {
+      const P = placeText(it);
+      const asc = P.y0, h = it.size * 1.25;
+      return { s: it.s, size: it.size, halo: !!it.halo, x: it.x + P.x0, y: it.y + P.y0 - asc * 0.95, w: P.width, h };
+    });
+  }
+
+  root.PeaksRender = { toCanvas, toSVG, textCheck, textBoxes };
 })(typeof window !== "undefined" ? window : globalThis);

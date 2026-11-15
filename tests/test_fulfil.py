@@ -58,9 +58,13 @@ class FakeHTTP:
 
 def fake_render(recipe, out, kinds, min_long_px=None):
     names = {"print": "x-300dpi.png", "web": "x-web.png", "pdf": "x.pdf"}
-    files = {k: Path(out) / names[k] for k in kinds}
+    files = {k: Path(out) / names[k] for k in kinds if k != "check"}
     for f in files.values():
         f.write_bytes(b"file")
+    if "check" in kinds:
+        files["check"] = [Path(out) / "check-list.png", Path(out) / "check-title.png"]
+        for f in files["check"]:
+            f.write_bytes(b"crop")
     return files
 
 
@@ -454,9 +458,12 @@ def test_peaks_print_is_rendered_with_its_route_and_sent_with_its_own_reference(
         return fake_render(recipe, out, kinds)
     monkeypatch.setitem(fulfil.RENDERERS, "peaks", peaks_render)
     http = FakeHTTP([("GET", "/checkout/sessions/", 200, peaks_session()), ("POST", "/payment_intents/", 200, {})])
-    up, _ = uploads()
+    up, log = uploads()
     assert fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up, shop=SHOP) == "submit"
     assert seen["route"] == ROUTE and json.loads(seen["recipe"])["style"] == "poster"
+    assert "check" in seen["kinds"]
+    puts = [a[1] for c, a in log if c == "put"]
+    assert any(p.endswith("-check-list.png") for p in puts) and any(p.endswith("-check-title.png") for p in puts)
     payload = fulfil.order_payload(fulfil.order_from_session(peaks_session()), "SKU", "Standard", "https://f")
     assert payload["items"][0]["merchantReference"] == "peaks-print"
 
@@ -537,3 +544,57 @@ def test_render_tries_again_before_giving_up(monkeypatch):
     def broken(recipe, out, kinds): calls.append(1); raise RuntimeError("down")
     with pytest.raises(RuntimeError): fulfil._render(broken, order, Path("."), ("web",))
     assert len(calls) == fulfil.RENDER_ATTEMPTS
+
+
+def test_owner_approval_email_shows_crops_of_the_print_file():
+    checks = [("list", "https://b/list"), ("title", "https://b/title")]
+    _, text, html = fulfil.approval_email(json.loads(PEAKS_RECIPE), "A3 print", "https://p", "", "", "peaks", checks)
+    assert "Summit list: https://b/list" in text and "Title and details: https://b/title" in text
+    assert 'src="https://b/list"' in html and "Read the text before approving" in html
+    _, text, html = fulfil.approval_email(json.loads(PEAKS_RECIPE), "A3 print", "https://p", "", "", "peaks")
+    assert "crops" not in text and "Read the text" not in html
+
+
+def test_a_failed_text_check_stops_the_print_without_retrying(monkeypatch):
+    from maps import peaks_render
+    calls = []
+    def broken(*a, **k):
+        calls.append(1)
+        raise peaks_render.TextCheckFailed("text doesn't draw true at print resolution (500 Jost: gaps 16 for 6 spaces)")
+    monkeypatch.setattr(peaks_render, "render", broken)
+    monkeypatch.setattr(fulfil.time, "sleep", lambda s: None)
+    http = FakeHTTP([("GET", "/checkout/sessions/", 200, peaks_session()), ("POST", "/payment_intents/", 200, {})])
+    up, log = uploads()
+    with pytest.raises(fulfil.FulfilError, match="doesn't draw true"):
+        fulfil.prepare("cs_test_a1b2c3d4e5f6g7h8", http=http, key="sk", uploader=up, shop=SHOP)
+    assert len(calls) == 1 and not [c for c, _ in log if c == "put"]
+
+
+def test_check_crops_cut_the_title_list_and_labels_from_the_print(tmp_path):
+    from PIL import Image
+    from maps.peaks_render import check_crops
+    png = tmp_path / "p.png"
+    Image.new("RGB", (2970, 4200), "white").save(png)   # A3 at 10 px/mm
+    boxes = [{"s": "THE TEA ROUND", "size": 12, "halo": False, "x": 80, "y": 340, "w": 140, "h": 15},
+             {"s": "Abraham's Tea Round", "size": 4, "halo": False, "x": 110, "y": 358, "w": 80, "h": 5},
+             {"s": "14 SUMMITS, IN ORDER", "size": 2, "halo": False, "x": 20, "y": 300, "w": 40, "h": 2.5},
+             {"s": "Catbells", "size": 2.25, "halo": False, "x": 25, "y": 307, "w": 15, "h": 2.8},
+             {"s": "Sail", "size": 3, "halo": True, "x": 150, "y": 120, "w": 8, "h": 3.7}]
+    files = check_crops(png, boxes, (297, 420), tmp_path)
+    assert [f.name for f in files] == ["check-title.png", "check-list.png", "check-labels.png"]
+    sizes = {f.name: Image.open(f).size for f in files}
+    assert sizes["check-list.png"] == (460, 158)          # the list rows, 3 mm round, at full resolution
+    assert sizes["check-labels.png"] == (860, 560)        # an 80 x 50 mm patch around the label nearest the map's middle
+
+
+def test_shipped_peaks_order_deletes_its_check_crops_too():
+    shipped = peaks_session({"prodigi_order": "ord_1", "print_file": "orders/pi_3Abcdefgh12345678-print.png"})
+    http = FakeHTTP([("GET", "/checkout/sessions", 200, {"data": [shipped], "has_more": False}),
+                     ("GET", "/orders/ord_1", 200, {"order": {"status": {"stage": "Complete", "issues": []},
+                      "shipments": [{"status": "Shipped", "tracking": {"url": "https://track.example/1", "number": "1"}}]}}),
+                     ("POST", "/payment_intents/", 200, {})])
+    up, log = uploads()
+    fulfil.status(http=http, key="sk", prodigi_key="pk", uploader=up, shop=SHOP, now=1_000_000 + 3600)
+    deleted = [p for c, a in log if c == "del" for p in a]
+    assert "orders/pi_3Abcdefgh12345678-print.png" in deleted
+    assert {f"orders/pi_3Abcdefgh12345678-check-{n}.png" for n in ("list", "title", "labels")} <= set(deleted)

@@ -50,11 +50,66 @@ def _download(page, path: Path, kind: str, ppm: float | None = None) -> Path:
     return path
 
 
+class TextCheckFailed(RuntimeError):
+    """The browser doesn't draw text true at print resolution, so the print would be wrong."""
+
+
+def check_text(page, ppm: float) -> None:
+    """Draws test phrases as the print will and stops if letters or spaces come out wrong.
+    On 9 November 2026 a print went out with thin letters and spaces missing; this catches that."""
+    r = page.evaluate("p => PeaksApp.textCheck(p)", ppm)
+    if not r["ok"]:
+        bad = "; ".join(f"{x['font']}: width {x['ratio']}, gaps {x['gaps']} for {x['spaces']} spaces"
+                        for x in r["results"] if not x["ok"])
+        raise TextCheckFailed(f"text doesn't draw true at print resolution ({bad})")
+
+
+CROP_PAD_MM = 3
+
+
+def check_crops(png: Path, boxes: list[dict], size_mm: tuple[float, float], out: Path) -> list[Path]:
+    """Full-resolution crops of the finished print for the owner to read before approving:
+    the title block, the list of summits (if any) and a patch of map labels."""
+    from PIL import Image
+    im = Image.open(png)
+    k = im.width / size_mm[0]
+    pw, ph = size_mm
+
+    def union(bs):
+        return (min(b["x"] for b in bs), min(b["y"] for b in bs),
+                max(b["x"] + b["w"] for b in bs), max(b["y"] + b["h"] for b in bs))
+
+    regions = []
+    plain = [b for b in boxes if not b["halo"]]
+    if plain:
+        title = max(plain, key=lambda b: b["size"])
+        below = [b for b in plain if title["y"] - 1 <= b["y"] <= title["y"] + title["h"] * 3.2]
+        regions.append(("title", union(below)))
+        head = next((b for b in plain if b["s"].upper().endswith(", IN ORDER")), None)
+        if head:
+            rows = [b for b in plain if head["y"] <= b["y"] < title["y"] - 1]
+            regions.append(("list", union(rows)))
+    labels = [b for b in boxes if b["halo"]]
+    if labels:
+        mid = min(labels, key=lambda b: (b["x"] + b["w"] / 2 - pw / 2) ** 2 + (b["y"] - ph * 0.3) ** 2)
+        cx, cy = mid["x"] + mid["w"] / 2, mid["y"] + mid["h"] / 2
+        regions.append(("labels", (cx - 40, cy - 25, cx + 40, cy + 25)))
+    files = []
+    for name, (x0, y0, x1, y1) in regions:
+        x0, y0 = max(0, x0 - CROP_PAD_MM), max(0, y0 - CROP_PAD_MM)
+        x1, y1 = min(pw, x1 + CROP_PAD_MM), min(ph, y1 + CROP_PAD_MM)
+        f = out / f"check-{name}.png"
+        im.crop((round(x0 * k), round(y0 * k), round(x1 * k), round(y1 * k))).save(f)
+        files.append(f)
+    return files
+
+
 def render(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | None = None,
            route: str | None = None, setup=None) -> dict[str, Path]:
-    """Returns {"print": PNG, "web": preview PNG, "pdf": vector PDF} for the kinds asked.
+    """Returns {"print": PNG, "web": preview PNG, "pdf": vector PDF, "check": [crop PNGs]} for the kinds asked.
 
-    The PNG is 300 dpi at the sheet's size, or finer if min_long_px asks for more pixels.
+    The PNG is 300 dpi at the sheet's size, or finer if min_long_px asks for more pixels; the
+    text is checked at that resolution first. "check" crops the print PNG (so needs "print").
     setup(page) lets tests route the page's network calls to stand-ins.
     """
     from playwright.sync_api import sync_playwright
@@ -77,7 +132,11 @@ def render(recipe: str, out: Path, kinds=("print", "web"), min_long_px: int | No
                 dpi = 300
                 if min_long_px:
                     dpi = max(dpi, math.ceil(min_long_px / (long_mm / MM_PER_INCH)))
+                check_text(page, dpi / MM_PER_INCH)
                 files["print"] = _download(page, out / f"peaks-{dpi}dpi.png", "png", dpi / MM_PER_INCH)
+                if "check" in kinds:
+                    files["check"] = check_crops(files["print"], page.evaluate("PeaksApp.textBoxes()"),
+                                                 (pw_mm, ph_mm), out)
             if "web" in kinds:
                 files["web"] = _download(page, out / "peaks-web.png", "png", PREVIEW_LONG_PX / long_mm)
             if "pdf" in kinds:
@@ -101,7 +160,7 @@ def main(argv=None):
     p.add_argument("recipe", help="recipe JSON file")
     p.add_argument("out", help="folder for the files")
     p.add_argument("--route", help="encoded route (from the order's route_* metadata)")
-    p.add_argument("--kinds", default="print,web,pdf")
+    p.add_argument("--kinds", default="print,web,pdf,check")
     a = p.parse_args(argv)
     files = render(Path(a.recipe).read_text(), Path(a.out), tuple(a.kinds.split(",")), route=a.route)
     for k, f in files.items():

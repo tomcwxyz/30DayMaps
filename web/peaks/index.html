@@ -565,7 +565,7 @@ function placeStops(route, g) {
   const list = wantStops();
   if (!list) return null;
   let from = 0;
-  return list.map(([name, lat, lon], k) => {
+  return list.map(([name, lat, lon, ele], k) => {
     const [x, y] = T.toXY(g.lat, g.lon, lat, lon);
     let best = from, bd = Infinity;
     for (let i = from; i < route.pts.length; i++) {
@@ -574,7 +574,8 @@ function placeStops(route, g) {
       if (bd < 300 && dd > bd + 2000) break;   // found it; don't run on to a later pass nearby
     }
     from = best;
-    return { n: k + 1, name, x, y, d: route.profile[best][0], h: T.sample(g, x, y) };
+    // The surveyed OpenStreetMap height where there is one, like the map labels; the tiles smooth tops down.
+    return { n: k + 1, name, x, y, d: route.profile[best][0], h: ele ?? T.sample(g, x, y) };
   });
 }
 
@@ -1133,6 +1134,9 @@ window.PeaksApp = {
   ready: null,
   recipe, apply: applyRecipe,
   size: () => [state.composed.pw, state.composed.ph],
+  // For the print job: does text draw true at this resolution, and where is the text on the sheet?
+  textCheck: ppm => RN.textCheck(ppm),
+  textBoxes: () => RN.textBoxes(state.composed.items),
   // Saves the drawn sheet as a download: "png" at ppm pixels per millimetre, or "svg".
   async file(kind, ppm, name) {
     save(kind === "svg" ? new Blob([await svgText()], { type: "image/svg+xml" }) : await pngBlob(ppm), name || `${fileStem()}.${kind}`);
