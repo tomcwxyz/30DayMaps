@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from io import BytesIO
 from pathlib import Path
 
@@ -171,9 +172,22 @@ def _latin(t: str | None) -> bool:
     return bool(t) and all(ord(c) < 0x250 or c in "’‘·" for c in t)
 
 
+# OSM mappers tag which node is the summit, or the Wainwright, in the name itself; on a print it
+# reads as noise ("High Stile (summit)", "Bakestall (Wainwright summit)", "Gowbarrow Fell Summit").
+BOOKKEEPING = re.compile(r"\s*\((?:wainwright\s*)?(?:summit|wainwright)\)|\s+summit$", re.I)
+SAME_HILL_M = 600   # two summits of the same name this close are one hill mapped twice
+
+
+def label(name: str) -> str:
+    """A summit's name as it should print: OSM bookkeeping dropped, stray capitals fixed ("SIde")."""
+    name = BOOKKEEPING.sub("", name).strip()
+    return re.sub(r"\b([A-Z])([A-Z])([a-z]{2,})\b", lambda m: m[1] + m[2].lower() + m[3], name)
+
+
 def names(slug: str, kind: str = "peak") -> list[dict]:
     """Named summits (or ridges, kind="ridge"), keeping a Latin-script name (English if the local
-    one isn't) so labels print."""
+    one isn't) so labels print. Names are tidied for print, and a hill mapped twice under the same
+    name keeps one label (the one with a height, then the higher)."""
     p = DEM_DIR / f"{slug}.names.json"
     out = []
     for n in (json.loads(p.read_text()) if p.exists() else []):
@@ -181,8 +195,15 @@ def names(slug: str, kind: str = "peak") -> list[dict]:
             continue
         name = n["name"] if _latin(n["name"]) else n.get("name_en")
         if _latin(name):
-            out.append(dict(n, name=name, name_en=None))
-    return out
+            out.append(dict(n, name=label(name), name_en=None))
+    out.sort(key=lambda n: (n.get("ele") is None, -(n.get("ele") or 0)))
+    kept = []
+    for n in out:
+        k = math.cos(math.radians(n["lat"]))
+        if not any(m["name"] == n["name"] and math.hypot((m["lat"] - n["lat"]) * 111320, (m["lon"] - n["lon"]) * 111320 * k) < SAME_HILL_M
+                   for m in kept):
+            kept.append(n)
+    return kept
 
 
 def clean(dem: np.ndarray) -> np.ndarray:

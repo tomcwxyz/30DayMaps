@@ -354,8 +354,8 @@
     const baked = await bakedNames(s, w, n, e);
     if (baked) { nameCache.set(key, baked); return baked; }
     // names change rarely: keep each answer between visits too
-    const memoUrl = `https://names.peaks.invalid/v1/${key}`;
-    const store = typeof caches !== "undefined" ? await caches.open("peaks-names-v1").catch(() => null) : null;
+    const memoUrl = `https://names.peaks.invalid/v2/${key}`;
+    const store = typeof caches !== "undefined" ? await caches.open("peaks-names-v2").catch(() => null) : null;
     const kept = store && await store.match(memoUrl).catch(() => null);
     if (kept) { const out = await kept.json(); nameCache.set(key, out); return out; }
     const q = `[out:json][timeout:40];(node["natural"~"^(peak|hill|volcano)$"]["name"](${key});way["natural"~"^(arete|ridge)$"]["name"](${key}););out center;`;
@@ -372,19 +372,39 @@
       if (root.PeaksTerrain.strict) throw new Error("summit names unavailable (Overpass)");
       return [];
     }
-    const out = els.map(e => {
-      const name = latin(e.tags.name) ? e.tags.name : e.tags["name:en"];
-      if (!name || !latin(name)) return null;
+    const out = tidyNames(els.map(e => {
+      const raw = latin(e.tags.name) ? e.tags.name : e.tags["name:en"];
+      if (!raw || !latin(raw)) return null;
+      const name = label(raw);
       if (e.type === "way") return e.center ? { name, lat: e.center.lat, lon: e.center.lon, kind: "ridge" } : null;
       const ele = parseFloat(String(e.tags.ele || "").replace(/[^\d.\-]/g, ""));
       return { name, lat: e.lat, lon: e.lon, ele: Number.isFinite(ele) ? ele : null };
-    }).filter(Boolean);
+    }).filter(Boolean));
     nameCache.set(key, out);
     if (store) store.put(memoUrl, new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json" } })).catch(() => {});
     return out;
   }
 
+  // A summit's name as it should print, as maps/peaks.py label(): OSM mappers put bookkeeping in
+  // the name ("High Stile (summit)", "Bakestall (Wainwright summit)"), and the odd stray capital.
+  const BOOKKEEPING = /\s*\((?:wainwright\s*)?(?:summit|wainwright)\)|\s+summit$/gi;
+  function label(name) {
+    return name.replace(BOOKKEEPING, "").trim().replace(/\b([A-Z])([A-Z])([a-z]{2,})\b/g, (m, a, b, c) => a + b.toLowerCase() + c);
+  }
+  // One label per hill: summits of the same name within 600 m are one hill mapped twice.
+  function tidyNames(list) {
+    const peaks = list.filter(n => n.kind !== "ridge")
+      .sort((a, b) => (a.ele == null) - (b.ele == null) || (b.ele || 0) - (a.ele || 0));
+    const kept = [];
+    for (const n of peaks) {
+      const k = Math.cos(n.lat * Math.PI / 180);
+      if (!kept.some(m => m.name === n.name && Math.hypot((m.lat - n.lat) * 111320, (m.lon - n.lon) * 111320 * k) < 600)) kept.push(n);
+    }
+    return kept.concat(list.filter(n => n.kind === "ridge"));
+  }
+
   root.PeaksTerrain = {
+    label, tidyNames,
     grid, baked, hires, withFine, blendFine, blur, sample, localMax, summits, toXY, toLL, CREDIT, R, _clean: clean,
     setTileUrl(u) { tileUrl = u; tileCache.clear(); storeP = null; },
   };
