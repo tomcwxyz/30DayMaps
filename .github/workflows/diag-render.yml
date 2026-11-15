@@ -2,7 +2,7 @@ name: Diagnostic render (temporary)
 on:
   push:
     branches: [ccr-b22ce61e-o03hit]
-    paths: [".github/workflows/diag-render.yml", "diag/render_check.py"]
+    paths: [".github/workflows/diag-render.yml", "diag/render_check.py", "web/peaks/lib/render.js"]
 permissions:
   contents: write
 jobs:

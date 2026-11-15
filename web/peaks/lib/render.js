@@ -84,11 +84,16 @@
           ctx.save();
           ctx.translate(it.x, it.y);
           if (it.rot) ctx.rotate(it.rot);
-          ctx.font = fontAt(it, it.size);
+          // Set the font at its real pixel size, not in millimetres scaled up: some Chromium
+          // builds hint and round glyphs at a ~2 px font, which broke letter spacing and lost
+          // thin letters (i, l, t) and spaces on a printed order.
+          const S = pxPerMM;
+          ctx.scale(1 / S, 1 / S);
+          ctx.font = fontAt(it, it.size * S);
           ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-          const draw = fn => { if (P.chars) P.chars.forEach((ch, i) => fn(ch, P.xs[i], P.y0)); else fn(it.s, P.x0, P.y0); };
+          const draw = fn => { if (P.chars) P.chars.forEach((ch, i) => fn(ch, P.xs[i] * S, P.y0 * S)); else fn(it.s, P.x0 * S, P.y0 * S); };
           if (it.halo) {
-            ctx.strokeStyle = it.halo.color; ctx.lineWidth = it.halo.width * 2; ctx.lineJoin = "round";
+            ctx.strokeStyle = it.halo.color; ctx.lineWidth = it.halo.width * 2 * S; ctx.lineJoin = "round";
             draw((s, x, y) => ctx.strokeText(s, x, y));
           }
           ctx.fillStyle = it.fill;
