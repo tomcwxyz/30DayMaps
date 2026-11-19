@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en-GB">
 <head>
+<!-- Track only the public site, not local development or Vercel previews. -->
+<script>
+if (location.hostname === "footprints.tomcw.xyz") {
+  const tracker = document.createElement("script");
+  tracker.defer = true;
+  tracker.dataset.domain = "tomcw.xyz";
+  tracker.src = "https://plausible.io/js/script.js";
+  document.head.appendChild(tracker);
+}
+</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Footprints: every building, nothing else. Map prints of any place</title>
